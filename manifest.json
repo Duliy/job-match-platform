@@ -1,0 +1,26 @@
+{
+  "name": "西南大学商贸学院 · 就业服务平台",
+  "short_name": "商贸就业",
+  "description": "西南大学商贸学院就业服务与简历匹配平台",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#FBF8F3",
+  "theme_color": "#9C6B3C",
+  "lang": "zh-CN",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ],
+  "categories": ["education", "business", "productivity"],
+  "prefer_related_applications": false
+}

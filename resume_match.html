@@ -1,0 +1,1644 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>就业服务平台</title>
+<style>
+:root {
+  --p: #9C6B3C;
+  --p-l: #B8845A;
+  --p-d: #7A5230;
+  --p-bg: #F2EAE0;
+  --p-bg-l: #F8F3EC;
+  --accent: #C4956A;
+  --success: #6B8E4E;
+  --warning: #C4943C;
+  --danger: #C4664A;
+  --bg: #FBF8F3;
+  --card: #FFFFFF;
+  --text: #1C1814;
+  --text-l: #6B5A4A;
+  --text-ll: #A08060;
+  --border: #E8DDD0;
+  --border-l: #F2EAE0;
+  --shadow: 0 1px 2px rgba(0,0,0,.04);
+  --shadow-md: 0 2px 8px rgba(0,0,0,.06);
+  --radius: 12px;
+  --radius-sm: 8px;
+  --radius-xs: 6px;
+  --c-51job: #6B8E4E;
+  --c-liepin: #C4664A;
+  --c-shixiseng: #8B6B8A;
+  --c-zhonggong: #5A7A6A;
+  --transition-ease: cubic-bezier(.4,0,.2,1);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{font-size:16px;-webkit-tap-highlight-color:transparent}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;color:var(--text);background:linear-gradient(160deg,#FBF8F3 0%,#F5F0E8 30%,#F2EDE4 60%,#F8F4EE 100%);line-height:1.6;min-height:100vh;background-attachment:fixed}
+body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 800px 600px at 85% 5%,rgba(220,195,170,.35) 0%,transparent 55%),radial-gradient(ellipse 700px 500px at 10% 90%,rgba(210,180,150,.28) 0%,transparent 55%),radial-gradient(ellipse 500px 400px at 55% 38%,rgba(235,210,180,.20) 0%,transparent 50%),radial-gradient(ellipse 450px 350px at 72% 82%,rgba(200,165,140,.15) 0%,transparent 50%);pointer-events:none;z-index:0}
+body::after{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 800px 600px at 85% 5%,rgba(220,195,170,.38) 0%,transparent 70%),radial-gradient(ellipse 700px 500px at 10% 90%,rgba(210,180,150,.32) 0%,transparent 65%),radial-gradient(ellipse 600px 450px at 55% 38%,rgba(235,200,160,.28) 0%,transparent 60%),radial-gradient(ellipse 500px 400px at 72% 82%,rgba(200,165,140,.24) 0%,transparent 55%),radial-gradient(ellipse 550px 380px at 25% 15%,rgba(215,185,155,.22) 0%,transparent 58%);pointer-events:none;z-index:0}
+a{color:var(--p);text-decoration:none}
+button{cursor:pointer;font:inherit;border:none;background:none}
+input,select,textarea{font:inherit;border:1px solid var(--border);border-radius:var(--radius-xs);padding:.5rem .75rem;outline:none;transition:border-color .2s;background:var(--card)}
+input:focus,select:focus,textarea:focus{border-color:var(--p-l);box-shadow:0 0 0 3px rgba(156,107,60,.1)}
+
+/* Header */
+.app-header{background:rgba(255,255,255,.88);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100}
+.header-inner{max-width:1280px;margin:0 auto;padding:0 1rem;display:flex;align-items:center;height:56px;gap:1rem}
+.logo{display:flex;align-items:center;gap:.5rem;font-size:1.125rem;font-weight:600;white-space:nowrap;color:var(--text);letter-spacing:-.02em}
+.logo svg{width:24px;height:24px;flex-shrink:0}
+.nav-tabs{display:flex;gap:.25rem;overflow-x:auto;scrollbar-width:none;-ms-overflow-style:none;flex:1;justify-content:center}
+.nav-tabs::-webkit-scrollbar{display:none}
+.nav-tab{padding:.5rem .875rem;border-radius:var(--radius-sm);font-size:.8125rem;white-space:nowrap;transition:all .2s var(--transition-ease);color:var(--text-l);min-height:44px;display:flex;align-items:center;gap:.375rem}
+.nav-tab:hover{background:var(--p-bg);color:var(--text)}
+.nav-tab.active{background:var(--p);color:#fff;font-weight:500}
+.nav-tab svg{width:18px;height:18px;flex-shrink:0}
+.header-right{display:flex;align-items:center;gap:.75rem;white-space:nowrap;font-size:.8125rem}
+.user-info{display:flex;align-items:center;gap:.5rem;font-size:.8125rem}
+.credits-badge{background:var(--p-bg);padding:.15rem .5rem;border-radius:20px;font-size:.75rem;color:var(--p-d)}
+.credits-badge svg{width:14px;height:14px;vertical-align:-2px;margin-right:2px}
+.login-btn{background:var(--p);color:#fff;padding:.4rem 1.125rem;border-radius:20px;font-size:.8125rem;transition:all .2s;min-height:36px}
+.login-btn:hover{background:var(--p-d)}
+
+/* Main */
+.main-content{max-width:1280px;margin:0 auto;padding:1.5rem 1rem 3rem;position:relative;z-index:1}
+.tab-panel{display:none;animation:tabEnter .35s var(--transition-ease)}
+.tab-panel.active{display:block}
+.tab-panel.exit-left{animation:tabExitL .25s var(--transition-ease) forwards}
+.tab-panel.exit-right{animation:tabExitR .25s var(--transition-ease) forwards}
+@keyframes tabEnter{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+@keyframes tabExitL{from{opacity:1;transform:translateX(0)}to{opacity:0;transform:translateX(-20px)}}
+@keyframes tabExitR{from{opacity:1;transform:translateX(0)}to{opacity:0;transform:translateX(20px)}}
+
+/* Cards */
+.card{background:var(--card);border-radius:var(--radius);border:1px solid var(--border-l);transition:all .25s var(--transition-ease);overflow:hidden}
+.card:hover{border-color:var(--border);box-shadow:var(--shadow-md)}
+.card-body{padding:1.25rem}
+
+/* Buttons */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:.375rem;padding:.625rem 1.5rem;border-radius:var(--radius-sm);font-size:.875rem;font-weight:500;transition:all .2s var(--transition-ease);min-height:44px}
+.btn-primary{background:var(--p);color:#fff}
+.btn-primary:hover{background:var(--p-d)}
+.btn-primary:disabled{opacity:.5;cursor:not-allowed}
+.btn-accent{background:var(--p-l);color:#fff}
+.btn-accent:hover{background:var(--p)}
+.btn-outline{border:1px solid var(--border);color:var(--text);background:var(--card)}
+.btn-outline:hover{border-color:var(--p);color:var(--p)}
+.btn-danger{background:var(--danger);color:#fff}
+.btn-sm{padding:.375rem .875rem;font-size:.8125rem;min-height:36px}
+
+/* Tags */
+.tag{display:inline-flex;align-items:center;padding:.125rem .5rem;border-radius:20px;font-size:.75rem;font-weight:500;gap:.25rem}
+.tag-blue{background:#E8E0F0;color:#5B4A6A}
+.tag-green{background:#E8F0E4;color:#4A5A3C}
+.tag-red{background:#F5E4DE;color:#8B4A38}
+.tag-yellow{background:#F5EDDE;color:#8B6A30}
+.tag-purple{background:#EDE4F2;color:#6A4A7A}
+.tag-gray{background:var(--p-bg);color:var(--text-l)}
+
+/* Platform badges */
+.platform-badge{display:inline-flex;align-items:center;padding:.125rem .5rem;border-radius:20px;font-size:.7rem;font-weight:500}
+.p-51job{background:rgba(107,142,78,.12);color:var(--c-51job)}
+.p-liepin{background:rgba(196,102,74,.12);color:var(--c-liepin)}
+.p-shixiseng{background:rgba(139,107,138,.12);color:var(--c-shixiseng)}
+.p-zhonggong{background:rgba(90,122,106,.12);color:var(--c-zhonggong)}
+
+/* Section titles */
+.section-title{font-size:1.125rem;font-weight:600;margin-bottom:1rem;display:flex;align-items:center;gap:.5rem;color:var(--text)}
+.section-title svg{width:20px;height:20px;flex-shrink:0;color:var(--p)}
+
+/* ============= TAB 0: Hot Jobs ============= */
+.hot-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1rem}
+.hot-card{cursor:pointer;position:relative}
+.hot-card .card-body{padding:1rem}
+.hot-card .job-title{font-size:.9375rem;font-weight:600;margin-bottom:.5rem;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;line-height:1.4}
+.hot-card .company{font-size:.8125rem;color:var(--text-l);margin-bottom:.5rem}
+.hot-card .salary{font-size:1rem;font-weight:600;color:var(--p-d);margin-bottom:.5rem}
+.hot-card .meta{display:flex;flex-wrap:wrap;gap:.375rem;margin-bottom:.5rem}
+.hot-card .meta-item{font-size:.75rem;color:var(--text-ll);display:flex;align-items:center;gap:.25rem}
+.hot-card .meta-item svg{width:14px;height:14px;flex-shrink:0}
+.hot-rank{position:absolute;top:0;left:0;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:700;color:#fff;border-radius:0 0 8px 0}
+.hot-rank.r1{background:var(--p-d)}
+.hot-rank.r2{background:var(--p-l)}
+.hot-rank.r3{background:var(--accent)}
+.hot-rank.rn{background:var(--text-ll)}
+.hot-tabs{display:flex;gap:.5rem;margin-bottom:1.25rem}
+.hot-tab{padding:.375rem 1rem;border-radius:20px;font-size:.875rem;background:var(--card);border:1px solid var(--border);transition:all .2s}
+.hot-tab:hover{border-color:var(--p);color:var(--p)}
+.hot-tab.active{background:var(--p);color:#fff;border-color:var(--p)}
+
+/* ============= TAB 1: Job Listings ============= */
+.sub-tabs{display:flex;gap:.5rem;margin-bottom:1.25rem}
+.sub-tab{padding:.5rem 1.25rem;border-radius:var(--radius-sm);font-size:.875rem;background:var(--card);border:1px solid var(--border);transition:all .2s;min-height:40px}
+.sub-tab:hover{border-color:var(--p);color:var(--p)}
+.sub-tab.active{background:var(--p);color:#fff;border-color:var(--p)}
+.stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:.75rem;margin-bottom:1.25rem}
+.stat-card{background:var(--card);border-radius:var(--radius-sm);padding:1rem;text-align:center;border:1px solid var(--border-l)}
+.stat-card .stat-num{font-size:1.5rem;font-weight:600;color:var(--p)}
+.stat-card .stat-label{font-size:.75rem;color:var(--text-l);margin-top:.25rem}
+.filter-bar{background:var(--card);border-radius:var(--radius);padding:1rem;margin-bottom:1.25rem;border:1px solid var(--border-l);display:flex;flex-wrap:wrap;gap:.75rem;align-items:center}
+.filter-bar input,.filter-bar select{min-width:0;flex:1;min-width:120px}
+.job-list{display:flex;flex-direction:column;gap:.75rem}
+.job-card{display:flex;flex-direction:column;padding:1rem 1.25rem;background:var(--card);border-radius:var(--radius);border:1px solid var(--border-l);transition:all .2s var(--transition-ease);cursor:pointer}
+.job-card:hover{border-color:var(--p-l);box-shadow:var(--shadow-md)}
+.job-card.expanded{border-color:var(--p);box-shadow:0 2px 12px rgba(156,107,60,.1)}
+.job-card .jc-row{display:flex;flex-wrap:wrap;align-items:center;gap:1rem;width:100%}
+.job-card .jc-main{flex:1;min-width:0}
+.job-card .jc-title{font-size:.9375rem;font-weight:600;margin-bottom:.25rem}
+.job-card .jc-company{font-size:.8125rem;color:var(--text-l)}
+.job-card .jc-salary{font-size:1rem;font-weight:600;color:var(--p-d);white-space:nowrap}
+.job-card .jc-meta{display:flex;flex-wrap:wrap;gap:.375rem;margin-top:.375rem;align-items:center}
+.job-card .jc-chevron{color:var(--text-ll);transition:transform .3s var(--transition-ease);flex-shrink:0}
+.job-card .jc-chevron.open{transform:rotate(180deg)}
+.job-card .jc-detail{margin-top:.75rem;padding-top:.875rem;border-top:1px dashed var(--border);animation:cardExpandIn .3s var(--transition-ease)}
+@keyframes cardExpandIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
+.jc-detail .jd-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:.625rem;margin-bottom:.75rem}
+.jc-detail .jd-item{display:flex;flex-direction:column;gap:.125rem}
+.jc-detail .jd-label{font-size:.75rem;color:var(--text-ll);font-weight:500}
+.jc-detail .jd-value{font-size:.875rem;color:var(--text);font-weight:500}
+.jc-detail .jd-salary{color:var(--p-d);font-weight:600}
+.jc-detail .jd-desc{font-size:.8125rem;color:var(--text-l);line-height:1.7;margin-bottom:.75rem;padding:.625rem .75rem;background:var(--p-bg-l);border-radius:var(--radius-xs);border-left:3px solid var(--p-l)}
+.jc-detail .jd-actions{display:flex;align-items:center;gap:.75rem}
+.jc-detail .jd-link-btn{display:inline-flex;align-items:center;gap:.375rem;padding:.5rem 1rem;background:var(--p);color:#fff;border-radius:var(--radius-xs);font-size:.8125rem;font-weight:600;transition:all .2s}
+.jc-detail .jd-link-btn:hover{background:var(--p-d);transform:translateY(-1px);box-shadow:0 2px 8px rgba(156,107,60,.25)}
+.jc-detail .jd-no-url{font-size:.8125rem;color:var(--text-ll);font-style:italic}
+
+/* Hot card expand */
+.hot-card.expanded{border-color:var(--p);box-shadow:0 2px 12px rgba(156,107,60,.1)}
+.hot-detail{margin-top:.625rem;padding-top:.625rem;border-top:1px dashed var(--border);animation:cardExpandIn .3s var(--transition-ease)}
+.hot-detail .hd-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:.5rem;margin-bottom:.625rem}
+.hot-detail .hd-item{display:flex;flex-direction:column;gap:.125rem}
+.hot-detail .hd-label{font-size:.7rem;color:var(--text-ll);font-weight:500}
+.hot-detail .hd-value{font-size:.8125rem;color:var(--text);font-weight:500}
+.hot-detail .hd-salary{color:var(--p-d);font-weight:600}
+.hot-detail .hd-actions{display:flex;align-items:center}
+.hot-detail .hd-link-btn{display:inline-flex;align-items:center;gap:.375rem;padding:.4rem .875rem;background:var(--p);color:#fff;border-radius:var(--radius-xs);font-size:.75rem;font-weight:600;transition:all .2s}
+.hot-detail .hd-link-btn:hover{background:var(--p-d);transform:translateY(-1px);box-shadow:0 2px 8px rgba(156,107,60,.25)}
+.hot-detail .hd-no-url{font-size:.75rem;color:var(--text-ll);font-style:italic}
+
+/* Vue transition for card expand */
+.card-expand-enter-active,.card-expand-leave-active{transition:all .3s var(--transition-ease);overflow:hidden}
+.card-expand-enter-from,.card-expand-leave-to{opacity:0;max-height:0;margin-top:0;padding-top:0;border-top-color:transparent}
+.card-expand-enter-to,.card-expand-leave-from{opacity:1;max-height:500px}
+.salary-bar{height:4px;border-radius:2px;background:var(--border-l);min-width:60px;max-width:100px;margin-top:.25rem;overflow:hidden}
+.salary-bar-inner{height:100%;border-radius:2px;background:var(--p)}
+.pagination{display:flex;justify-content:center;gap:.25rem;margin-top:1.5rem;flex-wrap:wrap}
+.page-btn{width:40px;height:40px;display:flex;align-items:center;justify-content:center;border-radius:var(--radius-xs);background:var(--card);border:1px solid var(--border);font-size:.875rem;transition:all .2s;color:var(--text-l)}
+.page-btn:hover{border-color:var(--p);color:var(--p)}
+.page-btn.active{background:var(--p);color:#fff;border-color:var(--p)}
+.page-btn:disabled{opacity:.4;cursor:not-allowed}
+
+/* ============= TAB 2: Resume Matching ============= */
+.ai-section{display:grid;grid-template-columns:1fr;gap:1.5rem}
+@media(min-width:768px){.ai-section{grid-template-columns:1fr 1fr}}
+.upload-zone{border:2px dashed var(--border);border-radius:var(--radius);padding:2.5rem 1.5rem;text-align:center;cursor:pointer;transition:all .2s;background:var(--card);position:relative}
+.upload-zone:hover,.upload-zone.dragover{border-color:var(--p);background:var(--p-bg-l)}
+.upload-zone .uz-icon{margin-bottom:.75rem;color:var(--text-ll)}
+.upload-zone .uz-icon svg{width:40px;height:40px}
+.upload-zone .uz-text{font-size:.9375rem;color:var(--text-l)}
+.upload-zone .uz-hint{font-size:.75rem;color:var(--text-ll);margin-top:.5rem}
+.upload-zone input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer}
+.pref-form{display:flex;flex-direction:column;gap:1rem}
+.pref-form label{font-size:.875rem;font-weight:500;margin-bottom:.25rem;display:block;color:var(--text)}
+.tag-input-wrap{display:flex;flex-wrap:wrap;gap:.375rem;padding:.5rem;border:1px solid var(--border);border-radius:var(--radius-xs);min-height:44px;align-items:center;background:#fff}
+.tag-input-wrap:focus-within{border-color:var(--p-l);box-shadow:0 0 0 3px rgba(156,107,60,.1)}
+.tag-input-wrap .tag-item{display:inline-flex;align-items:center;gap:.25rem;padding:.125rem .5rem;background:var(--p-bg);color:var(--p-d);border-radius:20px;font-size:.75rem}
+.tag-input-wrap .tag-item button{font-size:.75rem;color:var(--p-d);font-weight:700;min-height:auto;padding:0;width:16px;height:16px;display:flex;align-items:center;justify-content:center}
+.tag-input-wrap input{border:none;padding:0;flex:1;min-width:60px;outline:none;box-shadow:none;background:transparent}
+.range-row{display:flex;gap:.75rem;align-items:center}
+.range-row input{width:100%}
+.range-row span{color:var(--text-ll);white-space:nowrap}
+.type-toggle{display:flex;gap:0;border:1px solid var(--border);border-radius:var(--radius-xs);overflow:hidden}
+.type-toggle button{flex:1;padding:.5rem 1rem;font-size:.8125rem;text-align:center;transition:all .2s;background:var(--card);color:var(--text-l);min-height:40px}
+.type-toggle button.active{background:var(--p);color:#fff}
+.resume-preview{background:var(--card);border-radius:var(--radius);padding:1.25rem;border:1px solid var(--border-l);margin-top:1rem}
+.resume-preview h4{font-size:.875rem;font-weight:600;margin-bottom:.75rem;color:var(--p)}
+.resume-preview .rp-field{margin-bottom:.5rem;font-size:.8125rem}
+.resume-preview .rp-label{color:var(--text-ll);margin-right:.5rem}
+.match-results{margin-top:1.5rem}
+.match-card{background:var(--card);border-radius:var(--radius);border:1px solid var(--border-l);padding:1.25rem;margin-bottom:1rem;transition:all .2s;position:relative}
+.match-card:hover{border-color:var(--p-l);box-shadow:var(--shadow-md)}
+.match-header{display:flex;align-items:flex-start;gap:1rem;margin-bottom:.75rem}
+.score-ring{width:56px;height:56px;flex-shrink:0}
+.score-ring svg{width:100%;height:100%;transform:rotate(-90deg)}
+.score-ring .ring-bg{fill:none;stroke:var(--border);stroke-width:5}
+.score-ring .ring-fg{fill:none;stroke-width:5;stroke-linecap:round;transition:stroke-dashoffset .6s ease}
+.score-ring .ring-text{font-size:.75rem;font-weight:700;fill:var(--text);text-anchor:middle;dominant-baseline:central}
+.match-title{font-size:.9375rem;font-weight:600}
+.match-company{font-size:.8125rem;color:var(--text-l);margin-top:.125rem}
+.match-salary{font-size:.875rem;font-weight:600;color:var(--p-d);margin-top:.25rem}
+.admit-badge{display:inline-flex;align-items:center;padding:.125rem .625rem;border-radius:20px;font-size:.7rem;font-weight:500;margin-top:.375rem}
+.admit-high{background:#E8F0E4;color:#4A5A3C}
+.admit-mid{background:#F5EDDE;color:#8B6A30}
+.admit-low{background:#F5E4DE;color:#8B4A38}
+.match-reason{font-size:.8125rem;color:var(--text-l);margin-top:.75rem;padding-top:.75rem;border-top:1px solid var(--border-l)}
+.match-tags{display:flex;flex-wrap:wrap;gap:.375rem;margin-top:.5rem}
+.suggestions-section{margin-top:.5rem}
+.suggestions-section h5{font-size:.8125rem;font-weight:600;margin-bottom:.375rem}
+.suggestions-section p{font-size:.8125rem;color:var(--text-l);line-height:1.5}
+
+/* ============= TAB 3: Resume Analysis ============= */
+.analysis-upload{max-width:500px;margin:0 auto 2rem}
+.overall-score-wrap{display:flex;flex-direction:column;align-items:center;margin-bottom:2rem}
+.big-score-ring{width:140px;height:140px;margin-bottom:1rem}
+.big-score-ring svg{width:100%;height:100%;transform:rotate(-90deg)}
+.big-score-ring .ring-bg{fill:none;stroke:var(--border);stroke-width:10}
+.big-score-ring .ring-fg{fill:none;stroke-width:10;stroke-linecap:round;transition:stroke-dashoffset .8s ease}
+.big-score-ring .ring-text{font-size:2rem;font-weight:700;fill:var(--text);text-anchor:middle;dominant-baseline:central}
+.big-score-ring .ring-sub{font-size:.6rem;fill:var(--text-ll);text-anchor:middle}
+.analysis-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:1.25rem}
+.analysis-block{background:var(--card);border-radius:var(--radius);padding:1.25rem;border:1px solid var(--border-l)}
+.analysis-block h4{font-size:.9375rem;font-weight:600;margin-bottom:.75rem;display:flex;align-items:center;gap:.5rem;color:var(--text)}
+.analysis-block h4 svg{width:18px;height:18px;flex-shrink:0}
+.keyword-section{margin-bottom:.75rem}
+.keyword-section h5{font-size:.8125rem;font-weight:600;margin-bottom:.375rem;color:var(--text)}
+.keyword-tags{display:flex;flex-wrap:wrap;gap:.375rem}
+.industry-table{width:100%;border-collapse:collapse;font-size:.8125rem}
+.industry-table th,.industry-table td{padding:.5rem .75rem;text-align:left;border-bottom:1px solid var(--border-l)}
+.industry-table th{font-weight:600;color:var(--text-l);font-size:.75rem}
+.market-text{font-size:.875rem;color:var(--text-l);line-height:1.7}
+
+/* ============= TAB 4: Credits ============= */
+.credits-center{max-width:560px;margin:0 auto}
+.balance-card{background:var(--p);border-radius:var(--radius);padding:2rem;color:#fff;text-align:center;margin-bottom:2rem}
+.balance-card .bc-num{font-size:3rem;font-weight:700}
+.balance-card .bc-label{font-size:.875rem;opacity:.85;margin-top:.25rem}
+.cdk-form{display:flex;gap:.75rem;margin-bottom:2rem}
+.cdk-form input{flex:1;height:48px;font-size:1rem;letter-spacing:.05em}
+.cdk-form button{white-space:nowrap}
+.history-list{list-style:none}
+.history-item{display:flex;justify-content:space-between;align-items:center;padding:.875rem 0;border-bottom:1px solid var(--border-l);font-size:.875rem}
+.history-item:last-child{border-bottom:none}
+.pricing-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:.75rem;margin-top:1.5rem}
+.pricing-card{background:var(--card);border-radius:var(--radius-sm);padding:1.25rem;border:1px solid var(--border-l);text-align:center;transition:all .2s}
+.pricing-card:hover{border-color:var(--p-l)}
+.pricing-card .pc-icon{margin-bottom:.5rem;color:var(--p)}
+.pricing-card .pc-icon svg{width:24px;height:24px}
+.pricing-card .pc-name{font-size:.875rem;font-weight:500;margin-bottom:.25rem}
+.pricing-card .pc-price{font-size:1.125rem;font-weight:600;color:var(--p-d)}
+
+/* ============= Login Modal ============= */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:200;display:flex;align-items:center;justify-content:center;padding:1rem;animation:fadeIn .2s}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.modal-box{background:var(--card);border-radius:var(--radius);width:100%;max-width:400px;padding:2rem;animation:scaleIn .25s var(--transition-ease)}
+@keyframes scaleIn{from{opacity:0;transform:scale(.95)}to{opacity:1;transform:scale(1)}}
+.modal-box h2{font-size:1.25rem;font-weight:600;text-align:center;margin-bottom:1.5rem}
+.modal-tabs{display:flex;gap:0;margin-bottom:1.5rem;border:1px solid var(--border);border-radius:var(--radius-xs);overflow:hidden}
+.modal-tabs button{flex:1;padding:.5rem;text-align:center;font-size:.875rem;transition:all .2s;background:var(--card);color:var(--text-l)}
+.modal-tabs button.active{background:var(--p);color:#fff}
+.form-group{margin-bottom:1rem}
+.form-group label{font-size:.8125rem;font-weight:500;display:block;margin-bottom:.25rem;color:var(--text-l)}
+.form-group input{width:100%;height:44px}
+.modal-box .btn{width:100%;margin-top:.5rem}
+.modal-close{position:absolute;top:1rem;right:1rem;font-size:1.25rem;color:var(--text-ll);width:32px;height:32px;display:flex;align-items:center;justify-content:center;border-radius:50%;transition:all .2s}
+.modal-close:hover{background:var(--p-bg);color:var(--text)}
+
+/* Toast */
+.toast{position:fixed;top:70px;right:1rem;z-index:300;padding:.75rem 1.25rem;border-radius:var(--radius-sm);font-size:.875rem;color:#fff;animation:slideIn .3s var(--transition-ease);max-width:360px}
+.toast-success{background:var(--success)}
+.toast-error{background:var(--danger)}
+.toast-warning{background:var(--warning)}
+@keyframes slideIn{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:translateX(0)}}
+
+/* Loading */
+.loading-wrap{display:flex;align-items:center;justify-content:center;padding:3rem;flex-direction:column;gap:.75rem}
+.spinner{width:36px;height:36px;border:3px solid var(--border);border-top-color:var(--p);border-radius:50%;animation:spin .6s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-wrap p{font-size:.875rem;color:var(--text-l)}
+
+/* Empty state */
+.empty-state{text-align:center;padding:3rem 1rem;color:var(--text-ll)}
+.empty-state .es-icon{margin-bottom:.75rem}
+.empty-state .es-icon svg{width:48px;height:48px}
+.empty-state p{font-size:.875rem}
+
+/* VIP */
+.vip-center{max-width:800px;margin:0 auto}
+.vip-status-card{display:flex;align-items:center;gap:1rem;padding:1.25rem;background:var(--card);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:1.25rem}
+.vip-status-card .vsc-icon{flex-shrink:0;width:40px;height:40px;display:flex;align-items:center;justify-content:center;color:var(--text-ll)}
+.vip-status-card.active .vsc-icon{color:var(--warning)}
+.vsc-body{flex:1;min-width:0}
+.vsc-title{font-size:.95rem;font-weight:600;color:var(--text)}
+.vip-status-card.active .vsc-title{color:var(--warning)}
+.vsc-sub{font-size:.8rem;color:var(--text-l);margin-top:2px}
+.vip-features{margin-bottom:1.5rem}
+.vf-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:.75rem;margin-top:.75rem}
+.vf-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:1rem;text-align:center;transition:border-color .2s}
+.vf-card:hover{border-color:var(--p-l)}
+.vfc-icon{width:32px;height:32px;margin:0 auto .5rem;display:flex;align-items:center;justify-content:center;color:var(--p)}
+.vfc-icon svg{width:20px;height:20px}
+.vfc-title{font-size:.85rem;font-weight:600;color:var(--text);margin-bottom:.25rem}
+.vfc-desc{font-size:.78rem;color:var(--text-l);line-height:1.4}
+.vip-section{margin-bottom:1.5rem}
+.vip-analysis{display:flex;gap:1.5rem;align-items:flex-start;background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:1.25rem}
+.va-score{font-size:2.5rem;font-weight:600;color:var(--p);flex-shrink:0;min-width:80px;text-align:center}
+.va-score span{font-size:1rem;color:var(--text-l)}
+.va-sections{flex:1}
+.va-sec{margin-bottom:.75rem}
+.va-sec strong{display:block;font-size:.83rem;color:var(--text);margin-bottom:.25rem}
+.va-sec ul{list-style:disc;padding-left:1.25rem;font-size:.8rem;color:var(--text-l)}
+.va-sec li{margin-bottom:2px}
+.vip-match-list{display:flex;flex-direction:column;gap:.5rem}
+.vip-match-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:.75rem 1rem;transition:border-color .2s}
+.vip-match-card.high{border-left:3px solid var(--warning)}
+.vmc-header{display:flex;align-items:center;gap:.5rem;margin-bottom:.25rem}
+.vmc-score{font-size:.85rem;font-weight:700;color:var(--p);min-width:44px}
+.vip-match-card.high .vmc-score{color:var(--warning)}
+.vmc-title{font-size:.85rem;font-weight:600;color:var(--text)}
+.vmc-meta{font-size:.75rem;color:var(--text-l)}
+.vmc-reason{font-size:.75rem;color:var(--text-ll);margin-top:.25rem}
+.vmc-link-bar{margin-top:.5rem}
+.notify-list{display:flex;flex-direction:column;gap:.4rem}
+.notify-item{display:flex;align-items:center;gap:.75rem;padding:.5rem .75rem;background:var(--p-bg-l);border-radius:var(--radius-xs);font-size:.8rem}
+.ni-time{color:var(--text-ll);flex-shrink:0}
+.ni-msg{color:var(--text);flex:1}
+.ni-link{font-size:.78rem;color:var(--p);white-space:nowrap}
+
+/* VIP 权益介绍 */
+.vip-benefits-intro{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:1.25rem;margin-bottom:1.25rem}
+.vip-benefits-intro .vbi-header{display:flex;align-items:center;gap:.5rem;margin-bottom:1rem}
+.vip-benefits-intro .vbi-header svg{color:var(--warning);flex-shrink:0}
+.vip-benefits-intro .vbi-title{font-size:.92rem;font-weight:600;color:var(--text)}
+.vip-benefits-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:.6rem}
+.benefit-item{text-align:center;padding:.75rem .5rem;border-radius:var(--radius-xs);background:var(--p-bg-l);transition:background .2s}
+.benefit-item:hover{background:#f5ede1}
+.benefit-item .bi-icon{width:28px;height:28px;margin:0 auto .4rem;color:var(--p)}
+.benefit-item .bi-title{font-size:.78rem;font-weight:600;color:var(--text);margin-bottom:.15rem}
+.benefit-item .bi-desc{font-size:.7rem;color:var(--text-l);line-height:1.35}
+
+/* 邮件配置区 */
+.vip-email-section{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:1.25rem;margin-bottom:1.25rem}
+.vip-email-section .ves-header{display:flex;align-items:center;gap:.5rem;margin-bottom:.75rem}
+.vip-email-section .ves-header svg{color:var(--p);flex-shrink:0}
+.vip-email-section .ves-title{font-size:.92rem;font-weight:600;color:var(--text)}
+.vip-email-section .ves-desc{font-size:.78rem;color:var(--text-l);margin-bottom:.75rem;line-height:1.4}
+.ves-row{display:flex;gap:.5rem;align-items:center}
+.ves-row input{flex:1;padding:.45rem .65rem;border:1px solid var(--border);border-radius:var(--radius-xs);font-size:.8rem;background:var(--p-bg-l);color:var(--text);outline:none;transition:border-color .2s}
+.ves-row input:focus{border-color:var(--p)}
+.ves-row .btn{flex-shrink:0}
+.ves-row .ve-hint{font-size:.7rem;color:var(--text-ll);margin-top:.35rem}
+
+/* 模拟邮件预览 */
+.mock-email-preview{margin-top:.75rem;border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;background:#fff}
+.mock-email-preview .mep-bar{display:flex;align-items:center;justify-content:space-between;padding:.45rem .75rem;background:var(--p-bg-l);border-bottom:1px solid var(--border);font-size:.72rem;color:var(--text-l)}
+.mock-email-preview .mep-bar .mep-dot{display:flex;gap:4px}
+.mock-email-preview .mep-bar .mep-dot span{width:8px;height:8px;border-radius:50%;background:var(--border)}
+.mock-email-preview .mep-bar .mep-dot span:first-child{background:#e74c3c}
+.mock-email-preview .mep-bar .mep-dot span:nth-child(2){background:#f39c12}
+.mock-email-preview .mep-bar .mep-dot span:last-child{background:#2ecc71}
+.mock-email-body{padding:1rem 1.25rem}
+.mock-email-body .meb-from{font-size:.72rem;color:var(--text-l);margin-bottom:.15rem}
+.mock-email-body .meb-subject{font-size:.82rem;font-weight:600;color:var(--text);margin-bottom:.6rem;padding-bottom:.6rem;border-bottom:1px dashed var(--border)}
+.mock-email-body .meb-greeting{font-size:.78rem;color:var(--text);margin-bottom:.5rem}
+.mock-email-body .meb-content{font-size:.76rem;color:var(--text-l);line-height:1.55;margin-bottom:.6rem}
+.mock-email-body .meb-job{display:flex;align-items:center;gap:.5rem;padding:.4rem .6rem;margin-bottom:.3rem;background:var(--p-bg-l);border-radius:var(--radius-xs);font-size:.76rem}
+.mock-email-body .meb-job .meb-score{font-weight:700;color:var(--warning);flex-shrink:0;font-size:.85rem}
+.mock-email-body .meb-job .meb-jtitle{color:var(--text);flex:1}
+.mock-email-body .meb-job .meb-jsalary{color:var(--text-l);flex-shrink:0;font-size:.72rem}
+.mock-email-body .meb-cta{display:inline-block;margin-top:.5rem;padding:.4rem .9rem;background:var(--p);color:#fff;border-radius:var(--radius-xs);font-size:.76rem;text-decoration:none}
+.mock-email-body .meb-footer{font-size:.7rem;color:var(--text-ll);margin-top:.75rem;padding-top:.5rem;border-top:1px solid var(--border)}
+
+/* Responsive */
+@media(max-width:640px){
+  .vip-benefits-grid{grid-template-columns:repeat(2,1fr)}
+  .ves-row{flex-direction:column;align-items:stretch}}
+@media(max-width:640px){
+  .header-inner{gap:.5rem}
+  .logo span{display:none}
+  .nav-tab{padding:.375rem .5rem;font-size:.75rem}
+  .nav-tab .tab-text{display:none}
+  .main-content{padding:1rem .75rem 2rem}
+  .stats-row{grid-template-columns:repeat(2,1fr)}
+  .filter-bar{flex-direction:column}
+  .job-card .jc-row{flex-direction:column;align-items:flex-start;gap:.5rem}
+  .job-card .jc-salary{font-size:.875rem}
+  .jc-detail .jd-grid{grid-template-columns:repeat(2,1fr)}
+  .cdk-form{flex-direction:column}
+  .balance-card .bc-num{font-size:2rem}
+  .vf-grid{grid-template-columns:repeat(1,1fr)}
+  .vip-analysis{flex-direction:column}
+}
+</style>
+</head>
+<body>
+<div id="app">
+  <!-- Toast -->
+  <div v-if="toast.show" :class="['toast','toast-'+toast.type]">{{ toast.msg }}</div>
+
+  <!-- Header -->
+  <header class="app-header">
+    <div class="header-inner">
+      <div class="logo">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="2" y="3" width="8" height="8" rx="1.5"/><rect x="14" y="3" width="8" height="8" rx="1.5"/>
+          <rect x="2" y="13" width="8" height="8" rx="1.5"/><rect x="14" y="13" width="8" height="8" rx="1.5"/>
+        </svg>
+        <span>就业服务平台</span>
+      </div>
+      <nav class="nav-tabs">
+        <button v-for="(t,i) in tabs" :key="i"
+          :class="['nav-tab',{active:activeTab===i}]"
+          @click="switchTab(i)">
+          <span v-html="t.icon"></span><span class="tab-text">{{ t.label }}</span>
+        </button>
+      </nav>
+      <div class="header-right">
+        <template v-if="user">
+          <div class="user-info">
+            <span>{{ user.username }}</span>
+            <span class="credits-badge">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+              {{ user.credits }}
+            </span>
+          </div>
+          <button class="btn-sm btn-outline" @click="logout">退出</button>
+        </template>
+        <template v-else>
+          <button class="login-btn" @click="showAuthModal=true">登录 / 注册</button>
+        </template>
+      </div>
+    </div>
+  </header>
+
+  <!-- Auth Modal -->
+  <div class="modal-overlay" v-if="showAuthModal" @click.self="showAuthModal=false" style="position:fixed">
+    <div class="modal-box" style="position:relative">
+      <button class="modal-close" @click="showAuthModal=false">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+      <h2>{{ authMode==='login'?'欢迎回来':'创建账户' }}</h2>
+      <div class="modal-tabs">
+        <button :class="{active:authMode==='login'}" @click="authMode='login'">登录</button>
+        <button :class="{active:authMode==='register'}" @click="authMode='register'">注册</button>
+      </div>
+      <div class="form-group">
+        <label>用户名</label>
+        <input v-model="authForm.username" placeholder="请输入用户名" @keyup.enter="authMode==='login'?doLogin():doRegister()">
+      </div>
+      <div class="form-group">
+        <label>密码</label>
+        <input type="password" v-model="authForm.password" placeholder="请输入密码" @keyup.enter="authMode==='login'?doLogin():doRegister()">
+      </div>
+      <button v-if="authMode==='login'" class="btn btn-primary" @click="doLogin" :disabled="authLoading">
+        {{ authLoading?'登录中...':'登 录' }}
+      </button>
+      <button v-else class="btn btn-primary" @click="doRegister" :disabled="authLoading">
+        {{ authLoading?'注册中...':'注 册' }}
+      </button>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <main class="main-content">
+
+    <!-- ===== TAB 0: Hot Jobs ===== -->
+    <div :class="['tab-panel',{active:activeTab===0}]">
+      <div class="hot-tabs">
+        <button :class="['hot-tab',{active:hotType==='social'}]" @click="hotType='social'">社招热力</button>
+        <button :class="['hot-tab',{active:hotType==='gk'}]" @click="hotType='gk'">公考热力</button>
+      </div>
+      <div v-if="hotLoading" class="loading-wrap"><div class="spinner"></div><p>加载热力数据...</p></div>
+      <div v-else-if="hotJobs.length" class="hot-grid">
+        <div v-for="(job,idx) in hotJobs" :key="job.id||idx" :class="['card hot-card',{expanded:isHotExpanded(job)}]" @click="clickHotJob(job)">
+          <div v-if="idx<3" :class="['hot-rank','r'+(idx+1)]">{{ idx+1 }}</div>
+          <div v-else :class="['hot-rank','rn']">{{ idx+1 }}</div>
+          <div class="card-body">
+            <div class="job-title">{{ job.title }}</div>
+            <div class="company">{{ job.company }}</div>
+            <div class="salary">{{ displaySalary(job) }}</div>
+            <div class="meta">
+              <span class="meta-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="10" r="3"/><path d="M12 21.7C17.3 17 20 13 20 10a8 8 0 10-16 0c0 3 2.7 7 8 11.7z"/></svg>{{ job.city||job.location||'不限' }}</span>
+              <span class="meta-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c0 2 3 3 6 3s6-1 6-3v-5"/></svg>{{ job.education||'不限' }}</span>
+              <span v-if="job.click_count" class="meta-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>{{ job.click_count }}次点击</span>
+            </div>
+            <span :class="['platform-badge',platformClass(job.platform)]">{{ job.platform }}</span>
+          </div>
+          <transition name="card-expand">
+            <div v-if="isHotExpanded(job)" class="hot-detail" @click.stop>
+              <div class="hd-grid">
+                <div class="hd-item"><span class="hd-label">薪资</span><span class="hd-value hd-salary">{{ displaySalary(job) }}</span></div>
+                <div class="hd-item"><span class="hd-label">地点</span><span class="hd-value">{{ job.city||job.location||'不限' }}</span></div>
+                <div class="hd-item"><span class="hd-label">学历</span><span class="hd-value">{{ job.education||'不限' }}</span></div>
+                <div class="hd-item"><span class="hd-label">平台</span><span class="hd-value">{{ job.platform||'—' }}</span></div>
+              </div>
+              <div class="hd-actions">
+                <a v-if="job.link" :href="job.link" rel="noopener" class="hd-link-btn" @click.stop>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                  查看招聘原网址
+                </a>
+                <span v-else class="hd-no-url">暂无原网址</span>
+              </div>
+            </div>
+          </transition>
+        </div>
+      </div>
+      <div v-else class="empty-state"><div class="es-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg></div><p>暂无热力数据</p></div>
+    </div>
+
+    <!-- ===== TAB 1: Job Listings ===== -->
+    <div :class="['tab-panel',{active:activeTab===1}]">
+      <div class="sub-tabs">
+        <button :class="['sub-tab',{active:jobType==='社招'}]" @click="jobType='社招';loadJobs()">社招</button>
+        <button :class="['sub-tab',{active:jobType==='公考'}]" @click="jobType='公考';loadJobs()">公考</button>
+      </div>
+      <div class="stats-row">
+        <div class="stat-card"><div class="stat-num">{{ stats.totalJobs||0 }}</div><div class="stat-label">岗位总数</div></div>
+        <div class="stat-card"><div class="stat-num">{{ stats.cities||0 }}</div><div class="stat-label">覆盖城市</div></div>
+        <div class="stat-card"><div class="stat-num">{{ stats.platforms||0 }}</div><div class="stat-label">招聘平台</div></div>
+        <div class="stat-card"><div class="stat-num">{{ stats.lastUpdated||'-' }}</div><div class="stat-label">最近更新</div></div>
+      </div>
+      <div class="filter-bar">
+        <input v-model="jobFilter.keyword" placeholder="搜索岗位/公司" @keyup.enter="loadJobs()">
+        <select v-model="jobFilter.city">
+          <option value="">全部城市</option>
+          <option v-for="c in cityOptions" :key="c" :value="c">{{ c }}</option>
+        </select>
+        <div class="range-row">
+          <input v-model.number="jobFilter.salaryMin" type="number" placeholder="最低薪资" min="0">
+          <span>—</span>
+          <input v-model.number="jobFilter.salaryMax" type="number" placeholder="最高薪资" min="0">
+        </div>
+        <select v-model="jobFilter.education">
+          <option value="">学历不限</option>
+          <option v-for="e in eduOptions" :key="e" :value="e">{{ e }}</option>
+        </select>
+        <button class="btn btn-primary btn-sm" @click="loadJobs()">搜索</button>
+      </div>
+      <div v-if="jobsLoading" class="loading-wrap"><div class="spinner"></div><p>加载岗位列表...</p></div>
+      <template v-else-if="jobList.length">
+        <div class="job-list">
+          <div v-for="job in jobList" :key="job.id||job.link" :class="['job-card',{expanded:isJobExpanded(job)}]" @click="toggleJobExpand(job)">
+            <div class="jc-row">
+              <div class="jc-main">
+                <div class="jc-title">{{ job.title }}</div>
+                <div class="jc-company">{{ job.company }}</div>
+                <div class="jc-meta">
+                  <span class="tag tag-blue">{{ job.city||job.location||'不限' }}</span>
+                  <span class="tag tag-green">{{ job.education||'不限' }}</span>
+                  <span :class="['platform-badge',platformClass(job.platform)]">{{ job.platform }}</span>
+                </div>
+              </div>
+              <div style="text-align:right;min-width:80px">
+                <div class="jc-salary">{{ displaySalary(job) }}</div>
+                <div class="salary-bar"><div class="salary-bar-inner" :style="{width:salaryPercent(displaySalary(job))+'%'}"></div></div>
+              </div>
+              <div class="jc-chevron" :class="{open:isJobExpanded(job)}">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+              </div>
+            </div>
+            <transition name="card-expand">
+              <div v-if="isJobExpanded(job)" class="jc-detail" @click.stop>
+                <div class="jd-grid">
+                  <div class="jd-item"><span class="jd-label">职位名称</span><span class="jd-value">{{ job.title||'—' }}</span></div>
+                  <div class="jd-item"><span class="jd-label">公司</span><span class="jd-value">{{ job.company||'—' }}</span></div>
+                  <div class="jd-item"><span class="jd-label">薪资</span><span class="jd-value jd-salary">{{ displaySalary(job) }}</span></div>
+                  <div class="jd-item"><span class="jd-label">工作地点</span><span class="jd-value">{{ job.city||job.location||'不限' }}</span></div>
+                  <div class="jd-item"><span class="jd-label">学历要求</span><span class="jd-value">{{ job.education||'不限' }}</span></div>
+                  <div class="jd-item"><span class="jd-label">平台来源</span><span class="jd-value">{{ job.platform||'—' }}</span></div>
+                </div>
+                <div v-if="job.description||job.requirement||job.detail" class="jd-desc">{{ job.description||job.requirement||job.detail }}</div>
+                <div class="jd-actions">
+                  <a v-if="job.link" :href="job.link" rel="noopener" class="jd-link-btn" @click.stop>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                    查看招聘原网址
+                  </a>
+                  <span v-else class="jd-no-url">暂无原网址</span>
+                </div>
+              </div>
+            </transition>
+          </div>
+        </div>
+        <div class="pagination" v-if="totalPages>1">
+          <button class="page-btn" :disabled="jobPage<=1" @click="jobPage--;loadJobs()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>
+          </button>
+          <button v-for="p in pageNumbers" :key="p" :class="['page-btn',{active:jobPage===p}]" @click="jobPage=p;loadJobs()">{{ p }}</button>
+          <button class="page-btn" :disabled="jobPage>=totalPages" @click="jobPage++;loadJobs()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
+        </div>
+      </template>
+      <div v-else class="empty-state"><div class="es-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></div><p>暂无匹配岗位</p></div>
+    </div>
+
+    <!-- ===== TAB 2: Resume Matching ===== -->
+    <div :class="['tab-panel',{active:activeTab===2}]">
+      <div class="ai-section">
+        <div>
+          <h3 class="section-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="13" x2="12" y2="18"/><polyline points="9 15 12 18 15 15"/></svg>上传简历</h3>
+          <div :class="['upload-zone',{dragover:aiDragOver}]"
+            @dragover.prevent="aiDragOver=true"
+            @dragleave="aiDragOver=false"
+            @drop.prevent="aiDropResume"
+            @click="aiPickResume">
+            <div class="uz-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg></div>
+            <div class="uz-text">拖放简历文件到此处</div>
+            <div class="uz-hint">支持 PDF / Word 格式，或点击选择文件</div>
+            <input type="file" ref="aiFileInput" accept=".pdf,.docx,.doc" @change="aiFileChange" style="position:absolute;inset:0;opacity:0;cursor:pointer">
+          </div>
+          <div v-if="aiResumeFile" class="resume-preview">
+            <h4>简历已上传</h4>
+            <div class="rp-field"><span class="rp-label">文件名:</span>{{ aiResumeFile.name }}</div>
+            <div v-if="aiParsedResume">
+              <div v-for="(v,k) in aiParsedResume" :key="k" class="rp-field" v-show="v">
+                <span class="rp-label">{{ fieldLabel(k) }}:</span>{{ v }}
+              </div>
+            </div>
+          </div>
+        </div>
+        <div>
+          <h3 class="section-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>偏好设置</h3>
+          <div class="pref-form">
+            <div>
+              <label>意向城市</label>
+              <div class="tag-input-wrap">
+                <span v-for="(c,i) in aiPrefCities" :key="i" class="tag-item">
+                  {{ c }}<button @click="aiPrefCities.splice(i,1)">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                  </button>
+                </span>
+                <input v-model="aiCityInput" placeholder="输入城市后按回车"
+                  @keyup.enter="addAiCity">
+              </div>
+            </div>
+            <div>
+              <label>薪资范围 (元/月)</label>
+              <div class="range-row">
+                <input v-model.number="aiPrefSalaryMin" type="number" placeholder="最低" min="0">
+                <span>—</span>
+                <input v-model.number="aiPrefSalaryMax" type="number" placeholder="最高" min="0">
+              </div>
+            </div>
+            <div>
+              <label>求职类型</label>
+              <div class="type-toggle">
+                <button :class="{active:aiPrefType==='社招'}" @click="aiPrefType='社招'">社招</button>
+                <button :class="{active:aiPrefType==='公考'}" @click="aiPrefType='公考'">公考</button>
+              </div>
+            </div>
+            <button class="btn btn-accent" @click="doRecommend" :disabled="aiRecommending" style="margin-top:.5rem">
+              {{ aiRecommending?'匹配中...':'开始匹配' }}
+            </button>
+            <div style="font-size:.75rem;color:var(--text-ll)">需要登录，消耗15积分</div>
+          </div>
+        </div>
+      </div>
+      <div v-if="aiRecommendResults.length" class="match-results">
+        <h3 class="section-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>匹配结果</h3>
+        <div v-for="(r,idx) in aiRecommendResults" :key="idx" class="match-card">
+          <div class="match-header">
+            <div class="score-ring">
+              <svg viewBox="0 0 56 56">
+                <circle class="ring-bg" cx="28" cy="28" r="22"/>
+                <circle class="ring-fg" cx="28" cy="28" r="22"
+                  :stroke="scoreColor(r.match_score||0)"
+                  :stroke-dasharray="138.2"
+                  :stroke-dashoffset="138.2 - 138.2*(r.match_score||0)/100"/>
+                <text class="ring-text" x="28" y="28" transform="rotate(90,28,28)">{{ r.match_score||0 }}</text>
+              </svg>
+            </div>
+            <div style="flex:1;min-width:0">
+              <div class="match-title">{{ r.title }}</div>
+              <div class="match-company">{{ r.company }}</div>
+              <div class="match-salary">{{ displaySalary(r) }}</div>
+              <span v-if="r.admission_probability" :class="['admit-badge',admitClass(r.admission_probability)]">
+                录用概率 {{ r.admission_probability }}%
+              </span>
+            </div>
+          </div>
+          <div v-if="r.match_reason" class="match-reason">{{ r.match_reason }}</div>
+          <div v-if="r.advantages&&r.advantages.length" class="match-tags" style="margin-top:.5rem">
+            <span v-for="(a,i) in r.advantages" :key="i" class="tag tag-green">{{ a }}</span>
+          </div>
+          <div v-if="r.suggestions&&r.suggestions.length" class="suggestions-section">
+            <h5>改进建议</h5>
+            <p v-for="(s,i) in r.suggestions" :key="i">&middot; {{ s }}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== TAB 3: Resume Analysis ===== -->
+    <div :class="['tab-panel',{active:activeTab===3}]">
+      <div v-if="!analysisResult" class="analysis-upload">
+        <h3 class="section-title" style="justify-content:center"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>上传简历进行分析</h3>
+        <div :class="['upload-zone',{dragover:anDragOver}]"
+          @dragover.prevent="anDragOver=true"
+          @dragleave="anDragOver=false"
+          @drop.prevent="anDropResume"
+          @click="anPickResume">
+          <div class="uz-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg></div>
+          <div class="uz-text">拖放简历文件到此处</div>
+          <div class="uz-hint">系统将全面分析您的简历</div>
+          <input type="file" ref="anFileInput" accept=".pdf,.docx,.doc" @change="anFileChange" style="position:absolute;inset:0;opacity:0;cursor:pointer">
+        </div>
+        <div style="font-size:.75rem;color:var(--text-ll);text-align:center;margin-top:.75rem">需要登录，消耗20积分</div>
+      </div>
+      <div v-if="analysisLoading" class="loading-wrap"><div class="spinner"></div><p>分析中，请稍候...</p></div>
+      <div v-if="analysisResult&&!analysisLoading">
+        <div class="overall-score-wrap">
+          <h3 class="section-title" style="justify-content:center"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M21.21 15.89A10 10 0 118 2.83"/><path d="M22 12A10 10 0 0012 2v10z"/></svg>简历综合评分</h3>
+          <div class="big-score-ring">
+            <svg viewBox="0 0 140 140">
+              <circle class="ring-bg" cx="70" cy="70" r="58"/>
+              <circle class="ring-fg" cx="70" cy="70" r="58"
+                :stroke="scoreColor(analysisResult.overall_score||0)"
+                :stroke-dasharray="364.4"
+                :stroke-dashoffset="364.4 - 364.4*(analysisResult.overall_score||0)/100"/>
+              <text class="ring-text" x="70" y="65" transform="rotate(90,70,70)">{{ analysisResult.overall_score||0 }}</text>
+              <text class="ring-sub" x="70" y="82" transform="rotate(90,70,70)">综合得分</text>
+            </svg>
+          </div>
+          <button class="btn btn-outline btn-sm" @click="analysisResult=null" style="margin-top:.5rem">重新分析</button>
+        </div>
+        <div class="analysis-grid">
+          <div class="analysis-block" v-if="analysisResult.strengths&&analysisResult.strengths.length">
+            <h4><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 10 17 4 12"/></svg> 优势</h4>
+            <div class="keyword-tags">
+              <span v-for="(s,i) in analysisResult.strengths" :key="i" class="tag tag-green">{{ s }}</span>
+            </div>
+          </div>
+          <div class="analysis-block" v-if="analysisResult.weaknesses&&analysisResult.weaknesses.length">
+            <h4><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg> 不足</h4>
+            <div class="keyword-tags">
+              <span v-for="(w,i) in analysisResult.weaknesses" :key="i" class="tag tag-red">{{ w }}</span>
+            </div>
+          </div>
+          <div class="analysis-block" v-if="analysisResult.suggestions&&analysisResult.suggestions.length">
+            <h4><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> 改进建议</h4>
+            <div v-for="(s,i) in analysisResult.suggestions" :key="i" class="tag tag-blue" style="margin-bottom:.5rem;display:block;text-align:left;padding:.5rem .75rem">
+              {{ s }}
+            </div>
+          </div>
+          <div class="analysis-block" v-if="analysisResult.keywords">
+            <h4><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg> 关键词分析</h4>
+            <div v-if="analysisResult.keywords.present&&analysisResult.keywords.present.length" class="keyword-section">
+              <h5>已包含</h5>
+              <div class="keyword-tags">
+                <span v-for="(k,i) in analysisResult.keywords.present" :key="'p'+i" class="tag tag-green">{{ k }}</span>
+              </div>
+            </div>
+            <div v-if="analysisResult.keywords.missing&&analysisResult.keywords.missing.length" class="keyword-section">
+              <h5>缺失</h5>
+              <div class="keyword-tags">
+                <span v-for="(k,i) in analysisResult.keywords.missing" :key="'m'+i" class="tag tag-red">{{ k }}</span>
+              </div>
+            </div>
+            <div v-if="analysisResult.keywords.recommended&&analysisResult.keywords.recommended.length" class="keyword-section">
+              <h5>建议添加</h5>
+              <div class="keyword-tags">
+                <span v-for="(k,i) in analysisResult.keywords.recommended" :key="'r'+i" class="tag tag-yellow">{{ k }}</span>
+              </div>
+            </div>
+          </div>
+          <div class="analysis-block" v-if="analysisResult.industry_fit&&analysisResult.industry_fit.length" style="grid-column:1/-1">
+            <h4><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg> 行业匹配</h4>
+            <table class="industry-table">
+              <thead><tr><th>行业</th><th>匹配度</th><th>相关度</th></tr></thead>
+              <tbody>
+                <tr v-for="(ind,i) in analysisResult.industry_fit" :key="i">
+                  <td>{{ ind.industry||ind.name }}</td>
+                  <td><span :class="['tag',ind.score>=70?'tag-green':ind.score>=40?'tag-yellow':'tag-red']">{{ ind.score||ind.fit||0 }}%</span></td>
+                  <td style="color:var(--text-l);font-size:.8125rem">{{ ind.description||ind.relevance||'-' }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="analysis-block" v-if="analysisResult.market_position" style="grid-column:1/-1">
+            <h4><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg> 市场定位</h4>
+            <p class="market-text">{{ analysisResult.market_position }}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== TAB 4: Credits ===== -->
+    <div :class="['tab-panel',{active:activeTab===4}]">
+      <div class="credits-center">
+        <div class="balance-card">
+          <div class="bc-label">当前积分余额</div>
+          <div class="bc-num">{{ user?user.credits:0 }}</div>
+        </div>
+        <h3 class="section-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>CDK 兑换</h3>
+        <div class="cdk-form">
+          <input v-model="cdkCode" placeholder="请输入CDK兑换码" @keyup.enter="doRecharge">
+          <button class="btn btn-primary" @click="doRecharge" :disabled="recharging">{{ recharging?'兑换中...':'兑 换' }}</button>
+        </div>
+        <h3 class="section-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>充值记录</h3>
+        <ul class="history-list" v-if="rechargeHistory.length">
+          <li v-for="(h,i) in rechargeHistory" :key="i" class="history-item">
+            <span>{{ h.time||h.created_at||'-' }}</span>
+            <span style="color:var(--success);font-weight:600">+{{ h.credits_added||h.amount||0 }} 积分</span>
+          </li>
+        </ul>
+        <div v-else class="empty-state" style="padding:1.5rem"><p>暂无充值记录</p></div>
+        <h3 class="section-title" style="margin-top:2rem"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>服务定价</h3>
+        <div class="pricing-grid">
+          <div class="pricing-card"><div class="pc-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div><div class="pc-name">简历解析</div><div class="pc-price">10 积分</div></div>
+          <div class="pricing-card"><div class="pc-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div><div class="pc-name">岗位匹配</div><div class="pc-price">15 积分</div></div>
+          <div class="pricing-card"><div class="pc-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M21.21 15.89A10 10 0 118 2.83"/><path d="M22 12A10 10 0 0012 2v10z"/></svg></div><div class="pc-name">简历分析</div><div class="pc-price">20 积分</div></div>
+          <div class="pricing-card"><div class="pc-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg></div><div class="pc-name">兑换比率</div><div class="pc-price">10 积分 = 1 元</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab 5: VIP 会员中心 -->
+    <div :class="['tab-panel',{active:activeTab===5}]">
+      <div class="vip-center">
+        <!-- 状态卡片 -->
+        <div :class="['vip-status-card',{active:vipStatus.is_vip}]">
+          <div class="vsc-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26"/></svg>
+          </div>
+          <div class="vsc-body">
+            <template v-if="vipStatus.is_vip">
+              <div class="vsc-title">VIP 会员</div>
+              <div class="vsc-sub">剩余 <strong>{{ vipStatus.days_left }}</strong> 天 · 到期 {{ (vipStatus.expired_at||'').slice(0,10) }}</div>
+            </template>
+            <template v-else>
+              <div class="vsc-title">未开通会员</div>
+              <div class="vsc-sub">开通即享简历存储、AI分析免费、自动岗位匹配</div>
+            </template>
+          </div>
+          <button v-if="!vipStatus.is_vip" class="btn btn-primary" @click="activateVip" :disabled="vipActivating">
+            {{ vipActivating?'开通中...':'立即开通 · 300 积分/月' }}
+          </button>
+          <button v-else class="btn btn-outline" @click="activateVip" :disabled="vipActivating">
+            {{ vipActivating?'续费中...':'续费 · 300 积分' }}
+          </button>
+        </div>
+
+        <!-- 功能入口 -->
+        <div class="vip-features">
+          <h3 class="section-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18"/></svg>会员权益</h3>
+          <div class="vf-grid">
+            <div class="vf-card">
+              <div class="vfc-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
+              <div class="vfc-title">简历云端存储</div>
+              <div class="vfc-desc" v-if="vipResume.has_resume">已存储 · {{ vipResume.text_length }} 字符</div>
+              <div class="vfc-desc" v-else>尚未上传简历</div>
+              <label v-if="vipStatus.is_vip" class="btn btn-primary btn-sm" style="margin-top:.5rem;cursor:pointer">
+                <input type="file" accept=".pdf,.docx,.doc" @change="uploadVipResume($event)" style="display:none">
+                {{ vipResume.has_resume ? '更新简历' : '上传简历' }}
+              </label>
+              <div v-else class="vfc-desc" style="color:var(--text-ll)">开通会员后可用</div>
+            </div>
+            <div class="vf-card">
+              <div class="vfc-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M21.21 15.89A10 10 0 118 2.83"/><path d="M22 12A10 10 0 0012 2v10z"/></svg></div>
+              <div class="vfc-title">AI 简历分析</div>
+              <div class="vfc-desc">深度多维度分析 · <strong>会员免费</strong></div>
+              <button v-if="vipStatus.is_vip&&vipResume.has_resume" class="btn btn-primary btn-sm" style="margin-top:.5rem" @click="analyzeVipResume" :disabled="vipAnalyzing">{{ vipAnalyzing?'分析中...':'开始分析' }}</button>
+              <div v-else class="vfc-desc" style="color:var(--text-ll)">开通会员并上传简历后可用</div>
+            </div>
+            <div class="vf-card">
+              <div class="vfc-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg></div>
+              <div class="vfc-title">自动岗位匹配</div>
+              <div class="vfc-desc">AI 智能匹配 · <strong>会员免费</strong></div>
+              <button v-if="vipStatus.is_vip&&vipResume.has_resume" class="btn btn-primary btn-sm" style="margin-top:.5rem" @click="matchVipJobs" :disabled="vipMatching">{{ vipMatching?'匹配中...':'开始匹配' }}</button>
+              <div v-else class="vfc-desc" style="color:var(--text-ll)">开通会员并上传简历后可用</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 会员权益详细介绍 -->
+        <div class="vip-benefits-intro">
+          <div class="vbi-header">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26"/></svg>
+            <span class="vbi-title">VIP 会员专属权益</span>
+          </div>
+          <div class="vip-benefits-grid">
+            <div class="benefit-item">
+              <div class="bi-icon"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
+              <div class="bi-title">简历云存储</div>
+              <div class="bi-desc">PDF/DOCX永久保存，随时调用匹配</div>
+            </div>
+            <div class="benefit-item">
+              <div class="bi-icon"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M21.21 15.89A10 10 0 118 2.83"/><path d="M22 12A10 10 0 0012 2v10z"/></svg></div>
+              <div class="bi-title">AI 深度分析</div>
+              <div class="bi-desc">多维度评估优劣势，精准建议</div>
+            </div>
+            <div class="benefit-item">
+              <div class="bi-icon"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg></div>
+              <div class="bi-title">智能岗位匹配</div>
+              <div class="bi-desc">AI 匹配全平台岗位，精准排序</div>
+            </div>
+            <div class="benefit-item">
+              <div class="bi-icon"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg></div>
+              <div class="bi-title">高概率通知</div>
+              <div class="bi-desc">>80% 匹配岗位 · 48h 自动邮件提醒</div>
+            </div>
+            <div class="benefit-item">
+              <div class="bi-icon"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
+              <div class="bi-title">AI 调用免费</div>
+              <div class="bi-desc">分析/匹配均不扣积分，仅记录成本</div>
+            </div>
+            <div class="benefit-item">
+              <div class="bi-icon"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg></div>
+              <div class="bi-title">链接直达</div>
+              <div class="bi-desc">匹配结果含招聘原链接，一键跳转</div>
+            </div>
+            <div class="benefit-item">
+              <div class="bi-icon"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></div>
+              <div class="bi-title">全平台搜索</div>
+              <div class="bi-desc">社招+公考双通道，覆盖所有岗位</div>
+            </div>
+            <div class="benefit-item">
+              <div class="bi-icon"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+              <div class="bi-title">30天周期</div>
+              <div class="bi-desc">一次开通享30天全部会员权益</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 邮件通知配置 -->
+        <div class="vip-email-section">
+          <div class="ves-header">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+            <span class="ves-title">邮件通知配置</span>
+          </div>
+          <div class="ves-desc">
+            绑定邮箱后，当系统检测到高于 60% 概率的匹配岗位时，将自动发送邮件通知。
+          </div>
+          <div :class="['ves-row',{editing:vipEmailEditing}]">
+            <input type="email" v-model="vipEmail" placeholder="请输入你的邮箱地址 (选填 · 留空使用模拟通知)"
+              :disabled="!vipStatus.is_vip" @keyup.enter="saveVipEmail()">
+            <button class="btn btn-primary btn-sm" @click="saveVipEmail()" :disabled="!vipStatus.is_vip||vipEmailSaving">
+              {{ vipEmailSaving?'保存中...':'保存' }}
+            </button>
+          </div>
+          <div class="ve-hint" v-if="vipEmailSaved">已保存 · 邮箱: {{ vipEmailSaved }}</div>
+
+          <!-- 模拟邮件预览 -->
+          <div class="mock-email-preview" v-if="vipShowEmailPreview">
+            <div class="mep-bar">
+              <span>模拟邮件预览</span>
+              <div class="mep-dot"><span></span><span></span><span></span></div>
+            </div>
+            <div class="mock-email-body">
+              <div class="meb-from">发件人: <strong>noreply@jobboard.cn</strong></div>
+              <div class="meb-subject">JobBoard — 发现 {{ vipHighProbCount||3 }} 个高匹配度岗位</div>
+              <div class="meb-greeting">亲爱的 {{ user?.username||'用户' }}：</div>
+              <div class="meb-content">
+                您好！系统刚刚完成了新一轮智能岗位匹配，我们发现以下岗位与您的简历高度匹配（匹配度 ≥ 60%）：
+              </div>
+              <div class="meb-job" v-for="(job,i) in (vipMatches.length?vipMatches.slice(0,3):mockDemoJobs)" :key="i">
+                <span class="meb-score">{{ job.match_score||job.s||88-i*4 }}%</span>
+                <span class="meb-jtitle">{{ job.title||job.t||'示例岗位-高级前端工程师' }}</span>
+                <span class="meb-jsalary">{{ job.salary||job.sa||'15K-25K' }}</span>
+              </div>
+              <div class="meb-content" style="margin-top:.5rem">
+                请尽快登录平台查看详情并投递。机会稍纵即逝！
+              </div>
+              <a class="meb-cta" href="#" onclick="return false">登录平台查看 ></a>
+              <div class="meb-footer">
+                此邮件由就业服务平台自动发送 · 如不想接收请登录取消订阅<br>
+                <span v-if="!vipEmail||vipShowEmailPreview===true">（演示模式 — 实际发件将使用你绑定的邮箱地址）</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- AI 分析结果 -->
+        <div v-if="vipAnalysis&&vipAnalysis.overall_score!==undefined" class="vip-section">
+          <h3 class="section-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M21.21 15.89A10 10 0 118 2.83"/><path d="M22 12A10 10 0 0012 2v10z"/></svg>AI 简历分析结果</h3>
+          <div class="vip-analysis">
+            <div class="va-score">{{ vipAnalysis.overall_score }}<span>分</span></div>
+            <div class="va-sections">
+              <div class="va-sec" v-if="vipAnalysis.strengths&&vipAnalysis.strengths.length">
+                <strong>优势</strong>
+                <ul><li v-for="s in vipAnalysis.strengths">{{ s }}</li></ul>
+              </div>
+              <div class="va-sec" v-if="vipAnalysis.weaknesses&&vipAnalysis.weaknesses.length">
+                <strong>不足</strong>
+                <ul><li v-for="w in vipAnalysis.weaknesses">{{ w }}</li></ul>
+              </div>
+              <div class="va-sec" v-if="vipAnalysis.suggestions&&vipAnalysis.suggestions.length">
+                <strong>建议</strong>
+                <ul><li v-for="s in vipAnalysis.suggestions">{{ s }}</li></ul>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 匹配结果 -->
+        <div v-if="vipMatches.length" class="vip-section">
+          <h3 class="section-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            匹配结果 ({{ vipMatches.length }} 个岗位
+            <span v-if="vipHighProbCount" style="color:var(--warning)">· {{ vipHighProbCount }} 个高概率</span>)
+          </h3>
+          <div class="vip-match-list">
+            <div v-for="(job,i) in vipMatches" :key="i" :class="['vip-match-card',{high:job.match_score>=80}]">
+              <div class="vmc-header">
+                <span class="vmc-score">{{ job.match_score }}%</span>
+                <span class="vmc-title">{{ job.title }}</span>
+              </div>
+              <div class="vmc-meta">{{ job.company }} · {{ job.salary||job.salary_raw }} · {{ job.location }}</div>
+              <div class="vmc-reason" v-if="job.reason">{{ job.reason }}</div>
+              <div class="vmc-link-bar" v-if="job.link">
+                <a :href="job.link" class="btn btn-outline btn-sm">查看招聘原网址</a>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 历史通知 -->
+        <div v-if="vipNotifications.length" class="vip-section">
+          <h3 class="section-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>历史通知</h3>
+          <div class="notify-list">
+            <div v-for="(n,i) in vipNotifications" :key="i" class="notify-item">
+              <span class="ni-time">{{ (n.created_at||'').slice(0,19) }}</span>
+              <span class="ni-msg">发现 <strong>{{ n.high_count||0 }}</strong> 个高匹配岗位</span>
+              <a :href="n.mock_url" class="ni-link" v-if="n.mock_url">模拟邮件预览</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+<script>
+const {createApp,ref,reactive,computed,onMounted,watch,nextTick}=Vue;
+
+const API=window.__API_BASE__||'http://localhost:5001';
+
+function getToken(){return localStorage.getItem('job_board_token')}
+function setToken(t){if(t)localStorage.setItem('job_board_token',t);else localStorage.removeItem('job_board_token')}
+function getUser(){try{return JSON.parse(localStorage.getItem('job_board_user'))}catch{return null}}
+function setUser(u){if(u)localStorage.setItem('job_board_user',JSON.stringify(u));else localStorage.removeItem('job_board_user')}
+function authHeaders(){const t=getToken();return t?{Authorization:'Bearer '+t}:{}}
+
+async function api(path,opts={}){
+  const url=path.startsWith('http')?path:API+path;
+  const headers={...authHeaders(),...(opts.headers||{})};
+  const res=await fetch(url,{...opts,headers});
+  if(!res.ok){const t=await res.text().catch(()=>'');throw new Error(t||res.statusText)}
+  const ct=res.headers.get('content-type')||'';
+  return ct.includes('json')?res.json():res;
+}
+
+const app=createApp({
+  setup(){
+    const activeTab=ref(0);
+    const tabDirection=ref(0);
+    const tabs=[
+      {icon:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="8" height="8" rx="1.5"/><rect x="15" y="3" width="8" height="8" rx="1.5"/><rect x="1" y="13" width="8" height="8" rx="1.5"/><rect x="15" y="13" width="8" height="8" rx="1.5"/></svg>',label:'热力图'},
+      {icon:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="10" r="7"/><line x1="15" y1="15" x2="21" y2="21"/></svg>',label:'岗位搜索'},
+      {icon:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>',label:'简历匹配'},
+      {icon:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21.21 15.89A10 10 0 118 2.83"/><path d="M22 12A10 10 0 0012 2v10z"/></svg>',label:'简历分析'},
+      {icon:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>',label:'积分充值'},
+      {icon:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26"/></svg>',label:'会员中心'}
+    ];
+    const user=ref(getUser());
+    const showAuthModal=ref(false);
+    const authMode=ref('login');
+    const authForm=reactive({username:'',password:''});
+    const authLoading=ref(false);
+    const toast=reactive({show:false,msg:'',type:'success',timer:null});
+
+    // Tab 0: Hot
+    const hotType=ref('social');
+    const hotJobs=ref([]);
+    const hotLoading=ref(false);
+
+    // Tab 1: Jobs
+    const jobType=ref('社招');
+    const jobFilter=reactive({keyword:'',city:'',salaryMin:0,salaryMax:999999,education:''});
+    const jobList=ref([]);
+    const jobsLoading=ref(false);
+    const jobPage=ref(1);
+    const totalJobs=ref(0);
+    const pageSize=20;
+    const expandedJobId=ref(null);
+    const expandedHotId=ref(null);
+    const stats=reactive({totalJobs:0,cities:0,platforms:0,lastUpdated:'-'});
+    const cityOptions=ref([]);
+    const eduOptions=['大专','本科','硕士','博士','学历不限'];
+
+    // Tab 2: AI Recommend
+    const aiDragOver=ref(false);
+    const aiResumeFile=ref(null);
+    const aiParsedResume=ref(null);
+    const aiCityInput=ref('');
+    const aiPrefCities=ref([]);
+    const aiPrefSalaryMin=ref(0);
+    const aiPrefSalaryMax=ref(999999);
+    const aiPrefType=ref('社招');
+    const aiRecommending=ref(false);
+    const aiRecommendResults=ref([]);
+
+    // Tab 3: Analysis
+    const anDragOver=ref(false);
+    const anResumeFile=ref(null);
+    const analysisLoading=ref(false);
+    const analysisResult=ref(null);
+
+    // Tab 4: Credits
+    const cdkCode=ref('');
+    const recharging=ref(false);
+    const rechargeHistory=ref([]);
+
+    // Tab 5: VIP
+    const vipStatus=ref({is_vip:false,expired_at:null,days_left:null,message:'加载中...'});
+    const vipActivating=ref(false);
+    const vipResume=ref({has_resume:false,filename:'',text_length:0,parsed:{},analysis:{},uploaded_at:'',updated_at:''});
+    const vipAnalyzing=ref(false);
+    const vipAnalysis=ref(null);
+    const vipMatching=ref(false);
+    const vipMatches=ref([]);
+    const vipHighProbCount=ref(0);
+    const vipNotifications=ref([]);
+    const vipEmail=ref(localStorage.getItem('vip_email')||'');
+    const vipEmailSaving=ref(false);
+    const vipEmailSaved=ref(localStorage.getItem('vip_email')||'');
+    const vipShowEmailPreview=ref(true);
+    const mockDemoJobs=ref([
+      {s:88,t:'示例岗位-高级前端工程师',sa:'15K-25K'},
+      {s:84,t:'示例岗位-全栈开发工程师',sa:'18K-30K'},
+      {s:80,t:'示例岗位-前端架构师',sa:'25K-40K'}
+    ]);
+
+    // Refs
+    const aiFileInput=ref(null);
+    const anFileInput=ref(null);
+
+    // === Computed ===
+    const totalPages=computed(()=>Math.ceil(totalJobs.value/pageSize)||1);
+    const pageNumbers=computed(()=>{
+      const p=jobPage.value,t=totalPages.value;
+      const pages=[];
+      const start=Math.max(1,p-2);
+      const end=Math.min(t,p+2);
+      for(let i=start;i<=end;i++)pages.push(i);
+      return pages;
+    });
+
+    // === Methods ===
+    function showToast(msg,type='success',duration=3000){
+      toast.msg=msg;toast.type=type;toast.show=true;
+      if(toast.timer)clearTimeout(toast.timer);
+      toast.timer=setTimeout(()=>{toast.show=false},duration);
+    }
+
+    async function checkLogin(){
+      const token=getToken();
+      if(!token){user.value=null;setUser(null);return}
+      try{
+        const data=await api('/api/auth/me');
+        user.value={username:data.username,credits:data.credits,role:data.role,id:data.id};
+        setUser(user.value);
+        loadVipAll();
+      }catch{
+        setToken(null);setUser(null);user.value=null;
+      }
+    }
+
+    function requireLogin(msg='请先登录'){
+      if(!user.value){showToast(msg,'error');showAuthModal.value=true;return false}
+      return true;
+    }
+
+    async function doLogin(){
+      if(!authForm.username||!authForm.password)return showToast('请填写用户名和密码','error');
+      authLoading.value=true;
+      try{
+        const data=await api('/api/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:authForm.username,password:authForm.password})});
+        if(data.ok!==false&&data.token){
+          setToken(data.token);
+          user.value={username:data.username,credits:data.credits||0,role:data.role,id:data.user_id};
+          setUser(user.value);
+          showAuthModal.value=false;
+          authForm.username='';authForm.password='';
+          showToast('登录成功');
+          loadVipAll();
+        }else{showToast(data.msg||data.detail||'登录失败','error')}
+      }catch(e){showToast('登录失败: '+e.message,'error')}
+      authLoading.value=false;
+    }
+
+    async function doRegister(){
+      if(!authForm.username||!authForm.password)return showToast('请填写用户名和密码','error');
+      if(authForm.password.length<4)return showToast('密码至少4位','error');
+      authLoading.value=true;
+      try{
+        const data=await api('/api/auth/register',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:authForm.username,password:authForm.password})});
+        if(data.ok!==false&&data.token){
+          setToken(data.token);
+          user.value={username:data.username,credits:data.credits||0,role:data.role,id:data.user_id};
+          setUser(user.value);
+          showAuthModal.value=false;
+          authForm.username='';authForm.password='';
+          showToast('注册成功');
+          loadVipAll();
+        }else{showToast(data.msg||data.detail||'注册失败','error')}
+      }catch(e){showToast('注册失败: '+e.message,'error')}
+      authLoading.value=false;
+    }
+
+    function logout(){
+      setToken(null);setUser(null);user.value=null;
+      showToast('已退出登录');
+    }
+
+    function switchTab(i){
+      const old=activeTab.value;
+      tabDirection.value=i>old?1:-1;
+      activeTab.value=i;
+      if(i===0&&!hotJobs.value.length)loadHotJobs();
+      if(i===1&&!jobList.value.length)loadJobs();
+      if(i===4)loadRechargeHistory();
+      if(i===5)loadVipAll();
+    }
+
+    // Platform helpers
+    function platformClass(p){
+      if(!p)return '';
+      const s=p.toLowerCase();
+      if(s.includes('51job')||s.includes('前程'))return 'p-51job';
+      if(s.includes('猎聘'))return 'p-liepin';
+      if(s.includes('实习僧'))return 'p-shixiseng';
+      if(s.includes('中公'))return 'p-zhonggong';
+      return 'p-51job';
+    }
+
+    // Tab 0
+    async function loadHotJobs(){
+      hotLoading.value=true;
+      try{
+        const data=await api('/api/hot/jobs?limit=30');
+        const list=hotType.value==='social'?(data.social||[]):(data.gk||[]);
+        hotJobs.value=list;
+      }catch(e){showToast('加载热力数据失败','error')}
+      hotLoading.value=false;
+    }
+
+    async function clickHotJob(job){
+      try{await api(`/api/hot/click/${job.id}?job_type=${hotType.value==='social'?'社招':'公考'}`,{method:'POST'})}catch{}
+      toggleHotExpand(job);
+    }
+
+    watch(hotType,loadHotJobs);
+
+    // Tab 1
+    async function loadStats(){
+      try{
+        const data=await api('/api/match/stats');
+        const s=data.jobs||{};
+        stats.totalJobs=s.total||0;
+        stats.cities=s.cities||0;
+        stats.platforms=s.platforms||0;
+        stats.lastUpdated=data.last_updated||'-';
+      }catch{}
+    }
+
+    async function loadJobs(){
+      jobsLoading.value=true;
+      try{
+        const params=new URLSearchParams({
+          keyword:jobFilter.keyword||'',
+          city:jobFilter.city||'',
+          salary_min:String(jobFilter.salaryMin||0),
+          salary_max:String(jobFilter.salaryMax||999999),
+          job_type:jobType.value,
+          page:String(jobPage.value),
+          page_size:String(pageSize)
+        });
+        if(jobFilter.education)params.set('education',jobFilter.education);
+        const data=await api('/api/match/jobs?'+params.toString());
+        jobList.value=data.jobs||data.items||data||[];
+        totalJobs.value=data.total||jobList.value.length;
+        const cities=new Set();
+        jobList.value.forEach(j=>{if(j.city)cities.add(j.city);if(j.location)cities.add(j.location)});
+        if(cities.size)cityOptions.value=[...cities];
+        loadStats();
+      }catch(e){showToast('加载岗位失败','error');jobList.value=[]}
+      jobsLoading.value=false;
+    }
+
+    function displaySalary(job){
+      if(job.salary)return job.salary;
+      const min=job.salary_min||0, max=job.salary_max||0;
+      const type=job.salary_type||'monthly';
+      if(type==='negotiable'||(min===0&&max===0)){
+        if(job.salary_raw&&job.salary_raw!=='面议'&&job.salary_raw!=='（见实习僧）'){
+          return job.salary_raw;
+        }
+        return '面议';
+      }
+      const fmt=v=>v>=10000?(v/10000).toFixed(1)+'万':v>=1000?(v/1000).toFixed(1)+'千':v+'';
+      if(min>0&&max>0&&max<999999)return fmt(min)+'-'+fmt(max)+'/月';
+      if(max>0)return fmt(max)+'以下/月';
+      if(min>0)return fmt(min)+'以上/月';
+      return job.salary_raw||'面议';
+    }
+
+    function salaryPercent(salary){
+      if(!salary||salary==='面议')return 0;
+      const nums=salary.match(/\d+/g);
+      if(!nums)return 0;
+      const v=parseInt(nums[nums.length-1]);
+      if(v>=50000)return 100;if(v>=30000)return 75;if(v>=20000)return 50;if(v>=10000)return 30;return 15;
+    }
+
+    function openJobLink(job){
+      if(job.link)window.location.href=job.link;
+    }
+    function toggleJobExpand(job){
+      const id=job.id||job.link||job.title;
+      if(expandedJobId.value===id){expandedJobId.value=null}
+      else{expandedJobId.value=id}
+    }
+    function toggleHotExpand(job){
+      const id=job.id||job.link||job.title;
+      if(expandedHotId.value===id){expandedHotId.value=null}
+      else{expandedHotId.value=id}
+    }
+    function isJobExpanded(job){
+      return expandedJobId.value===(job.id||job.link||job.title);
+    }
+    function isHotExpanded(job){
+      return expandedHotId.value===(job.id||job.link||job.title);
+    }
+
+    // Tab 2
+    function aiPickResume(){}
+    function aiFileChange(e){if(e.target.files&&e.target.files[0])handleAiResume(e.target.files[0])}
+    function aiDropResume(e){const f=e.dataTransfer.files;if(f&&f[0])handleAiResume(f[0])}
+    async function handleAiResume(file){
+      if(!requireLogin())return;
+      if(!file.name.toLowerCase().match(/\.(pdf|docx|doc)$/))return showToast('请上传PDF或Word文件','error');
+      aiResumeFile.value=file;
+      aiParsedResume.value=null;
+      try{
+        const fd=new FormData();fd.append('file',file);
+        const data=await api('/api/match/parse-resume',{method:'POST',body:fd});
+        aiParsedResume.value=data;
+        user.value.credits=(user.value.credits||0)-10;
+        setUser(user.value);
+        showToast('简历解析成功，消耗10积分');
+      }catch(e){showToast('简历解析失败: '+e.message,'error')}
+    }
+
+    function addAiCity(){
+      const v=aiCityInput.value.trim();
+      if(v&&!aiPrefCities.value.includes(v)){aiPrefCities.value.push(v)}
+      aiCityInput.value='';
+    }
+
+    function fieldLabel(k){
+      const map={name:'姓名',phone:'电话',email:'邮箱',education:'学历',school:'学校',major:'专业',experience:'经验',skills:'技能',summary:'摘要'};
+      return map[k]||k;
+    }
+
+    async function doRecommend(){
+      if(!requireLogin())return;
+      if((user.value.credits||0)<15)return showToast('积分不足，需要15积分','error');
+      if(!aiParsedResume.value&&!aiResumeFile.value)return showToast('请先上传简历','error');
+      aiRecommending.value=true;
+      try{
+        let resume=aiParsedResume.value;
+        if(!resume){
+          const fd=new FormData();fd.append('file',aiResumeFile.value);
+          resume=await api('/api/match/parse-resume',{method:'POST',body:fd});
+          aiParsedResume.value=resume;
+        }
+        const body={
+          resume:resume,
+          preference:{
+            cities:aiPrefCities.value,
+            salary_min:aiPrefSalaryMin.value,
+            salary_max:aiPrefSalaryMax.value,
+            job_type:aiPrefType.value
+          }
+        };
+        const data=await api('/api/match/recommend',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+        aiRecommendResults.value=data.recommendations||data.results||data.jobs||[];
+        user.value.credits=(user.value.credits||0)-15;
+        setUser(user.value);
+        showToast('匹配完成，消耗15积分');
+      }catch(e){showToast('匹配失败: '+e.message,'error')}
+      aiRecommending.value=false;
+    }
+
+    function scoreColor(s){
+      if(s>=80)return '#9C6B3C';if(s>=60)return '#C4943C';if(s>=40)return '#B8845A';return '#C4664A';
+    }
+
+    function admitClass(p){
+      if(p>=70)return 'admit-high';if(p>=40)return 'admit-mid';return 'admit-low';
+    }
+
+    // Tab 3
+    function anPickResume(){}
+    function anFileChange(e){if(e.target.files&&e.target.files[0])handleAnResume(e.target.files[0])}
+    function anDropResume(e){const f=e.dataTransfer.files;if(f&&f[0])handleAnResume(f[0])}
+    async function handleAnResume(file){
+      if(!requireLogin())return;
+      if(!file.name.toLowerCase().match(/\.(pdf|docx|doc)$/))return showToast('请上传PDF或Word文件','error');
+      if((user.value.credits||0)<20)return showToast('积分不足，需要20积分','error');
+      anResumeFile.value=file;
+      analysisLoading.value=true;
+      analysisResult.value=null;
+      try{
+        const fd=new FormData();fd.append('file',file);
+        const data=await api('/api/match/analyze-resume',{method:'POST',body:fd});
+        analysisResult.value=data.analysis||data;
+        user.value.credits=(user.value.credits||0)-20;
+        setUser(user.value);
+        showToast('分析完成，消耗20积分');
+      }catch(e){showToast('简历分析失败: '+e.message,'error')}
+      analysisLoading.value=false;
+    }
+
+    // Tab 4
+    async function doRecharge(){
+      if(!requireLogin())return;
+      if(!cdkCode.value.trim())return showToast('请输入CDK兑换码','error');
+      recharging.value=true;
+      try{
+        const data=await api('/api/auth/recharge',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({cdk_code:cdkCode.value.trim()})});
+        if(data.ok!==false){
+          const added=data.credits_added||0;
+          user.value.credits=data.new_balance||(user.value.credits||0)+added;
+          setUser(user.value);
+          cdkCode.value='';
+          showToast(`兑换成功，+${added} 积分`);
+          rechargeHistory.value.unshift({time:new Date().toLocaleString(),credits_added:added});
+        }else{showToast(data.msg||data.detail||'兑换失败','error')}
+      }catch(e){showToast('兑换失败: '+e.message,'error')}
+      recharging.value=false;
+    }
+
+    async function loadRechargeHistory(){}
+
+    // === VIP Methods ===
+    async function loadVipStatus(){
+      try{
+        const d=await api('/api/vip/status');
+        vipStatus.value=d;
+        user.value.credits=d.credits;
+        setUser(user.value);
+      }catch(e){vipStatus.value={is_vip:false,expired_at:null,days_left:null,message:'请登录后查看'}}
+    }
+
+    async function activateVip(){
+      if(!requireLogin())return;
+      if(user.value.credits<300)return showToast('积分不足，需要300积分开通','error');
+      vipActivating.value=true;
+      try{
+        const d=await api('/api/vip/activate',{method:'POST'});
+        if(d.ok!==false){
+          vipStatus.value.is_vip=true;
+          vipStatus.value.expired_at=d.expired_at;
+          vipStatus.value.days_left=d.days_left;
+          vipStatus.value.message=d.message;
+          user.value.credits=d.credits;
+          setUser(user.value);
+          showToast(d.message);
+        }else{showToast(d.message||'开通失败','error')}
+      }catch(e){showToast('开通失败: '+e.message,'error')}
+      vipActivating.value=false;
+    }
+
+    async function loadVipResume(){
+      try{
+        const d=await api('/api/vip/resume');
+        if(d.ok!==false)vipResume.value=d;
+      }catch(e){}
+    }
+
+    async function uploadVipResume(e){
+      if(!requireLogin())return;
+      const f=e.target.files[0];
+      if(!f)return;
+      const form=new FormData();
+      form.append('file',f);
+      try{
+        const res=await fetch(API+'/api/vip/resume/upload',{method:'POST',headers:authHeaders(),body:form});
+        const d=await res.json();
+        if(d.ok!==false){
+          showToast(d.message||'上传成功');
+          await loadVipResume();
+        }else{const m=d.detail||d.message||'上传失败';showToast(m,'error')}
+      }catch(er){showToast('上传失败: '+er.message,'error')}
+    }
+
+    async function analyzeVipResume(){
+      if(!requireLogin())return;
+      if(!vipResume.value.has_resume)return showToast('请先上传简历','error');
+      vipAnalyzing.value=true;
+      vipAnalysis.value=null;
+      try{
+        const d=await api('/api/vip/resume/analyze',{method:'POST'});
+        if(d.ok!==false){
+          vipAnalysis.value=d.analysis;
+          showToast('分析完成');
+        }else{showToast(d.detail||d.message||'分析失败','error')}
+      }catch(e){showToast('分析失败: '+e.message,'error')}
+      vipAnalyzing.value=false;
+    }
+
+    async function matchVipJobs(){
+      if(!requireLogin())return;
+      if(!vipResume.value.has_resume)return showToast('请先上传简历','error');
+      vipMatching.value=true;
+      vipMatches.value=[];
+      try{
+        const d=await api('/api/vip/match',{method:'POST'});
+        if(d.ok!==false){
+          vipMatches.value=d.recommendations||[];
+          vipHighProbCount.value=d.high_prob_count||0;
+          showToast(`匹配完成，共 ${vipMatches.value.length} 个岗位`);
+        }else{showToast(d.detail||'匹配失败','error')}
+      }catch(e){showToast('匹配失败: '+e.message,'error')}
+      vipMatching.value=false;
+    }
+
+    async function loadVipNotifications(){
+      try{
+        const d=await api('/api/vip/match/results');
+        if(d.ok!==false&&d.results){
+          const notifs=[];
+          for(const r of d.results){
+            if(r.high_prob_count>0){
+              notifs.push({
+                created_at:r.created_at,
+                high_count:r.high_prob_count,
+                notify_count:r.matches?r.matches.length:0,
+                mock_url:'/vip/notify/'+(user.value?user.value.id:'')+'?t='+Date.now()
+              });
+            }
+          }
+          vipNotifications.value=notifs;
+        }
+      }catch(e){}
+    }
+
+    async function loadVipAll(){
+      await loadVipStatus();
+      if(vipStatus.value.is_vip){
+        await Promise.all([loadVipResume(),loadVipNotifications()]);
+      }
+    }
+
+    async function saveVipEmail(){
+      const email=vipEmail.value.trim();
+      if(!email)return showToast('请输入邮箱地址','error');
+      if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))return showToast('邮箱格式不正确','error');
+      vipEmailSaving.value=true;
+      try {
+        await api('/api/vip/notify-email',{
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({email})
+        });
+        localStorage.setItem('vip_email',email);
+        vipEmailSaved.value=email;
+        showToast('邮箱已保存 · 匹配到高匹配岗位时将发送邮件通知');
+      } catch(e){
+        showToast('保存失败: '+e.message,'error');
+      }
+      vipEmailSaving.value=false;
+    }
+
+    // Init
+    onMounted(async()=>{
+      await checkLogin();
+      loadHotJobs();
+      loadJobs();
+      loadVipAll();
+    });
+
+    return {
+      activeTab,tabs,user,showAuthModal,authMode,authForm,authLoading,toast,
+      switchTab,doLogin,doRegister,logout,platformClass,
+      hotType,hotJobs,hotLoading,clickHotJob,toggleHotExpand,isHotExpanded,
+      jobType,jobFilter,jobList,jobsLoading,jobPage,totalJobs,pageSize,stats,
+      cityOptions,eduOptions,totalPages,pageNumbers,
+      loadJobs,salaryPercent,displaySalary,openJobLink,toggleJobExpand,isJobExpanded,
+      aiDragOver,aiResumeFile,aiParsedResume,aiFileInput,
+      aiCityInput,aiPrefCities,aiPrefSalaryMin,aiPrefSalaryMax,aiPrefType,
+      aiRecommending,aiRecommendResults,
+      aiPickResume,aiFileChange,aiDropResume,addAiCity,doRecommend,
+      scoreColor,admitClass,fieldLabel,
+      anDragOver,anResumeFile,anFileInput,analysisLoading,analysisResult,
+      anPickResume,anFileChange,anDropResume,
+      cdkCode,recharging,rechargeHistory,doRecharge,
+      vipStatus,vipActivating,activateVip,
+      vipResume,uploadVipResume,
+      vipAnalyzing,vipAnalysis,analyzeVipResume,
+      vipMatching,vipMatches,vipHighProbCount,matchVipJobs,
+      vipNotifications,loadVipAll,
+      vipEmail,vipEmailSaving,vipEmailSaved,vipShowEmailPreview,saveVipEmail,mockDemoJobs
+    };
+  }
+});
+
+app.mount('#app');
+</script>
+</body>
+</html>

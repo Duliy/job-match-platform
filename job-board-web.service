@@ -1,0 +1,18 @@
+[Unit]
+Description=招聘采集平台 - 前端静态服务
+After=network.target
+
+[Service]
+Type=simple
+# ⚠️ 修改为实际部署路径和用户
+WorkingDirectory=/opt/job-board
+ExecStart=/usr/bin/python3 -m http.server 8765
+Restart=always
+RestartSec=5
+User=www-data
+Environment=PYTHONUNBUFFERED=1
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

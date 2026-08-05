@@ -1,0 +1,1911 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>管理后台 · 西南大学商贸学院学生就业服务平台</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%239C6B3C' stroke-width='2'%3E%3Crect x='3' y='11' width='18' height='11' rx='2'/%3E%3Cpath d='M7 11V7a5 5 0 0110 0v4'/%3E%3Ccircle cx='12' cy='16' r='1'/%3E%3C/svg%3E">
+  <style>
+    :root {
+      --p: #9C6B3C;
+      --p-l: #B8845A;
+      --p-d: #7A5230;
+      --p-bg: #F2EAE0;
+      --p-bg-l: #F8F3EC;
+      --accent: #C4956A;
+      --success: #6B8E4E;
+      --success-l: #F0F5EA;
+      --warn: #C4943C;
+      --warn-l: #FBF4E8;
+      --danger: #C4664A;
+      --danger-l: #FBF2EE;
+      --primary: var(--p);
+      --primary-l: var(--p-l);
+      --primary-ll: var(--p-bg);
+      --surface: #fff;
+      --bg: #FBF8F3;
+      --border: #E8DDD0;
+      --text: #1C1814;
+      --muted: #6B5A4A;
+      --muted-l: #A08060;
+      --radius: 12px;
+      --shadow: 0 1px 3px rgba(0,0,0,.04);
+      --shadow-md: 0 2px 8px rgba(0,0,0,.06);
+      --sidebar-w: 240px;
+      --header-h: 56px;
+      --transition-ease: cubic-bezier(.4,0,.2,1);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+      background: var(--bg); color: var(--text); min-height: 100vh; overflow: hidden;
+    }
+    body::after{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 800px 600px at 85% 5%,rgba(220,195,170,.38) 0%,transparent 70%),radial-gradient(ellipse 700px 500px at 10% 90%,rgba(210,180,150,.32) 0%,transparent 65%),radial-gradient(ellipse 600px 450px at 55% 38%,rgba(235,200,160,.28) 0%,transparent 60%),radial-gradient(ellipse 500px 400px at 72% 82%,rgba(200,165,140,.24) 0%,transparent 55%),radial-gradient(ellipse 550px 380px at 25% 15%,rgba(215,185,155,.22) 0%,transparent 58%);pointer-events:none;z-index:0}
+    body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 800px 600px at 85% 5%,rgba(220,195,170,.35) 0%,transparent 55%),radial-gradient(ellipse 700px 500px at 10% 90%,rgba(210,180,150,.28) 0%,transparent 55%),radial-gradient(ellipse 500px 400px at 55% 38%,rgba(235,210,180,.20) 0%,transparent 50%),radial-gradient(ellipse 450px 350px at 72% 82%,rgba(200,165,140,.15) 0%,transparent 50%);pointer-events:none;z-index:0}
+
+    /* ══ Lock Screen ══ */
+    #lockScreen {
+      position: fixed; inset: 0; z-index: 9999;
+      background: linear-gradient(155deg, #9C6B3C 0%, #7A5230 40%, #3D2B1A 100%);
+      display: flex; align-items: center; justify-content: center;
+    }
+    .lock-box {
+      background: rgba(255,255,255,.08);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255,255,255,.18);
+      border-radius: 24px;
+      padding: 48px 40px;
+      width: 400px;
+      box-shadow: 0 20px 60px rgba(0,0,0,.4);
+      text-align: center;
+      animation: fadeUp .4s ease;
+    }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(24px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .lock-icon { margin-bottom: 16px; }
+    .lock-icon svg { width: 52px; height: 52px; }
+    .lock-title { font-size: 22px; font-weight: 700; color: #fff; margin-bottom: 6px; }
+    .lock-sub { font-size: 13px; color: rgba(255,255,255,.6); margin-bottom: 28px; }
+    .lock-input {
+      width: 100%;
+      background: rgba(255,255,255,.12);
+      border: 1.5px solid rgba(255,255,255,.25);
+      border-radius: 10px;
+      padding: 13px 16px;
+      font-size: 16px; color: #fff;
+      outline: none;
+      letter-spacing: 3px;
+      transition: border-color .2s;
+      margin-bottom: 12px;
+    }
+    .lock-input::placeholder { color: rgba(255,255,255,.4); letter-spacing: 1px; }
+    .lock-input:focus { border-color: rgba(255,255,255,.6); }
+    .lock-input.err { border-color: #f87171; animation: shake .3s; }
+    @keyframes shake {
+      0%,100% { transform: translateX(0); }
+      25%      { transform: translateX(-6px); }
+      75%      { transform: translateX(6px); }
+    }
+    .lock-btn {
+      width: 100%;
+      background: var(--p);
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      padding: 13px;
+      font-size: 15px; font-weight: 600;
+      cursor: pointer;
+      transition: opacity .2s, transform .1s;
+    }
+    .lock-btn:hover { opacity: .92; }
+    .lock-btn:active { transform: scale(.98); }
+    .lock-btn:disabled { opacity: .5; cursor: not-allowed; }
+    .lock-err { font-size: 13px; color: #fca5a5; margin-top: 10px; min-height: 20px; }
+    .lock-back { margin-top: 16px; font-size: 13px; color: rgba(255,255,255,.5); }
+    .lock-back a { color: rgba(255,255,255,.7); text-decoration: none; }
+    .lock-back a:hover { text-decoration: underline; }
+    .lock-row { display: flex; gap: 12px; margin-bottom: 12px; }
+    .lock-row .lock-input { margin-bottom: 0; }
+
+    /* ══ Layout ══ */
+    #app { display: flex; height: 100vh; overflow: hidden; }
+    .sidebar {
+      width: var(--sidebar-w); min-width: var(--sidebar-w);
+      background: #F5EDE0; color: var(--text-l);
+      display: flex; flex-direction: column;
+      overflow: hidden;
+      transition: margin-left .3s, opacity .3s;
+      z-index: 200;
+      border-right: 1px solid var(--border);
+    }
+    .sidebar.collapsed { margin-left: calc(-1 * var(--sidebar-w)); }
+    .sidebar-brand {
+      padding: 16px 20px;
+      display: flex; align-items: center; gap: 10px;
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+    .sidebar-brand .logo { width: 28px; height: 28px; color: var(--p); }
+    .sidebar-brand .name { font-size: 15px; font-weight: 700; color: var(--text); }
+    .sidebar-brand .badge {
+      background: var(--danger); color: #fff; font-size: 10px; font-weight: 700;
+      padding: 2px 8px; border-radius: 10px; letter-spacing: .5px;
+    }
+    .sidebar-nav {
+      flex: 1; overflow-y: auto; overflow-x: hidden;
+      padding: 8px 0;
+    }
+    .sidebar-nav::-webkit-scrollbar { width: 4px; }
+    .sidebar-nav::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+    .sidebar-nav .nav-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 20px;
+      font-size: 13.5px; font-weight: 500;
+      cursor: pointer; color: var(--text-l);
+      transition: all .15s var(--transition-ease);
+      user-select: none;
+      border-left: 3px solid transparent;
+    }
+    .sidebar-nav .nav-item:hover { background: rgba(156,107,60,.06); color: var(--text); }
+    .sidebar-nav .nav-item.active { background: #FBF8F3; color: var(--p); border-left-color: var(--p); }
+    .sidebar-nav .nav-item .icon { width: 22px; height: 22px; text-align: center; flex-shrink: 0; }
+    .sidebar-nav .nav-item .icon svg { width: 18px; height: 18px; }
+    .sidebar-nav .nav-item .arrow { margin-left: auto; font-size: 11px; transition: transform .2s; }
+    .sidebar-nav .nav-item .arrow.open { transform: rotate(90deg); }
+    .sidebar-nav .sub-menu {
+      overflow: hidden; max-height: 0;
+      transition: max-height .25s ease;
+    }
+    .sidebar-nav .sub-menu.open { max-height: 200px; }
+    .sidebar-nav .sub-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 8px 20px 8px 50px;
+      font-size: 13px; color: var(--text-l);
+      cursor: pointer; transition: all .15s;
+    }
+    .sidebar-nav .sub-item:hover { color: var(--text); background: rgba(156,107,60,.04); }
+    .sidebar-nav .sub-item.active { color: var(--p); background: rgba(156,107,60,.08); }
+
+    .main-area {
+      flex: 1; display: flex; flex-direction: column;
+      overflow: hidden; min-width: 0;
+    }
+    .topbar {
+      height: var(--header-h); min-height: var(--header-h);
+      background: rgba(255,255,255,.88);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 24px;
+      z-index: 100;
+    }
+    .topbar-left { display: flex; align-items: center; gap: 12px; }
+    .hamburger {
+      background: none; border: none; font-size: 20px;
+      color: var(--muted); cursor: pointer; padding: 4px;
+      line-height: 1; display: none;
+    }
+    .hamburger:hover { color: var(--text); }
+    .topbar-title { font-size: 15px; font-weight: 600; color: var(--text); }
+    .topbar-right { display: flex; align-items: center; gap: 12px; }
+    .topbar-user { font-size: 13px; color: var(--muted); }
+    .btn-logout {
+      background: none; border: 1.5px solid var(--border);
+      color: var(--muted); font-size: 12px; font-weight: 600;
+      padding: 6px 14px; border-radius: 7px; cursor: pointer;
+      transition: all .15s;
+    }
+    .btn-logout:hover { border-color: var(--danger); color: var(--danger); }
+
+    .content {
+      flex: 1; overflow-y: auto; padding: 24px;
+      position: relative; z-index: 1;
+    }
+    .content::-webkit-scrollbar { width: 6px; }
+    .content::-webkit-scrollbar-thumb { background: var(--border); border-radius: 6px; }
+
+    /* ══ Cards ══ */
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px; }
+    .stat-card {
+      background: var(--surface); border-radius: var(--radius);
+      padding: 20px; border: 1px solid var(--border);
+      transition: border-color .2s var(--transition-ease);
+    }
+    .stat-card:hover { border-color: var(--p-l); }
+    .stat-card .label { font-size: 12px; color: var(--muted); font-weight: 500; margin-bottom: 6px; }
+    .stat-card .value { font-size: 28px; font-weight: 700; color: var(--text); }
+    .stat-card .value.revenue { color: var(--success); }
+    .stat-card .value.cost { color: var(--danger); }
+    .stat-card .value.profit { color: var(--p); }
+
+    .card {
+      background: var(--surface); border-radius: var(--radius);
+      padding: 24px; border: 1px solid var(--border);
+      margin-bottom: 20px;
+    }
+    .card-title {
+      font-size: 15px; font-weight: 700; color: var(--text);
+      margin-bottom: 18px; padding-bottom: 10px;
+      border-bottom: 2px solid var(--border);
+      display: flex; align-items: center; gap: 8px;
+    }
+    .card-title .icon { width: 20px; height: 20px; }
+    .card-title .icon svg { width: 20px; height: 20px; }
+
+    /* ══ Tables ══ */
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    table th {
+      background: var(--p-bg-l); padding: 10px 14px;
+      text-align: left; font-weight: 600; color: var(--text-l);
+      border-bottom: 2px solid var(--border);
+      white-space: nowrap; font-size: 12px; letter-spacing: .5px;
+    }
+    table td {
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--border);
+      vertical-align: middle;
+    }
+    table tr:hover { background: var(--p-bg-l); }
+    table .empty-row td { text-align: center; padding: 40px; color: var(--muted); }
+
+    /* ══ Badges ══ */
+    .badge-sm {
+      font-size: 11px; font-weight: 600; padding: 2px 8px;
+      border-radius: 10px; white-space: nowrap;
+    }
+    .badge-active { background: var(--success-l); color: var(--success); }
+    .badge-disabled { background: var(--danger-l); color: var(--danger); }
+    .badge-pinned { background: var(--warn-l); color: var(--warn); }
+    .badge-normal { background: var(--p-bg); color: var(--muted); }
+
+    /* ══ Buttons ══ */
+    .btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 8px 16px; border-radius: 8px;
+      font-size: 13px; font-weight: 600; cursor: pointer;
+      border: 1.5px solid var(--border);
+      background: var(--surface);
+      color: var(--text);
+      transition: all .15s var(--transition-ease);
+      white-space: nowrap;
+    }
+    .btn:hover { border-color: var(--p-l); color: var(--p); }
+    .btn:active { transform: scale(.97); }
+    .btn:disabled { opacity: .5; cursor: not-allowed; transform: none; }
+    .btn-primary {
+      background: var(--p); color: #fff; border-color: var(--p);
+    }
+    .btn-primary:hover { background: var(--p-d); border-color: var(--p-d); opacity: 1; }
+    .btn-success { background: var(--success); color: #fff; border-color: var(--success); }
+    .btn-success:hover { opacity: .9; }
+    .btn-danger { background: var(--danger); color: #fff; border-color: var(--danger); }
+    .btn-danger:hover { opacity: .9; }
+    .btn-sm { padding: 5px 10px; font-size: 12px; }
+
+    /* ══ Forms ══ */
+    .form-group { margin-bottom: 16px; }
+    .form-group label { display: block; font-size: 12px; font-weight: 600; color: var(--muted); margin-bottom: 6px; }
+    .form-group input, .form-group select, .form-group textarea {
+      width: 100%; border: 1.5px solid var(--border); border-radius: 8px;
+      padding: 9px 12px; font-size: 14px; color: var(--text);
+      outline: none; transition: border-color .2s; background: var(--surface);
+      font-family: inherit;
+    }
+    .form-group textarea { resize: vertical; min-height: 120px; font-family: 'Consolas', 'Courier New', monospace; font-size: 13px; }
+    .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: var(--p-l); box-shadow: 0 0 0 3px rgba(156,107,60,.1); }
+    .form-hint { font-size: 11px; color: var(--muted); margin-top: 4px; }
+    .form-inline { display: flex; gap: 8px; align-items: end; }
+    .form-inline .form-group { margin-bottom: 0; flex: 1; }
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px 24px; }
+    .form-grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+
+    /* ══ Inline edit ══ */
+    .inline-edit { display: flex; align-items: center; gap: 6px; }
+    .inline-edit input {
+      width: 70px; padding: 4px 8px; border: 1.5px solid var(--border);
+      border-radius: 6px; font-size: 13px; text-align: center;
+      outline: none;
+    }
+    .inline-edit input:focus { border-color: var(--p-l); }
+
+    /* ══ Tag input ══ */
+    .tag-box {
+      min-height: 40px; border: 1.5px solid var(--border); border-radius: 8px;
+      padding: 5px 10px; display: flex; flex-wrap: wrap; gap: 6px; align-items: center;
+      cursor: text; background: var(--surface); transition: border-color .2s;
+    }
+    .tag-box:focus-within { border-color: var(--p-l); }
+    .tag-item {
+      background: var(--p-bg); color: var(--p-d);
+      border-radius: 6px; padding: 3px 10px;
+      font-size: 13px; font-weight: 600;
+      display: flex; align-items: center; gap: 4px;
+    }
+    .tag-item span { cursor: pointer; opacity: .6; font-size: 14px; line-height: 1; }
+    .tag-item span:hover { opacity: 1; color: var(--danger); }
+    .tag-input {
+      border: none; outline: none; background: transparent;
+      font-size: 14px; color: var(--text); min-width: 120px; flex: 1;
+    }
+
+    /* ══ Toggle ══ */
+    .toggle-row { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+    .toggle-switch { position: relative; width: 44px; height: 24px; flex-shrink: 0; }
+    .toggle-switch input { opacity: 0; width: 0; height: 0; }
+    .toggle-slider {
+      position: absolute; inset: 0;
+      background: var(--border); border-radius: 24px;
+      transition: background .2s; cursor: pointer;
+    }
+    .toggle-slider:before {
+      content: ""; position: absolute;
+      width: 18px; height: 18px; border-radius: 50%;
+      background: #fff; top: 3px; left: 3px;
+      transition: transform .2s; box-shadow: 0 1px 4px rgba(0,0,0,.2);
+    }
+    input:checked + .toggle-slider { background: var(--p); }
+    input:checked + .toggle-slider:before { transform: translateX(20px); }
+    .toggle-label { font-size: 14px; font-weight: 600; color: var(--text); }
+    .toggle-hint { font-size: 12px; color: var(--muted); margin-left: 2px; }
+
+    /* ══ Status panel ══ */
+    .status-panel {
+      background: var(--p-bg-l); border: 1px solid var(--border); border-radius: 10px;
+      padding: 14px 18px; margin-top: 16px;
+      display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px 20px;
+    }
+    .status-panel.running { border-color: #8DB878; background: var(--success-l); }
+    .status-row { display: flex; gap: 6px; font-size: 13px; }
+    .status-row .k { color: var(--muted); white-space: nowrap; }
+    .status-row .v { font-weight: 600; color: var(--text); }
+
+    /* ══ Chart bars ══ */
+    .bar-chart { display: flex; align-items: end; gap: 8px; height: 160px; padding: 8px 0; }
+    .bar-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+    .bar-fill {
+      width: 100%; background: var(--p-l); border-radius: 6px 6px 0 0;
+      min-height: 4px; transition: height .4s ease;
+    }
+    .bar-label { font-size: 10px; color: var(--muted); transform: rotate(-45deg); white-space: nowrap; margin-top: 4px; }
+    .bar-val { font-size: 10px; color: var(--muted); font-weight: 600; }
+
+    /* ══ Pagination ══ */
+    .pagination { display: flex; align-items: center; justify-content: center; gap: 6px; margin-top: 16px; }
+    .pagination button {
+      background: var(--surface); border: 1px solid var(--border);
+      padding: 6px 12px; border-radius: 6px; font-size: 13px;
+      cursor: pointer; color: var(--text); transition: all .15s;
+    }
+    .pagination button:hover:not(:disabled) { border-color: var(--p); color: var(--p); }
+    .pagination button:disabled { opacity: .4; cursor: not-allowed; }
+    .pagination button.active { background: var(--p); color: #fff; border-color: var(--p); }
+    .pagination .page-info { font-size: 13px; color: var(--muted); padding: 0 8px; }
+
+    /* ══ Toast ══ */
+    .toast {
+      position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
+      background: rgba(156,107,60,.92);
+      backdrop-filter: blur(12px);
+      color: #fff;
+      padding: 11px 24px; border-radius: 10px;
+      font-size: 14px; font-weight: 500;
+      opacity: 0; pointer-events: none;
+      transition: opacity .3s, transform .3s;
+      z-index: 9999; max-width: 420px; text-align: center;
+      box-shadow: 0 8px 24px rgba(0,0,0,.3);
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(4px); }
+    .toast.success { background: rgba(107,142,78,.92); }
+    .toast.error { background: rgba(196,102,74,.92); }
+
+    /* ══ Search bar ══ */
+    .search-bar { display: flex; gap: 10px; margin-bottom: 16px; align-items: center; }
+    .search-bar input {
+      flex: 1; border: 1.5px solid var(--border); border-radius: 8px;
+      padding: 9px 14px; font-size: 14px; outline: none; transition: border-color .2s;
+      background: var(--surface);
+    }
+    .search-bar input:focus { border-color: var(--p-l); }
+
+    /* ══ Date range ══ */
+    .date-range { display: flex; gap: 10px; align-items: center; margin-bottom: 16px; flex-wrap: wrap; }
+    .date-range input[type="date"] {
+      border: 1.5px solid var(--border); border-radius: 8px;
+      padding: 8px 12px; font-size: 13px; outline: none;
+      color: var(--text); background: var(--surface);
+    }
+    .date-range input[type="date"]:focus { border-color: var(--p-l); }
+    .date-range .sep { color: var(--muted); font-size: 13px; }
+
+    /* ══ SQL results ══ */
+    .sql-results { margin-top: 16px; }
+    .sql-results .info { font-size: 13px; color: var(--muted); margin-bottom: 8px; }
+
+    /* ══ CDK list ══ */
+    .cdk-codes {
+      background: var(--p-bg-l); border: 1px solid var(--border); border-radius: 8px;
+      padding: 14px; max-height: 300px; overflow-y: auto; margin-top: 16px;
+    }
+    .cdk-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 8px 12px; border-radius: 6px; font-size: 13px;
+      font-family: 'Consolas', 'Courier New', monospace;
+      margin-bottom: 4px; background: var(--surface); border: 1px solid var(--border);
+    }
+    .cdk-row:hover { background: var(--p-bg-l); }
+    .cdk-row .copy-btn {
+      background: none; border: 1px solid var(--border);
+      padding: 3px 10px; border-radius: 5px; font-size: 11px;
+      cursor: pointer; color: var(--muted); transition: all .15s;
+    }
+    .cdk-row .copy-btn:hover { border-color: var(--p); color: var(--p); }
+
+    /* ══ Loading ══ */
+    .spinner {
+      display: flex; align-items: center; justify-content: center; padding: 40px;
+      color: var(--muted); font-size: 14px; gap: 8px;
+    }
+    .spinner::before {
+      content: ""; width: 20px; height: 20px;
+      border: 2px solid var(--border);
+      border-top-color: var(--p);
+      border-radius: 50%;
+      animation: spin .6s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .text-center { text-align: center; }
+    .text-muted { color: var(--muted); }
+    .mt-16 { margin-top: 16px; }
+    .mb-16 { margin-bottom: 16px; }
+    .gap-8 { gap: 8px; }
+
+    /* ══ Overlay for mobile ══ */
+    .sidebar-overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,.4); z-index: 199;
+    }
+    .sidebar-overlay.show { display: block; }
+
+    /* ══ Responsive ══ */
+    @media (max-width: 768px) {
+      .sidebar { position: fixed; left: 0; top: 0; bottom: 0; }
+      .sidebar.collapsed { margin-left: calc(-1 * var(--sidebar-w)); }
+      .hamburger { display: block; }
+      .stats-grid { grid-template-columns: repeat(2, 1fr); }
+      .form-grid, .form-grid-3 { grid-template-columns: 1fr; }
+      .status-panel { grid-template-columns: 1fr 1fr; }
+      .lock-box { width: 90%; padding: 36px 24px; }
+      .content { padding: 16px; }
+    }
+    @media (max-width: 480px) {
+      .stats-grid { grid-template-columns: 1fr; }
+      .status-panel { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ══ Lock Screen ══ -->
+<div id="lockScreen">
+  <div class="lock-box">
+    <div class="lock-icon"><svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.8)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/><circle cx="12" cy="16" r="1"/></svg></div>
+    <div class="lock-title">管理员后台</div>
+    <div class="lock-sub">西南大学商贸学院学生就业服务平台</div>
+    <div class="lock-row">
+      <input
+        type="text" id="lockUser"
+        class="lock-input" placeholder="用户名" value="admin"
+        style="letter-spacing:1px"
+      />
+    </div>
+    <input
+      type="password" id="lockPass"
+      class="lock-input" placeholder="密码"
+      onkeydown="if(event.key==='Enter')doLogin()"
+      autocomplete="current-password"
+    />
+    <button class="lock-btn" id="lockBtn" onclick="doLogin()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:4px"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>进入后台</button>
+    <div class="lock-err" id="lockErr"></div>
+    <div class="lock-back">← <a href="index.html">返回数据看板</a></div>
+  </div>
+</div>
+
+<!-- ══ Vue App ══ -->
+<div id="app" style="display:none">
+  <!-- Sidebar overlay (mobile) -->
+  <div class="sidebar-overlay" :class="{ show: !sidebarCollapsed && isMobile }" @click="sidebarCollapsed = true"></div>
+
+  <!-- Sidebar -->
+  <aside class="sidebar" :class="{ collapsed: sidebarCollapsed }">
+    <div class="sidebar-brand">
+      <span class="logo"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg></span>
+      <span class="name">管理后台</span>
+      <span class="badge">ADMIN</span>
+    </div>
+    <nav class="sidebar-nav">
+      <template v-for="item in menu" :key="item.key">
+        <div class="nav-item"
+          :class="{ active: activeMenu === item.key && !item.children }"
+          @click="item.children ? toggleMenu(item.key) : selectMenu(item.key)">
+          <span class="icon" v-html="item.icon"></span>
+          <span>{{ item.label }}</span>
+          <span v-if="item.children" class="arrow" :class="{ open: openMenus[item.key] }">▶</span>
+        </div>
+        <div v-if="item.children" class="sub-menu" :class="{ open: openMenus[item.key] }">
+          <div v-for="sub in item.children" :key="sub.key"
+            class="sub-item" :class="{ active: activeMenu === sub.key }"
+            @click="selectMenu(sub.key)">
+            {{ sub.label }}
+          </div>
+        </div>
+      </template>
+    </nav>
+  </aside>
+
+  <!-- Main area -->
+  <div class="main-area">
+    <header class="topbar">
+      <div class="topbar-left">
+        <button class="hamburger" @click="sidebarCollapsed = !sidebarCollapsed" title="菜单"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
+        <span class="topbar-title" v-html="currentTitle"></span>
+      </div>
+      <div class="topbar-right">
+        <span class="topbar-user"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:2px"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> admin</span>
+        <a href="index.html" style="font-size:12px;color:var(--muted);text-decoration:none">← 返回看板</a>
+        <button class="btn-logout" @click="doLogout"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:2px"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>退出</button>
+      </div>
+    </header>
+    <main class="content">
+
+      <!-- ══ Dashboard ══ -->
+      <template v-if="activeMenu === 'dashboard'">
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="label">总用户数</div>
+            <div class="value">{{ dashboard.total_users ?? '—' }}</div>
+          </div>
+          <div class="stat-card">
+            <div class="label">总职位数</div>
+            <div class="value">{{ dashboard.total_jobs ?? '—' }}</div>
+          </div>
+          <div class="stat-card">
+            <div class="label">总公考职位数</div>
+            <div class="value">{{ dashboard.total_gk_jobs ?? '—' }}</div>
+          </div>
+          <div class="stat-card">
+            <div class="label">今日 API 调用</div>
+            <div class="value">{{ dashboard.today_api_calls ?? '—' }}</div>
+          </div>
+          <div class="stat-card">
+            <div class="label">今日收入</div>
+            <div class="value revenue">¥{{ fmtNum(dashboard.today_revenue) }}</div>
+          </div>
+          <div class="stat-card">
+            <div class="label">今日成本</div>
+            <div class="value cost">¥{{ fmtNum(dashboard.today_cost) }}</div>
+          </div>
+        </div>
+      </template>
+
+      <!-- ══ 热力图管理 ══ -->
+      <template v-if="activeMenu === 'hot'">
+        <div class="card">
+          <div class="card-title"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0011 12c0-1.38-.5-2-1-3-1.07-2.14-.23-4.05 0-6 .19-1.54.52-2.24 1-3 1.82 2.72 1.76 4.72 2 7 .19 1.82.38 3.55 0 5.5-.34 1.73-1.25 3.18-3 3.5-2.33.42-4.09-1.37-4.09-3.5 0-2.12 1.1-3.91 0-5.5"/></svg> 热力图管理</div>
+          <!-- 添加热门岗位 -->
+          <div style="display:flex;gap:10px;align-items:center;margin-bottom:16px;padding:12px;background:#f7f8fa;border-radius:8px">
+            <input type="number" v-model.number="hot.addJobId" placeholder="岗位ID" style="width:100px" />
+            <select v-model="hot.addJobType" style="width:100px">
+              <option value="社招">社招</option>
+              <option value="公考">公考</option>
+            </select>
+            <button class="btn btn-primary btn-sm" @click="addHotJob"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" style="vertical-align:-2px;margin-right:2px"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> 加入热门</button>
+            <span style="font-size:12px;color:#888">先到「数据库管理」→浏览 jobs/gk_jobs 表获取岗位ID</span>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>职位名称</th>
+                  <th>公司</th>
+                  <th>类型</th>
+                  <th>权重</th>
+                  <th>点击量</th>
+                  <th>置顶</th>
+                  <th>操作</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-if="hot.loading"><td colspan="7" class="empty-row"><span class="spinner"></span></td></tr>
+                <tr v-else-if="hot.list.length === 0"><td colspan="7" class="empty-row">暂无热力数据</td></tr>
+                <tr v-for="item in hot.list" :key="item.id">
+                  <td>{{ item.job_title || item.title }}</td>
+                  <td>{{ item.company }}</td>
+                  <td>{{ item._job_type || item.job_type }}</td>
+                  <td>
+                    <div class="inline-edit">
+                      <input type="number" v-model.number="item._weight" style="width:60px" />
+                      <button class="btn btn-sm btn-primary" @click="saveHotWeight(item)">保存</button>
+                    </div>
+                  </td>
+                  <td>{{ item.click_count }}</td>
+                  <td>
+                    <span class="badge-sm" :class="item.is_pinned ? 'badge-pinned' : 'badge-normal'">
+                      {{ item.is_pinned ? '已置顶' : '未置顶' }}
+                    </span>
+                  </td>
+                  <td>
+                    <div style="display:flex;gap:6px">
+                      <button class="btn btn-sm" @click="toggleHotPin(item)">{{ item.is_pinned ? '取消置顶' : '置顶' }}</button>
+                      <button class="btn btn-sm btn-danger" @click="deleteHot(item)">删除</button>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </template>
+
+      <!-- ══ 用户管理 ══ -->
+      <template v-if="activeMenu === 'users'">
+        <div class="card">
+          <div class="card-title"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg> 用户管理</div>
+          <div class="search-bar">
+            <input type="text" v-model="users.keyword" placeholder="搜索用户名…" @keydown.enter="loadUsers" />
+            <button class="btn btn-primary" @click="loadUsers">搜索</button>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>用户名</th>
+                  <th>积分</th>
+                  <th>角色</th>
+                  <th>状态</th>
+                  <th>注册时间</th>
+                  <th>操作</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-if="users.loading"><td colspan="6" class="empty-row"><span class="spinner"></span></td></tr>
+                <tr v-else-if="users.list.length === 0"><td colspan="6" class="empty-row">暂无用户数据</td></tr>
+                <tr v-for="user in users.list" :key="user.id || user.user_id">
+                  <td><strong>{{ user.username }}</strong></td>
+                  <td>
+                    <div class="inline-edit">
+                      <input type="number" v-model.number="user._credits" />
+                      <button class="btn btn-sm btn-primary" @click="saveUserCredits(user)">保存</button>
+                    </div>
+                  </td>
+                  <td>{{ user.role || 'user' }}</td>
+                  <td>
+                    <span class="badge-sm" :class="user.is_disabled ? 'badge-disabled' : 'badge-active'">
+                      {{ user.is_disabled ? '已禁用' : '正常' }}
+                    </span>
+                  </td>
+                  <td>{{ formatDate(user.created_at) }}</td>
+                  <td>
+                    <div style="display:flex;gap:6px">
+                      <button class="btn btn-sm" @click="toggleUserStatus(user)">
+                        {{ user.is_disabled ? '启用' : '禁用' }}
+                      </button>
+                      <button class="btn btn-sm" @click="resetUserPassword(user)">重置密码</button>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="pagination" v-if="users.total > 0">
+            <button :disabled="users.page <= 1" @click="users.page--; loadUsers()">上一页</button>
+            <span class="page-info">第 {{ users.page }} / {{ users.totalPages }} 页（共 {{ users.total }} 条）</span>
+            <button :disabled="users.page >= users.totalPages" @click="users.page++; loadUsers()">下一页</button>
+          </div>
+        </div>
+      </template>
+
+      <!-- ══ 社招爬虫 ══ -->
+      <template v-if="activeMenu === 'crawl'">
+        <div class="card">
+          <div class="card-title"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg> 社招爬虫配置 <span class="badge-sm" style="background:var(--primary-ll);color:var(--primary)">招聘信息</span></div>
+          <div class="toggle-row">
+            <label class="toggle-switch">
+              <input type="checkbox" v-model="crawl.enabled">
+              <span class="toggle-slider"></span>
+            </label>
+            <div>
+              <div class="toggle-label">定时自动采集</div>
+              <div class="toggle-hint" v-html="crawlToggleText()"></div>
+            </div>
+          </div>
+          <div class="form-grid">
+            <div class="form-group" style="grid-column:1/-1">
+              <label>搜索关键词</label>
+              <div class="tag-box" @click="$refs.crawlTagInput?.focus()">
+                <span class="tag-item" v-for="(kw, i) in crawl.keywords" :key="i">
+                  {{ kw }}<span @click.stop="crawl.keywords.splice(i, 1)">×</span>
+                </span>
+                <input class="tag-input" ref="crawlTagInput" placeholder="输入后按回车添加关键词…"
+                  @keydown="onTagKeydown($event, crawl.keywords)"
+                  @keyup="onTagKeyup($event, crawl.keywords)" />
+              </div>
+              <div class="form-hint">支持多个关键词，如：软件工程师、数据分析、产品经理</div>
+            </div>
+            <div class="form-group">
+              <label>采集周期</label>
+              <select v-model.number="crawl.interval_hours">
+                <option :value="1">每小时</option>
+                <option :value="6">每 6 小时</option>
+                <option :value="12">每 12 小时</option>
+                <option :value="24">每天</option>
+                <option :value="48">每 2 天</option>
+                <option :value="168">每周</option>
+              </select>
+              <div class="form-hint">定时任务需保持服务运行</div>
+            </div>
+          </div>
+          <div style="display:flex;gap:10px;margin-top:16px">
+            <button class="btn btn-primary" @click="saveCrawlSchedule"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg> 保存配置</button>
+            <button class="btn btn-success" :disabled="crawl.saving" @click="triggerCrawl">
+              <span v-html="crawlBtnText()"></span>
+            </button>
+          </div>
+          <div class="status-panel" :class="{ running: crawl.is_running }">
+            <div class="status-row"><span class="k">服务状态：</span><span class="v" v-html="crawlStatusText()"></span></div>
+            <div class="status-row"><span class="k">定时任务：</span><span class="v">{{ crawl.enabled ? '每 ' + crawl.interval_hours + ' 小时' : '已关闭' }}</span></div>
+            <div class="status-row"><span class="k">上次采集：</span><span class="v">{{ crawl.last_run || '从未' }}</span></div>
+            <div class="status-row"><span class="k">上次结果：</span><span class="v">{{ crawl.last_count != null ? crawl.last_count + ' 条' : '—' }}</span></div>
+          </div>
+        </div>
+      </template>
+
+      <!-- ══ 公考爬虫 ══ -->
+      <template v-if="activeMenu === 'gkcrawl'">
+        <div class="card">
+          <div class="card-title"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 012 2v14a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/></svg> 公考爬虫配置 <span class="badge-sm" style="background:var(--warn-l);color:var(--warn)">考公考编</span></div>
+          <div class="form-grid">
+            <div class="form-group">
+              <label>搜索关键词</label>
+              <input type="text" v-model="gkcrawl.keyword" placeholder="如：公务员、事业单位" />
+            </div>
+            <div class="form-group">
+              <label>考试年份</label>
+              <select v-model="gkcrawl.year">
+                <option value="2026">2026年</option>
+                <option value="2025">2025年</option>
+                <option value="2024">2024年</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>采集周期</label>
+              <select v-model.number="gkcrawl.interval_hours">
+                <option :value="6">每 6 小时</option>
+                <option :value="12">每 12 小时</option>
+                <option :value="24">每天</option>
+                <option :value="48">每 2 天</option>
+                <option :value="168">每周</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group" style="margin-top:8px">
+            <label>采集省份（留空 = 全部省份）</label>
+            <div class="tag-box" @click="$refs.provTagInput?.focus()">
+              <span class="tag-item" v-for="(p, i) in gkcrawl.provinces" :key="i">
+                {{ safeProvLabel(p) }}<span @click.stop="gkcrawl.provinces.splice(i, 1)">×</span>
+              </span>
+              <input class="tag-input" ref="provTagInput" placeholder="输入省份代码后回车，如 bj, gd…"
+                @keydown="onTagKeydown($event, gkcrawl.provinces, true)"
+                @keyup="onTagKeyup($event, gkcrawl.provinces, true)" />
+            </div>
+            <div class="form-hint" style="margin-top:6px">
+              输入省份代码后回车添加，或
+              <a href="javascript:void(0)" @click="addAllProvinces" style="color:var(--warn);font-weight:600">+全部23省</a>
+              一键添加
+            </div>
+          </div>
+          <div style="display:flex;gap:10px;margin-top:16px">
+            <button class="btn btn-primary" @click="saveGkCrawlSchedule"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg> 保存配置</button>
+            <button class="btn btn-success" :disabled="gkcrawl.saving" @click="triggerGkCrawl">
+              <span v-html="gkCrawlBtnText()"></span>
+            </button>
+          </div>
+          <div class="status-panel" :class="{ running: gkcrawl.is_running }">
+            <div class="status-row"><span class="k">采集状态：</span><span class="v" v-html="gkCrawlStatusText()"></span></div>
+            <div class="status-row"><span class="k">上次采集：</span><span class="v">{{ gkcrawl.last_run || '从未' }}</span></div>
+            <div class="status-row"><span class="k">上次结果：</span><span class="v">{{ gkcrawl.last_count != null ? gkcrawl.last_count + ' 条' : '—' }}</span></div>
+          </div>
+        </div>
+      </template>
+
+      <!-- ══ 数据浏览 ══ -->
+      <template v-if="activeMenu === 'dbbrowse'">
+        <div class="card">
+          <div class="card-title"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg> 数据浏览</div>
+          <div class="form-group" style="max-width:320px">
+            <label>选择数据表</label>
+            <select v-model="dbbrowse.selectedTable" @change="loadTableData">
+              <option value="">-- 请选择 --</option>
+              <option v-for="t in dbbrowse.tables" :key="t.name" :value="t.name">
+                {{ t.name }}（{{ t.rows }} 行）
+              </option>
+            </select>
+          </div>
+          <div v-if="dbbrowse.selectedTable">
+            <div class="table-wrap" style="max-height:500px;overflow-y:auto">
+              <table>
+                <thead>
+                  <tr>
+                    <th v-for="col in dbbrowse.columns" :key="col">{{ col }}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-if="dbbrowse.loading"><td :colspan="dbbrowse.columns.length || 1" class="empty-row"><span class="spinner"></span></td></tr>
+                  <tr v-else-if="dbbrowse.rows.length === 0"><td :colspan="dbbrowse.columns.length || 1" class="empty-row">暂无数据</td></tr>
+                  <tr v-for="(row, ri) in dbbrowse.rows" :key="ri">
+                    <td v-for="col in dbbrowse.columns" :key="col">{{ row[col] }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="pagination" v-if="dbbrowse.total > 0">
+              <button :disabled="dbbrowse.page <= 1" @click="dbbrowse.page--; loadTableData()">上一页</button>
+              <span class="page-info">第 {{ dbbrowse.page }} / {{ Math.ceil(dbbrowse.total / dbbrowse.pageSize) }} 页（共 {{ dbbrowse.total }} 条）</span>
+              <button :disabled="dbbrowse.page >= Math.ceil(dbbrowse.total / dbbrowse.pageSize)" @click="dbbrowse.page++; loadTableData()">下一页</button>
+            </div>
+          </div>
+        </div>
+      </template>
+
+      <!-- ══ SQL查询 ══ -->
+      <template v-if="activeMenu === 'sqlquery'">
+        <div class="card">
+          <div class="card-title"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg> SQL 查询 <span class="badge-sm" style="background:var(--danger-l);color:var(--danger)">仅允许 SELECT</span></div>
+          <div class="form-group">
+            <textarea v-model="sqlquery.sql" placeholder="输入 SQL 查询语句…&#10;SELECT * FROM jobs LIMIT 10;"></textarea>
+          </div>
+          <button class="btn btn-primary" :disabled="sqlquery.loading" @click="execSql">
+            <span v-html="sqlQueryBtnText()"></span>
+          </button>
+          <div class="sql-results" v-if="sqlquery.result">
+            <div class="info" v-if="sqlquery.columns">查询结果：{{ sqlquery.rows.length }} 行</div>
+            <div class="info error" v-else style="color:var(--danger)">{{ sqlquery.error }}</div>
+            <div class="table-wrap" style="max-height:400px;overflow-y:auto" v-if="sqlquery.columns">
+              <table>
+                <thead>
+                  <tr><th v-for="col in sqlquery.columns" :key="col">{{ col }}</th></tr>
+                </thead>
+                <tbody>
+                  <tr v-if="sqlquery.rows.length === 0"><td :colspan="sqlquery.columns.length" class="empty-row">查询无结果</td></tr>
+                  <tr v-for="(row, ri) in sqlquery.rows" :key="ri">
+                    <td v-for="col in sqlquery.columns" :key="col">{{ row[col] }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </template>
+
+      <!-- ══ 成本控制 ══ -->
+      <template v-if="activeMenu === 'cost'">
+        <div class="card">
+          <div class="card-title"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg> 成本控制</div>
+          <div class="date-range">
+            <input type="date" v-model="cost.startDate" /> <span class="sep">至</span>
+            <input type="date" v-model="cost.endDate" />
+            <button class="btn btn-primary" @click="loadCost">查询</button>
+          </div>
+          <div class="stats-grid" v-if="cost.summary">
+            <div class="stat-card">
+              <div class="label">总 API 调用</div>
+              <div class="value">{{ fmtNum(cost.summary.total_calls) }}</div>
+            </div>
+            <div class="stat-card">
+              <div class="label">总成本</div>
+              <div class="value cost">¥{{ fmtNum(cost.summary.total_cost) }}</div>
+            </div>
+            <div class="stat-card">
+              <div class="label">总积分消耗</div>
+              <div class="value">{{ fmtNum(cost.summary.total_credits) }}</div>
+            </div>
+          </div>
+          <div v-if="cost.details && cost.details.length" class="mb-16">
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr><th>API 类型</th><th>调用次数</th><th>成本(元)</th><th>积分消耗</th></tr>
+                </thead>
+                <tbody>
+                  <tr v-for="d in cost.details" :key="d.api_type">
+                    <td>{{ d.api_type }}</td>
+                    <td>{{ d.count }}</td>
+                    <td>¥{{ fmtNum(d.total_cost) }}</td>
+                    <td>{{ d.total_credits }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <div v-if="cost.chart && cost.chart.length" class="bar-chart" style="margin-top:16px">
+            <div class="bar-col" v-for="item in cost.chart" :key="item.date" :title="item.date + ': ¥' + item.cost">
+              <div class="bar-val">¥{{ item.cost }}</div>
+              <div class="bar-fill" :style="{ height: barHeight(item.cost, cost.maxCost) + 'px' }"></div>
+              <div class="bar-label">{{ item.date.slice(5) }}</div>
+            </div>
+          </div>
+        </div>
+      </template>
+
+      <!-- ══ 充值记录 ══ -->
+      <template v-if="activeMenu === 'recharge'">
+        <div class="card">
+          <div class="card-title"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg> 充值记录</div>
+          <div class="date-range">
+            <input type="date" v-model="recharge.startDate" /> <span class="sep">至</span>
+            <input type="date" v-model="recharge.endDate" />
+            <button class="btn btn-primary" @click="loadRecharge">查询</button>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr><th>用户名</th><th>CDK 码</th><th>积分</th><th>价格(元)</th><th>时间</th></tr>
+              </thead>
+              <tbody>
+                <tr v-if="recharge.loading"><td colspan="5" class="empty-row"><span class="spinner"></span></td></tr>
+                <tr v-else-if="recharge.list.length === 0"><td colspan="5" class="empty-row">暂无充值记录</td></tr>
+                <tr v-for="item in recharge.list" :key="item.id">
+                  <td><strong>{{ item.username }}</strong></td>
+                  <td style="font-family:monospace;font-size:12px">{{ item.cdk_code }}</td>
+                  <td>{{ item.credits }}</td>
+                  <td>¥{{ fmtNum(item.price_yuan) }}</td>
+                  <td>{{ formatDate(item.created_at) }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="pagination" v-if="recharge.total > 0">
+            <button :disabled="recharge.page <= 1" @click="recharge.page--; loadRecharge()">上一页</button>
+            <span class="page-info">第 {{ recharge.page }} / {{ recharge.totalPages }} 页（共 {{ recharge.total }} 条）</span>
+            <button :disabled="recharge.page >= recharge.totalPages" @click="recharge.page++; loadRecharge()">下一页</button>
+          </div>
+        </div>
+      </template>
+
+      <!-- ══ 当月利润 ══ -->
+      <template v-if="activeMenu === 'profit'">
+        <div class="card">
+          <div class="card-title"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg> 当月利润</div>
+          <div class="date-range">
+            <input type="date" v-model="profit.startDate" /> <span class="sep">至</span>
+            <input type="date" v-model="profit.endDate" />
+            <button class="btn btn-primary" @click="loadProfit">查询</button>
+          </div>
+          <div class="stats-grid" v-if="profit.data">
+            <div class="stat-card">
+              <div class="label">收入</div>
+              <div class="value revenue">¥{{ fmtNum(profit.data.revenue) }}</div>
+            </div>
+            <div class="stat-card">
+              <div class="label">成本</div>
+              <div class="value cost">¥{{ fmtNum(profit.data.cost) }}</div>
+            </div>
+            <div class="stat-card">
+              <div class="label">利润</div>
+              <div class="value profit">¥{{ fmtNum(profit.data.profit) }}</div>
+            </div>
+            <div class="stat-card">
+              <div class="label">充值次数</div>
+              <div class="value">{{ fmtNum(profit.data.recharge_count) }}</div>
+            </div>
+            <div class="stat-card">
+              <div class="label">API 调用次数</div>
+              <div class="value">{{ fmtNum(profit.data.api_call_count) }}</div>
+            </div>
+          </div>
+        </div>
+      </template>
+
+      <!-- ══ 系统设置 ══ -->
+      <template v-if="activeMenu === 'settings'">
+        <!-- CDK 生成 -->
+        <div class="card">
+          <div class="card-title"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg> CDK 生成器</div>
+          <div class="form-grid-3">
+            <div class="form-group">
+              <label>积分数</label>
+              <input type="number" v-model.number="settings.cdkCredits" placeholder="如：100" />
+            </div>
+            <div class="form-group">
+              <label>价格（元）</label>
+              <input type="number" step="0.01" v-model.number="settings.cdkPrice" placeholder="如：9.99" />
+            </div>
+            <div class="form-group">
+              <label>生成数量</label>
+              <input type="number" v-model.number="settings.cdkCount" placeholder="如：10" />
+            </div>
+          </div>
+          <button class="btn btn-primary mt-16" :disabled="settings.generating" @click="generateCdk">
+            <span v-html="cdkBtnText()"></span>
+          </button>
+          <div class="cdk-codes" v-if="settings.cdkList.length">
+            <div class="cdk-row" v-for="(code, i) in settings.cdkList" :key="i">
+              <span>{{ code }}</span>
+              <button class="copy-btn" @click="copyCdk(code)">复制</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- CDK 列表 -->
+        <div class="card">
+          <div class="card-title"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v2c-1.1 0-2 .9-2 2s.9 2 2 2v2c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2v-2c1.1 0 2-.9 2-2s-.9-2-2-2V6c0-1.1.9-2 2-2z"/><circle cx="9" cy="12" r="1"/></svg> CDK 列表</div>
+          <div class="form-inline mb-16" style="max-width:320px">
+            <select v-model="settings.cdkFilter" @change="loadCdkList">
+              <option value="">全部</option>
+              <option value="0">未使用</option>
+              <option value="1">已使用</option>
+            </select>
+            <button class="btn btn-primary" @click="loadCdkList">查询</button>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr><th>CDK 码</th><th>积分</th><th>价格(元)</th><th>使用状态</th><th>创建时间</th></tr>
+              </thead>
+              <tbody>
+                <tr v-if="settings.cdkTableLoading"><td colspan="5" class="empty-row"><span class="spinner"></span></td></tr>
+                <tr v-else-if="settings.cdkTable.length === 0"><td colspan="5" class="empty-row">暂无 CDK</td></tr>
+                <tr v-for="item in settings.cdkTable" :key="item.id">
+                  <td style="font-family:monospace;font-size:12px">{{ item.code }}</td>
+                  <td>{{ item.credits }}</td>
+                  <td>¥{{ fmtNum(item.price_yuan) }}</td>
+                  <td>
+                    <span class="badge-sm" :class="item.is_used || item.used ? 'badge-disabled' : 'badge-active'">
+                      {{ item.is_used || item.used ? '已使用' : '未使用' }}
+                    </span>
+                  </td>
+                  <td>{{ formatDate(item.created_at) }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="pagination" v-if="settings.cdkTotal > 0">
+            <button :disabled="settings.cdkPage <= 1" @click="settings.cdkPage--; loadCdkList()">上一页</button>
+            <span class="page-info">第 {{ settings.cdkPage }} / {{ Math.ceil(settings.cdkTotal / 20) }} 页（共 {{ settings.cdkTotal }} 条）</span>
+            <button :disabled="settings.cdkPage >= Math.ceil(settings.cdkTotal / 20)" @click="settings.cdkPage++; loadCdkList()">下一页</button>
+          </div>
+        </div>
+
+        <!-- 修改密码 -->
+        <div class="card">
+          <div class="card-title"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 11-7.78 7.78 5.5 5.5 0 017.78-7.78zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg> 修改管理员密码</div>
+          <div class="form-grid">
+            <div class="form-group">
+              <label>当前密码</label>
+              <input type="password" v-model="settings.oldPwd" placeholder="输入当前密码" />
+            </div>
+            <div class="form-group">
+              <label>新密码</label>
+              <input type="password" v-model="settings.newPwd" placeholder="输入新密码" />
+            </div>
+          </div>
+          <button class="btn btn-primary mt-16" :disabled="settings.changingPwd" @click="changePassword">
+            <span v-html="pwdBtnText()"></span>
+          </button>
+        </div>
+      </template>
+
+    </main>
+  </div>
+</div>
+
+<!-- ══ Toast ══ -->
+<div class="toast" id="toast"></div>
+
+<script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+<script>
+// ══════════════════════════════════════════════════════════
+// API Base URL
+// ══════════════════════════════════════════════════════════
+(function () {
+  const proto = window.location.protocol;
+  const host  = window.location.hostname;
+  const port  = window.location.port;
+  if (proto === 'file:' || !host) {
+    window.__API_BASE__ = 'http://127.0.0.1:5001';
+  } else if (port === '80' || port === '443' || port === '') {
+    window.__API_BASE__ = proto + '//' + host;
+  } else {
+    window.__API_BASE__ = proto + '//' + host + ':5001';
+  }
+})();
+const API = window.__API_BASE__ || 'http://localhost:5001';
+
+// ══════════════════════════════════════════════════════════
+// Token management
+// ══════════════════════════════════════════════════════════
+function getToken() { return localStorage.getItem('job_board_token') || ''; }
+function setToken(t) { localStorage.setItem('job_board_token', t); }
+function clearToken() { localStorage.removeItem('job_board_token'); }
+
+function authHeaders() {
+  return {
+    'Content-Type': 'application/json',
+    'Authorization': 'Bearer ' + getToken()
+  };
+}
+
+// ══════════════════════════════════════════════════════════
+// Toast
+// ══════════════════════════════════════════════════════════
+let _toastTimer;
+function showToast(msg, type = '') {
+  const el = document.getElementById('toast');
+  el.innerHTML = msg;
+  el.className = 'toast ' + type + ' show';
+  clearTimeout(_toastTimer);
+  _toastTimer = setTimeout(() => { el.className = 'toast'; }, 3000);
+}
+
+// ══════════════════════════════════════════════════════════
+// Login
+// ══════════════════════════════════════════════════════════
+async function doLogin() {
+  const username = document.getElementById('lockUser').value.trim();
+  const password = document.getElementById('lockPass').value.trim();
+  if (!username || !password) return;
+
+  const btn = document.getElementById('lockBtn');
+  const errEl = document.getElementById('lockErr');
+  errEl.textContent = '';
+  btn.disabled = true;
+  btn.textContent = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg> 登录中…';
+
+  try {
+    const resp = await fetch(`${API}/api/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, password })
+    });
+    const data = await resp.json();
+    if (resp.ok && (data.token || data.access_token)) {
+      const token = data.token || data.access_token;
+      setToken(token);
+      unlockApp();
+    } else {
+      const inp = document.getElementById('lockPass');
+      inp.classList.add('err');
+      setTimeout(() => inp.classList.remove('err'), 400);
+      errEl.textContent = data.message || data.msg || '登录失败';
+      document.getElementById('lockPass').value = '';
+    }
+  } catch (e) {
+    errEl.textContent = '无法连接后端服务';
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '进入后台';
+  }
+}
+
+function unlockApp() {
+  document.getElementById('lockScreen').style.display = 'none';
+  document.getElementById('app').style.display = 'flex';
+  initVueApp();
+}
+
+function doLogout() {
+  clearToken();
+  location.reload();
+}
+
+// ══════════════════════════════════════════════════════════
+// API helper with auto-401 handling
+// ══════════════════════════════════════════════════════════
+async function apiFetch(url, options = {}) {
+  const resp = await fetch(url, { ...options, headers: { ...authHeaders(), ...(options.headers || {}) } });
+  if (resp.status === 401) {
+    clearToken();
+    showToast('登录已过期，请重新登录', 'error');
+    setTimeout(() => location.reload(), 1500);
+    throw new Error('Unauthorized');
+  }
+  return resp;
+}
+
+// ══════════════════════════════════════════════════════════
+// Province labels
+// ══════════════════════════════════════════════════════════
+const GK_PROVINCES = {
+  "bj":"北京","tj":"天津","he":"河北","sx":"山西","ne":"内蒙古","ln":"辽宁","jl":"吉林","hlj":"黑龙江",
+  "sh":"上海","js":"江苏","zj":"浙江","ah":"安徽","fj":"福建","jx":"江西","sd":"山东","hn":"河南",
+  "hb":"湖北","hunan":"湖南","gd":"广东","gx":"广西","hainan":"海南","cq":"重庆","sc":"四川","gz":"贵州",
+  "yn":"云南","xz":"西藏","sn":"陕西","gs":"甘肃","qh":"青海","nx":"宁夏","xj":"新疆"
+};
+const ALL_23_PROVINCES = ["bj","tj","he","sx","ne","ln","jl","hlj","sh","js","zj","ah","fj","jx","sd","hn","hb","hunan","gd","gx","hainan","cq","sc"];
+
+function provLabel(code) {
+  return GK_PROVINCES[code] ? GK_PROVINCES[code] + '(' + code + ')' : code;
+}
+
+// ══════════════════════════════════════════════════════════
+// Vue App
+// ══════════════════════════════════════════════════════════
+let app;
+function initVueApp() {
+  app = Vue.createApp({
+    data() {
+      const now = new Date();
+      const y = now.getFullYear();
+      const m = String(now.getMonth() + 1).padStart(2, '0');
+      const today = y + '-' + m + '-' + '01';
+      const todayEnd = y + '-' + m + '-' + String(new Date(y, now.getMonth() + 1, 0).getDate()).padStart(2, '0');
+
+      return {
+        sidebarCollapsed: window.innerWidth <= 768,
+        isMobile: window.innerWidth <= 768,
+        activeMenu: 'dashboard',
+        openMenus: {},
+
+        menu: [
+          { key: 'dashboard', icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="12" width="4" height="9"/><rect x="9" y="7" width="4" height="14"/><rect x="15" y="3" width="4" height="18"/></svg>', label: '仪表盘' },
+          { key: 'hot', icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0011 12c0-1.38-.5-2-1-3-1.07-2.14-.23-4.05 0-6 .19-1.54.52-2.24 1-3 1.82 2.72 1.76 4.72 2 7 .19 1.82.38 3.55 0 5.5-.34 1.73-1.25 3.18-3 3.5-2.33.42-4.09-1.37-4.09-3.5 0-2.12 1.1-3.91 0-5.5"/></svg>', label: '热力图管理' },
+          { key: 'users', icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>', label: '用户管理' },
+          { key: 'crawler', icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2v4"/><path d="M12 18v4"/><path d="M2 12h4"/><path d="M18 12h4"/><path d="M5.5 5.5l3 3"/><path d="M15.5 8.5l3-3"/><path d="M8.5 15.5l-3 3"/><path d="M15.5 15.5l3 3"/></svg>', label: '爬虫系统', children: [
+            { key: 'crawl', label: '社招爬虫' },
+            { key: 'gkcrawl', label: '公考爬虫' }
+          ]},
+          { key: 'database', icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>', label: '数据库管理', children: [
+            { key: 'dbbrowse', label: '数据浏览' },
+            { key: 'sqlquery', label: 'SQL查询' }
+          ]},
+          { key: 'finance', icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>', label: '财务管理', children: [
+            { key: 'cost', label: '成本控制' },
+            { key: 'recharge', label: '充值记录' },
+            { key: 'profit', label: '当月利润' }
+          ]},
+          { key: 'settings', icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>', label: '系统设置' }
+        ],
+
+        // Dashboard
+        dashboard: {},
+
+        // Hot
+        hot: { list: [], loading: false, addJobId: null, addJobType: '社招' },
+
+        // Users
+        users: { list: [], loading: false, page: 1, pageSize: 20, total: 0, totalPages: 1, keyword: '' },
+
+        // Crawl
+        crawl: {
+          enabled: false, interval_hours: 12, keywords: [],
+          is_running: false, last_run: '', last_count: null, saving: false
+        },
+
+        // GkCrawl
+        gkcrawl: {
+          keyword: '公务员', year: '2026', interval_hours: 24, provinces: [],
+          is_running: false, last_run: '', last_count: null, saving: false
+        },
+
+        // DB Browse
+        dbbrowse: { tables: [], selectedTable: '', columns: [], rows: [], loading: false, page: 1, pageSize: 50, total: 0 },
+
+        // SQL Query
+        sqlquery: { sql: '', loading: false, result: false, columns: null, rows: [], error: '' },
+
+        // Cost
+        cost: { startDate: today, endDate: todayEnd, summary: null, details: [], chart: [], maxCost: 0 },
+
+        // Recharge
+        recharge: { startDate: today, endDate: todayEnd, list: [], loading: false, page: 1, pageSize: 20, total: 0, totalPages: 1 },
+
+        // Profit
+        profit: { startDate: today, endDate: todayEnd, data: null },
+
+        // Settings
+        settings: {
+          cdkCredits: 100, cdkPrice: 9.99, cdkCount: 10, cdkList: [], generating: false,
+          cdkTable: [], cdkTableLoading: false, cdkPage: 1, cdkTotal: 0, cdkFilter: '',
+          oldPwd: '', newPwd: '', changingPwd: false
+        }
+      };
+    },
+
+    computed: {
+      currentTitle() {
+        try {
+          const map = {
+          dashboard: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="12" width="4" height="9"/><rect x="9" y="7" width="4" height="14"/><rect x="15" y="3" width="4" height="18"/></svg> 仪表盘',
+          hot: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0011 12c0-1.38-.5-2-1-3-1.07-2.14-.23-4.05 0-6 .19-1.54.52-2.24 1-3 1.82 2.72 1.76 4.72 2 7 .19 1.82.38 3.55 0 5.5-.34 1.73-1.25 3.18-3 3.5-2.33.42-4.09-1.37-4.09-3.5 0-2.12 1.1-3.91 0-5.5"/></svg> 热力图管理',
+          users: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg> 用户管理',
+crawl: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2v4"/><path d="M12 18v4"/><path d="M2 12h4"/><path d="M18 12h4"/><path d="M5.5 5.5l3 3"/><path d="M15.5 8.5l3-3"/><path d="M8.5 15.5l-3 3"/><path d="M15.5 15.5l3 3"/></svg> 社招爬虫',
+gkcrawl: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2v4"/><path d="M12 18v4"/><path d="M2 12h4"/><path d="M18 12h4"/><path d="M5.5 5.5l3 3"/><path d="M15.5 8.5l3-3"/><path d="M8.5 15.5l-3 3"/><path d="M15.5 15.5l3 3"/></svg> 公考爬虫',
+          dbbrowse: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg> 数据浏览',
+          sqlquery: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg> SQL查询',
+          cost: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg> 成本控制',
+          recharge: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg> 充值记录',
+          profit: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg> 当月利润',
+          settings: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg> 系统设置'
+        };
+        return map[this.activeMenu] || '管理后台';
+        } catch(e) { return '管理后台'; }
+      }
+    },
+
+    methods: {
+      // Navigation
+      toggleMenu(key) {
+        this.openMenus[key] = !this.openMenus[key];
+      },
+      selectMenu(key) {
+        this.activeMenu = key;
+        if (this.isMobile) this.sidebarCollapsed = true;
+        this.loadMenuData(key);
+      },
+
+      // Menu data loading
+      async loadMenuData(key) {
+        try {
+          switch (key) {
+          case 'dashboard': await this.loadDashboard(); break;
+          case 'hot': await this.loadHot(); break;
+          case 'users': await this.loadUsers(); break;
+          case 'crawl': await this.loadCrawlSchedule(); break;
+          case 'gkcrawl': await this.loadGkCrawlSchedule(); break;
+          case 'dbbrowse': await this.loadDbTables(); break;
+          case 'cost': await this.loadCost(); break;
+          case 'recharge': await this.loadRecharge(); break;
+          case 'profit': await this.loadProfit(); break;
+          case 'settings': await this.loadCdkList(); break;
+        }
+        } catch (e) {
+          console.error('[loadMenuData]', key, e);
+          showToast('[' + key + '] ' + (e.message || '加载失败'), 'error');
+        }
+      },
+
+      // Formatting
+      fmtNum(v) { return v != null ? Number(v).toLocaleString('zh-CN', { minimumFractionDigits: 0, maximumFractionDigits: 2 }) : '—'; },
+      formatDate(d) { if (!d) return '—'; const dt = new Date(d); return dt.toLocaleDateString('zh-CN') + ' ' + dt.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' }); },
+      barHeight(v, max) { return max > 0 ? Math.max(4, (v / max) * 140) : 4; },
+
+      // v-html helpers (return HTML strings for buttons/status)
+      crawlToggleText() {
+        return this.crawl.enabled
+          ? '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><polyline points="20 6 9 17 4 12"/></svg> 定时任务已开启'
+          : '开启后按设定周期自动运行';
+      },
+      crawlBtnText() {
+        return this.crawl.saving
+          ? '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg> 采集中…'
+          : '立即采集一次';
+      },
+      crawlStatusText() {
+        return this.crawl.is_running
+          ? '<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#6B8E4E;vertical-align:-1px;margin-right:2px"></span> 采集中'
+          : '<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#D0C8B8;vertical-align:-1px;margin-right:2px"></span> 空闲';
+      },
+      gkCrawlBtnText() {
+        try {
+          if (!this.gkcrawl) return '立即采集一次';
+          return this.gkcrawl.saving
+            ? '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg> 采集中…'
+            : '立即采集一次';
+        } catch(e) { return '立即采集一次'; }
+      },
+      gkCrawlStatusText() {
+        try {
+          if (!this.gkcrawl) return '空闲';
+          return this.gkcrawl.is_running
+            ? '<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#6B8E4E;vertical-align:-1px;margin-right:2px"></span> 采集中'
+            : '<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#D0C8B8;vertical-align:-1px;margin-right:2px"></span> 空闲';
+        } catch(e) { return '空闲'; }
+      },
+      sqlQueryBtnText() {
+        return this.sqlquery.loading
+          ? '执行中…'
+          : '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> 执行查询';
+      },
+      cdkBtnText() {
+        return this.settings.generating
+          ? '生成中…'
+          : '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:2px"><path d="M4 4h16c1.1 0 2 .9 2 2v2c-1.1 0-2 .9-2 2s.9 2 2 2v2c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2v-2c1.1 0 2-.9 2-2s-.9-2-2-2V6c0-1.1.9-2 2-2z"/><circle cx="9" cy="12" r="1"/></svg>生成 CDK';
+      },
+      pwdBtnText() {
+        return this.settings.changingPwd
+          ? '修改中…'
+          : '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" style="vertical-align:-2px;margin-right:2px"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>修改密码';
+      },
+
+      // Safe province label (never throws during render)
+      safeProvLabel(code) {
+        try {
+          if (!code && code !== 0) return '';
+          return (typeof provLabel === 'function') ? provLabel(code) : String(code);
+        } catch(e) { return String(code); }
+      },
+
+      // Tag input
+      onTagKeydown(e, arr, lowercase) {
+        // IME 输入法正在组合时，跳过（防止中文输入法回车确认被误处理）
+        if (e.isComposing || e.keyCode === 229) return;
+        if (e.key === 'Enter' || e.key === ',') {
+          e.preventDefault();
+          const v = (lowercase ? e.target.value.trim().toLowerCase() : e.target.value.trim());
+          if (v && !arr.includes(v)) { arr.push(v); }
+          e.target.value = '';
+        } else if (e.key === 'Backspace' && !e.target.value && arr.length) {
+          arr.pop();
+        }
+      },
+      // keyup fallback for IME: when Chinese IME eats the Enter keydown,
+      // keyup still fires with e.key === 'Enter' after composition ends
+      onTagKeyup(e, arr, lowercase) {
+        if (e.isComposing || e.keyCode === 229) return;
+        if (e.key === 'Enter' || e.key === ',') {
+          e.preventDefault();
+          const v = (lowercase ? e.target.value.trim().toLowerCase() : e.target.value.trim());
+          if (v && !arr.includes(v)) { arr.push(v); }
+          e.target.value = '';
+        }
+      },
+      addAllProvinces() {
+        const arr = this.gkcrawl.provinces;
+        ALL_23_PROVINCES.forEach(p => { if (!arr.includes(p)) arr.push(p); });
+      },
+
+      // ══ Dashboard ══
+      async loadDashboard() {
+        try {
+          const resp = await apiFetch(`${API}/api/admin/dashboard`);
+          const data = await resp.json();
+          this.dashboard = data;
+        } catch (e) { if (e.message !== 'Unauthorized') showToast('加载仪表盘失败', 'error'); }
+      },
+
+      // ══ Hot ══
+      async loadHot() {
+        this.hot.loading = true;
+        try {
+          const resp = await apiFetch(`${API}/api/admin/hot/config`);
+          const data = await resp.json();
+          // API 返回 {social: [...], gk: [...]}，合并为统一列表
+          let list = [];
+          if (data.social) list = list.concat(data.social.map(item => ({ ...item, _job_type: '社招' })));
+          if (data.gk) list = list.concat(data.gk.map(item => ({ ...item, _job_type: '公考' })));
+          if (list.length === 0) list = Array.isArray(data) ? data : (data.list || data.data || []);
+          list.forEach(item => { item._weight = item.weight; });
+          this.hot.list = list;
+        } catch (e) { if (e.message !== 'Unauthorized') showToast('加载热力图失败', 'error'); }
+        finally { this.hot.loading = false; }
+      },
+      async saveHotWeight(item) {
+        try {
+          await apiFetch(`${API}/api/admin/hot/${item.id || item.hot_id}`, {
+            method: 'PUT',
+            body: JSON.stringify({ weight: item._weight, is_pinned: item.is_pinned })
+          });
+          item.weight = item._weight;
+          showToast('<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><polyline points="20 6 9 17 4 12"/></svg> 权重已更新', 'success');
+        } catch (e) { if (e.message !== 'Unauthorized') showToast('更新失败', 'error'); }
+      },
+      async toggleHotPin(item) {
+        try {
+          const pinned = !item.is_pinned;
+          await apiFetch(`${API}/api/admin/hot/${item.id || item.hot_id}`, {
+            method: 'PUT',
+            body: JSON.stringify({ weight: item.weight, is_pinned: pinned })
+          });
+          item.is_pinned = pinned;
+          showToast(pinned ? '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><polyline points="20 6 9 17 4 12"/></svg> 已置顶' : '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><polyline points="20 6 9 17 4 12"/></svg> 已取消置顶', 'success');
+        } catch (e) { if (e.message !== 'Unauthorized') showToast('操作失败', 'error'); }
+      },
+      async deleteHot(item) {
+        if (!confirm('确定删除该热力项？')) return;
+        try {
+          await apiFetch(`${API}/api/admin/hot/${item.id || item.hot_id}`, { method: 'DELETE' });
+          this.hot.list = this.hot.list.filter(i => i !== item);
+          showToast('<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><polyline points="20 6 9 17 4 12"/></svg> 已删除', 'success');
+        } catch (e) { if (e.message !== 'Unauthorized') showToast('删除失败', 'error'); }
+      },
+      async addHotJob() {
+        const jobId = this.hot.addJobId;
+        if (!jobId || jobId <= 0) { showToast('请输入有效岗位ID', 'error'); return; }
+        try {
+          await apiFetch(`${API}/api/admin/hot/add`, {
+            method: 'POST',
+            body: JSON.stringify({ job_id: jobId, job_type: this.hot.addJobType, is_pinned: 0, weight: 0 })
+          });
+          showToast('<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><polyline points="20 6 9 17 4 12"/></svg> 已添加热门岗位', 'success');
+          this.hot.addJobId = null;
+          this.loadHot();
+        } catch (e) {
+          if (e.message !== 'Unauthorized') {
+            showToast('添加失败：' + (e.message || '请检查岗位ID是否存在'), 'error');
+          }
+        }
+      },
+
+      // ══ Users ══
+      async loadUsers() {
+        this.users.loading = true;
+        try {
+          const kw = encodeURIComponent(this.users.keyword);
+          const resp = await apiFetch(`${API}/api/admin/users?page=${this.users.page}&page_size=${this.users.pageSize}&keyword=${kw}`);
+          const data = await resp.json();
+          const list = Array.isArray(data) ? data : (data.users || data.list || data.data || data.items || []);
+          list.forEach(u => { u._credits = u.credits; });
+          this.users.list = list;
+          this.users.total = data.total || data.total_count || list.length;
+          this.users.totalPages = Math.max(1, Math.ceil(this.users.total / this.users.pageSize));
+        } catch (e) { if (e.message !== 'Unauthorized') showToast('加载用户失败', 'error'); }
+        finally { this.users.loading = false; }
+      },
+      async saveUserCredits(user) {
+        const userId = user.id || user.user_id;
+        try {
+          await apiFetch(`${API}/api/admin/users/${userId}`, {
+            method: 'PUT',
+            body: JSON.stringify({ credits: user._credits })
+          });
+          user.credits = user._credits;
+          showToast('<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><polyline points="20 6 9 17 4 12"/></svg> 积分已更新', 'success');
+        } catch (e) { if (e.message !== 'Unauthorized') showToast('更新失败', 'error'); }
+      },
+      async toggleUserStatus(user) {
+        const userId = user.id || user.user_id;
+        try {
+          await apiFetch(`${API}/api/admin/users/${userId}`, {
+            method: 'PUT',
+            body: JSON.stringify({ is_disabled: !user.is_disabled })
+          });
+          user.is_disabled = !user.is_disabled;
+          showToast(user.is_disabled ? '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><polyline points="20 6 9 17 4 12"/></svg> 已禁用' : '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><polyline points="20 6 9 17 4 12"/></svg> 已启用', 'success');
+        } catch (e) { if (e.message !== 'Unauthorized') showToast('操作失败', 'error'); }
+      },
+      async resetUserPassword(user) {
+        const newPwd = prompt(`为 ${user.username} 设置新密码：`, '123456');
+        if (!newPwd) return;
+        const userId = user.id || user.user_id;
+        try {
+          await apiFetch(`${API}/api/admin/users/${userId}`, {
+            method: 'PUT',
+            body: JSON.stringify({ password: newPwd })
+          });
+          showToast('<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><polyline points="20 6 9 17 4 12"/></svg> 密码已重置', 'success');
+        } catch (e) { if (e.message !== 'Unauthorized') showToast('重置失败', 'error'); }
+      },
+
+      // ══ Crawl ══
+      async loadCrawlSchedule() {
+        try {
+          const resp = await apiFetch(`${API}/api/admin/crawl/schedule`);
+          const data = await resp.json();
+          this.crawl.enabled = data.enabled;
+          this.crawl.interval_hours = data.interval_hours || 12;
+          this.crawl.keywords = data.keywords || [];
+          this.crawl.is_running = data.is_running;
+          this.crawl.last_run = data.last_run || '';
+          this.crawl.last_count = data.last_count;
+        } catch (e) { if (e.message !== 'Unauthorized') showToast('加载配置失败', 'error'); }
+      },
+      async saveCrawlSchedule() {
+        try {
+          await apiFetch(`${API}/api/admin/crawl/schedule`, {
+            method: 'POST',
+            body: JSON.stringify({
+              enabled: this.crawl.enabled,
+              interval_hours: this.crawl.interval_hours,
+              keywords: this.crawl.keywords
+            })
+          });
+          showToast('<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><polyline points="20 6 9 17 4 12"/></svg> 配置已保存', 'success');
+          this.loadCrawlSchedule();
+        } catch (e) { if (e.message !== 'Unauthorized') showToast('保存失败', 'error'); }
+      },
+      async triggerCrawl() {
+        this.crawl.saving = true;
+        try {
+          const resp = await apiFetch(`${API}/api/admin/crawl/now`, { method: 'POST' });
+          const data = await resp.json();
+          if (data.success || data.ok) {
+            showToast('<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 00-2.91-.09z"/><path d="M12 15l-3-3a22 22 0 012-3.95A12.88 12.88 0 0122 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 01-4 2z"/><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/></svg> 社招采集已启动', 'success');
+            this.pollCrawlStatus();
+          } else {
+            showToast(data.message || data.detail || '启动失败', 'error');
+            this.crawl.saving = false;
+          }
+        } catch (e) {
+          if (e.message !== 'Unauthorized') showToast('请求失败', 'error');
+          this.crawl.saving = false;
+        }
+      },
+      pollCrawlStatus() {
+        const timer = setInterval(async () => {
+          try {
+            const resp = await apiFetch(`${API}/api/admin/crawl/schedule`);
+            const data = await resp.json();
+            this.crawl.is_running = data.is_running;
+            if (!data.is_running) {
+              clearInterval(timer);
+              this.crawl.saving = false;
+              this.crawl.last_run = data.last_run;
+              this.crawl.last_count = data.last_count;
+              showToast('<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><polyline points="20 6 9 17 4 12"/></svg> 采集完成！共 ' + (data.last_count || 0) + ' 条', 'success');
+            }
+          } catch { clearInterval(timer); this.crawl.saving = false; }
+        }, 3000);
+      },
+
+      // ══ GkCrawl ══
+      async loadGkCrawlSchedule() {
+        try {
+          const resp = await apiFetch(`${API}/api/admin/crawl/gk/schedule`);
+          const data = await resp.json();
+          if (!data || typeof data !== 'object') { showToast('配置数据异常', 'error'); return; }
+          this.gkcrawl.keyword = data.keyword || '公务员';
+          this.gkcrawl.year = String(data.year || '2026');
+          this.gkcrawl.interval_hours = Number(data.interval_hours) || 24;
+          this.gkcrawl.provinces = Array.isArray(data.provinces) ? data.provinces : [];
+          this.gkcrawl.is_running = !!data.is_running;
+          this.gkcrawl.last_run = data.last_run || '';
+          this.gkcrawl.last_count = data.last_count != null ? data.last_count : null;
+        } catch (e) {
+          if (e.message !== 'Unauthorized') showToast('加载配置失败', 'error');
+        }
+      },
+      async saveGkCrawlSchedule() {
+        try {
+          await apiFetch(`${API}/api/admin/crawl/gk/schedule`, {
+            method: 'POST',
+            body: JSON.stringify({
+              enabled: true,
+              interval_hours: this.gkcrawl.interval_hours,
+              keyword: this.gkcrawl.keyword,
+              year: this.gkcrawl.year,
+              provinces: this.gkcrawl.provinces
+            })
+          });
+          showToast('<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><polyline points="20 6 9 17 4 12"/></svg> 配置已保存', 'success');
+          this.loadGkCrawlSchedule();
+        } catch (e) { if (e.message !== 'Unauthorized') showToast('保存失败', 'error'); }
+      },
+      async triggerGkCrawl() {
+        this.gkcrawl.saving = true;
+        try {
+          const resp = await apiFetch(`${API}/api/admin/crawl/gk/now`, { method: 'POST' });
+          const data = await resp.json();
+          if (data.success || data.ok) {
+            showToast('<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 00-2.91-.09z"/><path d="M12 15l-3-3a22 22 0 012-3.95A12.88 12.88 0 0122 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 01-4 2z"/><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/></svg> 公考采集已启动', 'success');
+            this.pollGkStatus();
+          } else {
+            showToast(data.message || data.detail || '启动失败', 'error');
+            this.gkcrawl.saving = false;
+          }
+        } catch (e) {
+          if (e.message !== 'Unauthorized') showToast('请求失败', 'error');
+          this.gkcrawl.saving = false;
+        }
+      },
+      pollGkStatus() {
+        const timer = setInterval(async () => {
+          try {
+            const resp = await apiFetch(`${API}/api/admin/crawl/gk/schedule`);
+            const data = await resp.json();
+            this.gkcrawl.is_running = data.is_running;
+            if (!data.is_running) {
+              clearInterval(timer);
+              this.gkcrawl.saving = false;
+              this.gkcrawl.last_run = data.last_run;
+              this.gkcrawl.last_count = data.last_count;
+              showToast('<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><polyline points="20 6 9 17 4 12"/></svg> 公考采集完成！共 ' + (data.last_count || 0) + ' 条', 'success');
+            }
+          } catch { clearInterval(timer); this.gkcrawl.saving = false; }
+        }, 3000);
+      },
+
+      // ══ DB Browse ══
+      async loadDbTables() {
+        try {
+          const resp = await apiFetch(`${API}/api/admin/db/tables`);
+          const data = await resp.json();
+          this.dbbrowse.tables = Array.isArray(data) ? data : (data.tables || []);
+        } catch (e) { if (e.message !== 'Unauthorized') showToast('加载表列表失败', 'error'); }
+      },
+      async loadTableData() {
+        if (!this.dbbrowse.selectedTable) return;
+        this.dbbrowse.loading = true;
+        try {
+          const resp = await apiFetch(`${API}/api/admin/db/table/${this.dbbrowse.selectedTable}?page=${this.dbbrowse.page}&page_size=${this.dbbrowse.pageSize}`);
+          const data = await resp.json();
+          const rows = data.rows || data.data || [];
+          this.dbbrowse.rows = rows;
+          this.dbbrowse.columns = rows.length > 0 ? Object.keys(rows[0]) : (data.columns || []);
+          this.dbbrowse.total = data.total || rows.length;
+        } catch (e) { if (e.message !== 'Unauthorized') showToast('加载数据失败', 'error'); }
+        finally { this.dbbrowse.loading = false; }
+      },
+
+      // ══ SQL Query ══
+      async execSql() {
+        const sql = this.sqlquery.sql.trim();
+        if (!sql) return showToast('请输入 SQL 语句', 'error');
+        if (!sql.toLowerCase().startsWith('select')) return showToast('仅允许 SELECT 查询', 'error');
+
+        this.sqlquery.loading = true;
+        this.sqlquery.result = false;
+        this.sqlquery.columns = null;
+        this.sqlquery.rows = [];
+        this.sqlquery.error = '';
+
+        try {
+          const resp = await apiFetch(`${API}/api/admin/db/query`, {
+            method: 'POST',
+            body: JSON.stringify({ sql })
+          });
+          const data = await resp.json();
+          this.sqlquery.result = true;
+          if (data.error) {
+            this.sqlquery.error = data.error;
+          } else {
+            const rows = data.rows || data.data || [];
+            this.sqlquery.rows = rows;
+            this.sqlquery.columns = rows.length > 0 ? Object.keys(rows[0]) : (data.columns || []);
+          }
+        } catch (e) { if (e.message !== 'Unauthorized') showToast('查询失败', 'error'); }
+        finally { this.sqlquery.loading = false; }
+      },
+
+      // ══ Cost ══
+      async loadCost() {
+        try {
+          const resp = await apiFetch(`${API}/api/admin/cost?start_date=${this.cost.startDate}&end_date=${this.cost.endDate}`);
+          const data = await resp.json();
+          this.cost.summary = { total_calls: data.total_calls || 0, total_cost: data.total_cost || 0, total_credits: data.total_credits || 0 };
+          this.cost.details = data.details || data.breakdown || [];
+          this.cost.chart = data.daily || data.chart || [];
+          this.cost.maxCost = Math.max(1, ...this.cost.chart.map(c => c.cost || 0));
+        } catch (e) { if (e.message !== 'Unauthorized') showToast('加载成本数据失败', 'error'); }
+      },
+
+      // ══ Recharge ══
+      async loadRecharge() {
+        this.recharge.loading = true;
+        try {
+          const resp = await apiFetch(`${API}/api/admin/recharge/records?page=${this.recharge.page}&page_size=${this.recharge.pageSize}&start_date=${this.recharge.startDate}&end_date=${this.recharge.endDate}`);
+          const data = await resp.json();
+          this.recharge.list = data.records || data.list || data.data || [];
+          this.recharge.total = data.total || this.recharge.list.length;
+          this.recharge.totalPages = Math.max(1, Math.ceil(this.recharge.total / this.recharge.pageSize));
+        } catch (e) { if (e.message !== 'Unauthorized') showToast('加载充值记录失败', 'error'); }
+        finally { this.recharge.loading = false; }
+      },
+
+      // ══ Profit ══
+      async loadProfit() {
+        try {
+          const resp = await apiFetch(`${API}/api/admin/profit?start_date=${this.profit.startDate}&end_date=${this.profit.endDate}`);
+          const data = await resp.json();
+          this.profit.data = data;
+        } catch (e) { if (e.message !== 'Unauthorized') showToast('加载利润数据失败', 'error'); }
+      },
+
+      // ══ Settings ══
+      async generateCdk() {
+        if (!this.settings.cdkCredits || !this.settings.cdkCount) return showToast('请填写积分数和数量', 'error');
+        this.settings.generating = true;
+        try {
+          const resp = await apiFetch(`${API}/api/admin/cdk/generate`, {
+            method: 'POST',
+            body: JSON.stringify({
+              credits: this.settings.cdkCredits,
+              price_yuan: this.settings.cdkPrice,
+              count: this.settings.cdkCount
+            })
+          });
+          const data = await resp.json();
+          const codes = data.codes || data.cdk_codes || [];
+          this.settings.cdkList = codes;
+          showToast(`<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><polyline points="20 6 9 17 4 12"/></svg> 已生成 ${codes.length} 个 CDK`, 'success');
+          this.loadCdkList();
+        } catch (e) { if (e.message !== 'Unauthorized') showToast('生成失败', 'error'); }
+        finally { this.settings.generating = false; }
+      },
+      async loadCdkList() {
+        this.settings.cdkTableLoading = true;
+        try {
+          const used = this.settings.cdkFilter;
+          const resp = await apiFetch(`${API}/api/admin/cdk/list?page=${this.settings.cdkPage}&page_size=20&used=${used}`);
+          const data = await resp.json();
+          this.settings.cdkTable = data.list || data.cdks || data.data || [];
+          this.settings.cdkTotal = data.total || this.settings.cdkTable.length;
+        } catch (e) { if (e.message !== 'Unauthorized') showToast('加载 CDK 列表失败', 'error'); }
+        finally { this.settings.cdkTableLoading = false; }
+      },
+      async copyCdk(code) {
+        try {
+          await navigator.clipboard.writeText(code);
+          showToast('<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><polyline points="20 6 9 17 4 12"/></svg> 已复制到剪贴板', 'success');
+        } catch {
+          // Fallback
+          const ta = document.createElement('textarea');
+          ta.value = code;
+          document.body.appendChild(ta);
+          ta.select();
+          document.execCommand('copy');
+          document.body.removeChild(ta);
+          showToast('<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><polyline points="20 6 9 17 4 12"/></svg> 已复制到剪贴板', 'success');
+        }
+      },
+      async changePassword() {
+        if (!this.settings.oldPwd || !this.settings.newPwd) return showToast('请填写完整信息', 'error');
+        if (this.settings.newPwd.length < 6) return showToast('新密码至少6位', 'error');
+        this.settings.changingPwd = true;
+        try {
+          const resp = await apiFetch(`${API}/api/auth/change-password`, {
+            method: 'POST',
+            body: JSON.stringify({
+              old_password: this.settings.oldPwd,
+              new_password: this.settings.newPwd
+            })
+          });
+          const data = await resp.json();
+          if (resp.ok) {
+            showToast('<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><polyline points="20 6 9 17 4 12"/></svg> 密码已修改', 'success');
+            this.settings.oldPwd = '';
+            this.settings.newPwd = '';
+          } else {
+            showToast(data.message || '修改失败', 'error');
+          }
+        } catch (e) { if (e.message !== 'Unauthorized') showToast('修改失败', 'error'); }
+        finally { this.settings.changingPwd = false; }
+      }
+    },
+
+    mounted() {
+      window.addEventListener('resize', () => {
+        this.isMobile = window.innerWidth <= 768;
+        if (!this.isMobile) this.sidebarCollapsed = false;
+      });
+      this.loadDashboard();
+    }
+  });
+
+  app.config.errorHandler = function(err, vm, info) {
+    const errMsg = err ? (err.message || String(err)) : '未知错误';
+    console.error('[Vue Error]', errMsg, info, err && err.stack);
+    // 显示具体错误信息便于诊断，但不再自动跳转（避免误切页面）
+    if (vm) {
+      showToast('[' + (info || 'render') + '] ' + errMsg, 'error');
+    }
+  };
+
+  app.mount('#app');
+}
+
+// ══════════════════════════════════════════════════════════
+// Auto-auth on page load
+// ══════════════════════════════════════════════════════════
+(async function autoAuth() {
+  const token = getToken();
+  if (!token) return;
+  try {
+    const resp = await fetch(`${API}/api/auth/verify`, {
+      headers: { 'Authorization': 'Bearer ' + token }
+    });
+    if (resp.ok) {
+      unlockApp();
+    } else {
+      clearToken();
+    }
+  } catch (e) {
+    // Backend not running, don't auto-unlock
+  }
+})();
+</script>
+</body>
+</html>
