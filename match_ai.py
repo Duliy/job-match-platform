@@ -131,12 +131,12 @@ RESUME_FALLBACK = {
     "major": "",
     "school": "",
     "skills": [],
-    "experience": ""
+    "experience": "",
 }
 
 MATCH_FALLBACK = {
     "recommendations": [],
-    "overall_analysis": "AI分析暂时不可用，请稍后重试"
+    "overall_analysis": "AI分析暂时不可用，请稍后重试",
 }
 
 ANALYSIS_FALLBACK = {
@@ -146,7 +146,7 @@ ANALYSIS_FALLBACK = {
     "suggestions": [],
     "keyword_analysis": {},
     "industry_fit": [],
-    "market_position": ""
+    "market_position": "",
 }
 
 # 简历分析 Prompt
@@ -218,12 +218,16 @@ RESUME_ANALYSIS_PROMPT = """你是一位资深HR总监和职业规划师，拥�
 # 核心函数
 # ══════════════════════════════════════════════════════
 
-async def parse_resume_with_deepseek(raw_text: str) -> tuple:
+
+async def parse_resume_with_deepseek(
+    raw_text: str, api_key: Optional[str] = None
+) -> tuple:
     """
     使用 DeepSeek 解析简历文本
 
     Args:
         raw_text: PDF中提取的原始文本
+        api_key: 用户自己的 DeepSeek API Key（不传则回退到服务器环境变量）
 
     Returns:
         (result_dict, usage_dict) — 解析结果和 token 用量
@@ -231,16 +235,22 @@ async def parse_resume_with_deepseek(raw_text: str) -> tuple:
     """
     messages = [
         {"role": "system", "content": RESUME_PARSE_PROMPT},
-        {"role": "user", "content": f"请解析以下简历内容:\n\n{raw_text[:4000]}"}
+        {"role": "user", "content": f"请解析以下简历内容:\n\n{raw_text[:4000]}"},
     ]
 
-    result_text, usage = await _call_deepseek(messages, temperature=0.1, max_tokens=1024)
+    result_text, usage = await _call_deepseek(
+        messages, temperature=0.1, max_tokens=1024, api_key=api_key
+    )
     parsed = _safe_parse_json(result_text, RESUME_FALLBACK)
     return parsed, usage
 
 
-async def call_deepseek_match(resume_info: dict, preference: dict,
-                              candidates: List[dict]) -> tuple:
+async def call_deepseek_match(
+    resume_info: dict,
+    preference: dict,
+    candidates: List[dict],
+    api_key: Optional[str] = None,
+) -> tuple:
     """
     使用 DeepSeek 进行岗位匹配
 
@@ -248,6 +258,7 @@ async def call_deepseek_match(resume_info: dict, preference: dict,
         resume_info: 简历信息 dict (name/education/major/school/skills/experience)
         preference: 偏好 dict (cities/salary_min/salary_max/job_type)
         candidates: 预筛选后的候选岗位列表
+        api_key: 用户自己的 DeepSeek API Key（不传则回退到服务器环境变量）
 
     Returns:
         (recommendations_list, usage_dict) — 推荐结果和 token 用量
@@ -255,20 +266,26 @@ async def call_deepseek_match(resume_info: dict, preference: dict,
     # 构建候选岗位文本 (精简版，控制token)
     jobs_text = _format_candidates(candidates)
 
-    cities_str = ', '.join(preference.get('cities', [])) if preference.get('cities') else '不限'
-    salary_min = preference.get('salary_min', 0)
-    salary_max = preference.get('salary_max', 999999)
-    job_type = preference.get('job_type', '社招')
+    cities_str = (
+        ", ".join(preference.get("cities", [])) if preference.get("cities") else "不限"
+    )
+    salary_min = preference.get("salary_min", 0)
+    salary_max = preference.get("salary_max", 999999)
+    job_type = preference.get("job_type", "社招")
 
-    salary_display = f"{salary_min}-{salary_max}元/月" if salary_max < 999999 else f"{salary_min}元以上/月"
+    salary_display = (
+        f"{salary_min}-{salary_max}元/月"
+        if salary_max < 999999
+        else f"{salary_min}元以上/月"
+    )
 
     user_prompt = f"""## 求职者简历信息
-姓名: {resume_info.get('name', '未知')}
-学历: {resume_info.get('education', '未知')}
-专业: {resume_info.get('major', '未知')}
-毕业院校: {resume_info.get('school', '未知')}
-技能: {', '.join(resume_info.get('skills', []))}
-工作经历: {resume_info.get('experience', '无')}
+姓名: {resume_info.get("name", "未知")}
+学历: {resume_info.get("education", "未知")}
+专业: {resume_info.get("major", "未知")}
+毕业院校: {resume_info.get("school", "未知")}
+技能: {", ".join(resume_info.get("skills", []))}
+工作经历: {resume_info.get("experience", "无")}
 
 ## 求职偏好
 期望城市: {cities_str}
@@ -282,30 +299,40 @@ async def call_deepseek_match(resume_info: dict, preference: dict,
 
     messages = [
         {"role": "system", "content": MATCH_SYSTEM_PROMPT},
-        {"role": "user", "content": user_prompt}
+        {"role": "user", "content": user_prompt},
     ]
 
-    result_text, usage = await _call_deepseek(messages, temperature=0.3, max_tokens=4096)
+    result_text, usage = await _call_deepseek(
+        messages, temperature=0.3, max_tokens=4096, api_key=api_key
+    )
     parsed = _safe_parse_json(result_text, MATCH_FALLBACK)
     return parsed.get("recommendations", []), usage
 
 
-async def analyze_resume_with_deepseek(raw_text: str) -> tuple:
+async def analyze_resume_with_deepseek(
+    raw_text: str, api_key: Optional[str] = None
+) -> tuple:
     """
     使用 DeepSeek 对简历进行深度分析
 
     Args:
         raw_text: PDF中提取的原始文本
+        api_key: 用户自己的 DeepSeek API Key（不传则回退到服务器环境变量）
 
     Returns:
         (analysis_dict, usage_dict) — 分析结果和 token 用量
     """
     messages = [
         {"role": "system", "content": RESUME_ANALYSIS_PROMPT},
-        {"role": "user", "content": f"请对以下简历进行全面分析评估:\n\n{raw_text[:5000]}"}
+        {
+            "role": "user",
+            "content": f"请对以下简历进行全面分析评估:\n\n{raw_text[:5000]}",
+        },
     ]
 
-    result_text, usage = await _call_deepseek(messages, temperature=0.3, max_tokens=4096)
+    result_text, usage = await _call_deepseek(
+        messages, temperature=0.3, max_tokens=4096, api_key=api_key
+    )
     parsed = _safe_parse_json(result_text, ANALYSIS_FALLBACK)
     return parsed, usage
 
@@ -314,31 +341,43 @@ async def analyze_resume_with_deepseek(raw_text: str) -> tuple:
 # 底层工具函数
 # ══════════════════════════════════════════════════════
 
-async def _call_deepseek(messages: list, temperature: float = 0.3,
-                         max_tokens: int = 4096) -> tuple:
+
+async def _call_deepseek(
+    messages: list,
+    temperature: float = 0.3,
+    max_tokens: int = 4096,
+    api_key: Optional[str] = None,
+) -> tuple:
     """底层 DeepSeek API 调用
+
+    Args:
+        api_key: 用户自带的 Key；不传则使用服务器环境变量 DEEPSEEK_API_KEY。
+                 Key 仅用于本次请求，不会被保存。
 
     Returns:
         (content_str, usage_dict) — 返回内容和 token 用量
         usage_dict: {"input_tokens": int, "output_tokens": int}
     """
-    if not DEEPSEEK_API_KEY:
-        raise ValueError("DEEPSEEK_API_KEY 环境变量未设置")
+    key = (api_key or "").strip() or DEEPSEEK_API_KEY
+    if not key:
+        raise ValueError(
+            "未提供 DeepSeek API Key：请在页面上填入你自己的 API Key 后重试"
+        )
 
     async with httpx.AsyncClient(timeout=60.0) as client:
         response = await client.post(
             f"{DEEPSEEK_BASE_URL}/chat/completions",
             headers={
-                "Authorization": f"Bearer {DEEPSEEK_API_KEY}",
-                "Content-Type": "application/json"
+                "Authorization": f"Bearer {key}",
+                "Content-Type": "application/json",
             },
             json={
                 "model": DEEPSEEK_MODEL,
                 "messages": messages,
                 "temperature": temperature,
                 "max_tokens": max_tokens,
-                "response_format": {"type": "json_object"}
-            }
+                "response_format": {"type": "json_object"},
+            },
         )
         response.raise_for_status()
         data = response.json()
@@ -358,28 +397,28 @@ def _format_candidates(candidates: List[dict]) -> str:
     """格式化候选岗位为文本 (控制token消耗)"""
     lines = []
     for i, job in enumerate(candidates[:50]):  # 最多50个发给AI
-        salary = job.get('salary_raw', '面议')
-        location = job.get('location', '') or job.get('province', '')
-        education = job.get('education', '不限')
+        salary = job.get("salary_raw", "面议")
+        location = job.get("location", "") or job.get("province", "")
+        education = job.get("education", "不限")
 
-        if job.get('job_type') == '公考':
+        if job.get("job_type") == "公考":
             # 公考岗位额外字段
-            major = job.get('major_req', '')
-            political = job.get('political', '')
-            headcount = job.get('headcount', 1)
+            major = job.get("major_req", "")
+            political = job.get("political", "")
+            headcount = job.get("headcount", 1)
             lines.append(
-                f"[{i+1}] ID:{job.get('id')} | {job.get('title','')} | "
-                f"{job.get('company','')} | 地点:{location} | "
+                f"[{i + 1}] ID:{job.get('id')} | {job.get('title', '')} | "
+                f"{job.get('company', '')} | 地点:{location} | "
                 f"学历:{education} | 专业:{major} | "
                 f"政治:{political} | 招收:{headcount}人"
             )
         else:
             # 社招岗位
             lines.append(
-                f"[{i+1}] ID:{job.get('id')} | {job.get('title','')} | "
-                f"{job.get('company','')} | 薪资:{salary} | "
+                f"[{i + 1}] ID:{job.get('id')} | {job.get('title', '')} | "
+                f"{job.get('company', '')} | 薪资:{salary} | "
                 f"地点:{location} | 学历:{education} | "
-                f"关键词:{job.get('keywords','')}"
+                f"关键词:{job.get('keywords', '')}"
             )
     return "\n".join(lines)
 

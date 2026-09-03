@@ -30,6 +30,7 @@ CREATE TABLE IF NOT EXISTS users (
     is_disabled     INTEGER DEFAULT 0,
     is_vip          INTEGER DEFAULT 0,
     vip_expired_at  TEXT DEFAULT NULL,
+    notify_email    TEXT DEFAULT NULL,
     created_at      TEXT DEFAULT (datetime('now'))
 );
 CREATE INDEX IF NOT EXISTS idx_users_username ON users(username);
@@ -190,34 +191,58 @@ def upgrade_schema(db_path: str = DB_PATH):
     existing = {row[0] for row in cursor.fetchall()}
 
     # V2 新增的表
-    new_tables = ['users', 'cdk_codes', 'recharge_records', 'api_call_logs', 'hot_jobs', 'user_actions',
-                  'vip_orders', 'member_resumes', 'vip_match_results', 'email_config']
-    vip_tables = ['vip_orders', 'member_resumes', 'vip_match_results', 'email_config']
+    new_tables = [
+        "users",
+        "cdk_codes",
+        "recharge_records",
+        "api_call_logs",
+        "hot_jobs",
+        "user_actions",
+        "vip_orders",
+        "member_resumes",
+        "vip_match_results",
+        "email_config",
+    ]
+    vip_tables = ["vip_orders", "member_resumes", "vip_match_results", "email_config"]
 
     # 执行建表
     conn.executescript(SCHEMA_V2_SQL)
     conn.commit()
 
     # 对已有 users 表补充 is_vip / vip_expired_at 列
-    if 'users' in existing:
+    if "users" in existing:
         try:
             cursor.execute("ALTER TABLE users ADD COLUMN is_vip INTEGER DEFAULT 0")
         except sqlite3.OperationalError:
             pass  # 列已存在
         try:
-            cursor.execute("ALTER TABLE users ADD COLUMN vip_expired_at TEXT DEFAULT NULL")
+            cursor.execute(
+                "ALTER TABLE users ADD COLUMN vip_expired_at TEXT DEFAULT NULL"
+            )
+        except sqlite3.OperationalError:
+            pass  # 列已存在
+        try:
+            cursor.execute(
+                "ALTER TABLE users ADD COLUMN notify_email TEXT DEFAULT NULL"
+            )
         except sqlite3.OperationalError:
             pass  # 列已存在
         conn.commit()
 
     # 创建默认管理员（如果 users 表刚创建）
-    if 'users' not in existing:
+    if "users" not in existing:
         import bcrypt as _bcrypt
-        password_hash = _bcrypt.hashpw('admin123'.encode('utf-8'), _bcrypt.gensalt()).decode('utf-8')
-        cursor.execute('''
+
+        password_hash = _bcrypt.hashpw(
+            "admin123".encode("utf-8"), _bcrypt.gensalt()
+        ).decode("utf-8")
+        cursor.execute(
+            """
             INSERT INTO users (username, password_hash, credits, role)
             VALUES (?, ?, ?, ?)
-        ''', ('admin', password_hash, 9999, 'admin'))
+        """,
+            ("admin", password_hash, 9999, "admin"),
+        )
         conn.commit()
         print("  已创建默认管理员: admin / admin123")
 
@@ -225,9 +250,9 @@ def upgrade_schema(db_path: str = DB_PATH):
     cursor.execute("SELECT name FROM sqlite_master WHERE type='table'")
     all_tables = {row[0] for row in cursor.fetchall()}
 
-    print(f"\n{'='*50}")
+    print(f"\n{'=' * 50}")
     print(f"数据库升级报告")
-    print(f"{'='*50}")
+    print(f"{'=' * 50}")
 
     for table in new_tables:
         status = "[OK] 已存在" if table in existing else "[NEW] 新建"
@@ -254,8 +279,18 @@ def check_schema(db_path: str = DB_PATH):
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
 
-    new_tables = ['users', 'cdk_codes', 'recharge_records', 'api_call_logs', 'hot_jobs', 'user_actions',
-                  'vip_orders', 'member_resumes', 'vip_match_results', 'email_config']
+    new_tables = [
+        "users",
+        "cdk_codes",
+        "recharge_records",
+        "api_call_logs",
+        "hot_jobs",
+        "user_actions",
+        "vip_orders",
+        "member_resumes",
+        "vip_match_results",
+        "email_config",
+    ]
 
     cursor.execute("SELECT name FROM sqlite_master WHERE type='table'")
     existing = {row[0] for row in cursor.fetchall()}
@@ -268,8 +303,8 @@ def check_schema(db_path: str = DB_PATH):
     conn.close()
 
 
-if __name__ == '__main__':
-    if '--check' in sys.argv:
+if __name__ == "__main__":
+    if "--check" in sys.argv:
         check_schema()
     else:
         upgrade_schema()

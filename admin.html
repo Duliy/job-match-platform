@@ -578,16 +578,16 @@
             <div class="value">{{ dashboard.total_gk_jobs ?? '—' }}</div>
           </div>
           <div class="stat-card">
-            <div class="label">今日 API 调用</div>
-            <div class="value">{{ dashboard.today_api_calls ?? '—' }}</div>
+            <div class="label">订阅推送用户</div>
+            <div class="value">{{ dashboard.subscriber_count ?? '—' }}</div>
           </div>
           <div class="stat-card">
-            <div class="label">今日收入</div>
-            <div class="value revenue">¥{{ fmtNum(dashboard.today_revenue) }}</div>
+            <div class="label">社招采集状态</div>
+            <div class="value">{{ dashboard.crawling && dashboard.crawling.social ? '采集中' : '空闲' }}</div>
           </div>
           <div class="stat-card">
-            <div class="label">今日成本</div>
-            <div class="value cost">¥{{ fmtNum(dashboard.today_cost) }}</div>
+            <div class="label">公考采集状态</div>
+            <div class="value">{{ dashboard.crawling && dashboard.crawling.gk ? '采集中' : '空闲' }}</div>
           </div>
         </div>
       </template>
@@ -664,7 +664,6 @@
               <thead>
                 <tr>
                   <th>用户名</th>
-                  <th>积分</th>
                   <th>角色</th>
                   <th>状态</th>
                   <th>注册时间</th>
@@ -672,16 +671,10 @@
                 </tr>
               </thead>
               <tbody>
-                <tr v-if="users.loading"><td colspan="6" class="empty-row"><span class="spinner"></span></td></tr>
-                <tr v-else-if="users.list.length === 0"><td colspan="6" class="empty-row">暂无用户数据</td></tr>
+                <tr v-if="users.loading"><td colspan="5" class="empty-row"><span class="spinner"></span></td></tr>
+                <tr v-else-if="users.list.length === 0"><td colspan="5" class="empty-row">暂无用户数据</td></tr>
                 <tr v-for="user in users.list" :key="user.id || user.user_id">
                   <td><strong>{{ user.username }}</strong></td>
-                  <td>
-                    <div class="inline-edit">
-                      <input type="number" v-model.number="user._credits" />
-                      <button class="btn btn-sm btn-primary" @click="saveUserCredits(user)">保存</button>
-                    </div>
-                  </td>
                   <td>{{ user.role || 'user' }}</td>
                   <td>
                     <span class="badge-sm" :class="user.is_disabled ? 'badge-disabled' : 'badge-active'">
@@ -892,194 +885,160 @@
       </template>
 
       <!-- ══ 成本控制 ══ -->
-      <template v-if="activeMenu === 'cost'">
+      <!-- ══ 数据源健康面板 ══ -->
+      <template v-if="activeMenu === 'health'">
         <div class="card">
-          <div class="card-title"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg> 成本控制</div>
-          <div class="date-range">
-            <input type="date" v-model="cost.startDate" /> <span class="sep">至</span>
-            <input type="date" v-model="cost.endDate" />
-            <button class="btn btn-primary" @click="loadCost">查询</button>
+          <div class="card-title"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg> 数据源健康面板
+            <button class="btn btn-sm" style="margin-left:auto" @click="loadHealth">刷新</button>
           </div>
-          <div class="stats-grid" v-if="cost.summary">
+          <div class="stats-grid" v-if="health.data">
             <div class="stat-card">
-              <div class="label">总 API 调用</div>
-              <div class="value">{{ fmtNum(cost.summary.total_calls) }}</div>
+              <div class="label">社招岗位总数</div>
+              <div class="value">{{ health.data.jobs_total ?? '—' }}</div>
             </div>
             <div class="stat-card">
-              <div class="label">总成本</div>
-              <div class="value cost">¥{{ fmtNum(cost.summary.total_cost) }}</div>
+              <div class="label">公考职位总数</div>
+              <div class="value">{{ health.data.gk_jobs_total ?? '—' }}</div>
             </div>
             <div class="stat-card">
-              <div class="label">总积分消耗</div>
-              <div class="value">{{ fmtNum(cost.summary.total_credits) }}</div>
+              <div class="label">数据最后更新</div>
+              <div class="value" style="font-size:14px">{{ (health.data.db_last_updated || '—').slice(0,16) }}</div>
             </div>
           </div>
-          <div v-if="cost.details && cost.details.length" class="mb-16">
-            <div class="table-wrap">
+          <div class="table-wrap" style="margin-top:16px" v-if="health.data">
+            <table>
+              <thead>
+                <tr><th>任务</th><th>状态</th><th>上次运行</th><th>上次新增</th><th>最近错误</th></tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>社招采集</strong></td>
+                  <td><span class="badge-sm" :class="health.data.crawl.running ? 'badge-active' : 'badge-disabled'">{{ health.data.crawl.running ? '运行中' : '空闲' }}</span>
+                    <span v-if="!health.data.crawl.enabled" class="badge-sm badge-disabled" style="margin-left:4px">定时未开启</span></td>
+                  <td>{{ health.data.crawl.last_run || '从未运行' }}</td>
+                  <td>{{ health.data.crawl.last_count ?? '—' }}</td>
+                  <td style="color:#c00;font-size:12px">{{ health.data.crawl.last_error || '' }}</td>
+                </tr>
+                <tr>
+                  <td><strong>公考采集</strong></td>
+                  <td><span class="badge-sm" :class="health.data.gk.running ? 'badge-active' : 'badge-disabled'">{{ health.data.gk.running ? '运行中' : '空闲' }}</span>
+                    <span v-if="!health.data.gk.enabled" class="badge-sm badge-disabled" style="margin-left:4px">定时未开启</span></td>
+                  <td>{{ health.data.gk.last_run || '从未运行' }}</td>
+                  <td>{{ health.data.gk.last_count ?? '—' }}</td>
+                  <td style="color:#c00;font-size:12px">{{ health.data.gk.last_error || '' }}</td>
+                </tr>
+                <tr>
+                  <td><strong>订阅推送</strong></td>
+                  <td><span class="badge-sm" :class="health.data.subscription.running ? 'badge-active' : 'badge-disabled'">{{ health.data.subscription.running ? '运行中' : '空闲' }}</span>
+                    <span v-if="!health.data.subscription.enabled" class="badge-sm badge-disabled" style="margin-left:4px">已停用</span></td>
+                  <td>{{ health.data.subscription.last_run || '从未运行' }}</td>
+                  <td>通知 {{ health.data.subscription.last_notify_count ?? 0 }} 人</td>
+                  <td style="color:#c00;font-size:12px">{{ health.data.subscription.last_error || '' }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div style="margin-top:16px">
+            <div class="card-title" style="font-size:15px">Cookie 状态（智联/猎聘需要）</div>
+            <div class="table-wrap" v-if="health.data">
               <table>
                 <thead>
-                  <tr><th>API 类型</th><th>调用次数</th><th>成本(元)</th><th>积分消耗</th></tr>
+                  <tr><th>平台</th><th>状态</th><th>更新时间</th><th>已用天数</th></tr>
                 </thead>
                 <tbody>
-                  <tr v-for="d in cost.details" :key="d.api_type">
-                    <td>{{ d.api_type }}</td>
-                    <td>{{ d.count }}</td>
-                    <td>¥{{ fmtNum(d.total_cost) }}</td>
-                    <td>{{ d.total_credits }}</td>
+                  <tr v-for="ck in health.data.cookies" :key="ck.key">
+                    <td>{{ ck.label }}</td>
+                    <td>
+                      <span class="badge-sm" :class="{'badge-active': ck.status==='ok', 'badge-disabled': ck.status!=='ok'}">
+                        {{ ck.status==='ok' ? '正常' : ck.status==='aging' ? '即将过期' : ck.status==='expired' ? '已过期' : (ck.optional ? '未配置（可采集）' : '未配置') }}
+                      </span>
+                    </td>
+                    <td>{{ ck.updated_at || '—' }}</td>
+                    <td>{{ ck.age_days != null ? ck.age_days + ' 天' : '—' }}</td>
                   </tr>
                 </tbody>
               </table>
             </div>
-          </div>
-          <div v-if="cost.chart && cost.chart.length" class="bar-chart" style="margin-top:16px">
-            <div class="bar-col" v-for="item in cost.chart" :key="item.date" :title="item.date + ': ¥' + item.cost">
-              <div class="bar-val">¥{{ item.cost }}</div>
-              <div class="bar-fill" :style="{ height: barHeight(item.cost, cost.maxCost) + 'px' }"></div>
-              <div class="bar-label">{{ item.date.slice(5) }}</div>
-            </div>
+            <p style="font-size:12px;color:#888;margin-top:8px">Cookie 一般 7 天内有效。过期或缺失时，请到「爬虫系统 → Cookie 管理」重新上传。</p>
           </div>
         </div>
       </template>
 
-      <!-- ══ 充值记录 ══ -->
-      <template v-if="activeMenu === 'recharge'">
+      <!-- ══ Cookie 管理 ══ -->
+      <template v-if="activeMenu === 'cookies'">
         <div class="card">
-          <div class="card-title"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg> 充值记录</div>
-          <div class="date-range">
-            <input type="date" v-model="recharge.startDate" /> <span class="sep">至</span>
-            <input type="date" v-model="recharge.endDate" />
-            <button class="btn btn-primary" @click="loadRecharge">查询</button>
-          </div>
+          <div class="card-title"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a10 10 0 1010 10 4 4 0 01-5-5 4 4 0 01-5-5"/><path d="M8.5 8.5v.01"/><path d="M16 15.5v.01"/><path d="M12 12v.01"/></svg> Cookie 管理</div>
+          <p style="font-size:13px;color:#666;line-height:1.8;margin-bottom:16px">
+            <strong>操作步骤（全程在你自己的电脑上完成，不需要登录服务器）：</strong><br>
+            1️⃣ 在你自己电脑上双击运行「Cookie采集工具.exe」（随系统一起提供）<br>
+            2️⃣ 浏览器会自动打开各招聘平台，依次完成登录，工具会在旁边生成 Cookie 文件<br>
+            3️⃣ 回到本页面，把生成的文件上传到下面对应平台即可
+          </p>
           <div class="table-wrap">
             <table>
               <thead>
-                <tr><th>用户名</th><th>CDK 码</th><th>积分</th><th>价格(元)</th><th>时间</th></tr>
+                <tr><th>平台</th><th>是否需要</th><th>当前状态</th><th>更新时间</th><th>上传新 Cookie</th></tr>
               </thead>
               <tbody>
-                <tr v-if="recharge.loading"><td colspan="5" class="empty-row"><span class="spinner"></span></td></tr>
-                <tr v-else-if="recharge.list.length === 0"><td colspan="5" class="empty-row">暂无充值记录</td></tr>
-                <tr v-for="item in recharge.list" :key="item.id">
-                  <td><strong>{{ item.username }}</strong></td>
-                  <td style="font-family:monospace;font-size:12px">{{ item.cdk_code }}</td>
-                  <td>{{ item.credits }}</td>
-                  <td>¥{{ fmtNum(item.price_yuan) }}</td>
-                  <td>{{ formatDate(item.created_at) }}</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-          <div class="pagination" v-if="recharge.total > 0">
-            <button :disabled="recharge.page <= 1" @click="recharge.page--; loadRecharge()">上一页</button>
-            <span class="page-info">第 {{ recharge.page }} / {{ recharge.totalPages }} 页（共 {{ recharge.total }} 条）</span>
-            <button :disabled="recharge.page >= recharge.totalPages" @click="recharge.page++; loadRecharge()">下一页</button>
-          </div>
-        </div>
-      </template>
-
-      <!-- ══ 当月利润 ══ -->
-      <template v-if="activeMenu === 'profit'">
-        <div class="card">
-          <div class="card-title"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg> 当月利润</div>
-          <div class="date-range">
-            <input type="date" v-model="profit.startDate" /> <span class="sep">至</span>
-            <input type="date" v-model="profit.endDate" />
-            <button class="btn btn-primary" @click="loadProfit">查询</button>
-          </div>
-          <div class="stats-grid" v-if="profit.data">
-            <div class="stat-card">
-              <div class="label">收入</div>
-              <div class="value revenue">¥{{ fmtNum(profit.data.revenue) }}</div>
-            </div>
-            <div class="stat-card">
-              <div class="label">成本</div>
-              <div class="value cost">¥{{ fmtNum(profit.data.cost) }}</div>
-            </div>
-            <div class="stat-card">
-              <div class="label">利润</div>
-              <div class="value profit">¥{{ fmtNum(profit.data.profit) }}</div>
-            </div>
-            <div class="stat-card">
-              <div class="label">充值次数</div>
-              <div class="value">{{ fmtNum(profit.data.recharge_count) }}</div>
-            </div>
-            <div class="stat-card">
-              <div class="label">API 调用次数</div>
-              <div class="value">{{ fmtNum(profit.data.api_call_count) }}</div>
-            </div>
-          </div>
-        </div>
-      </template>
-
-      <!-- ══ 系统设置 ══ -->
-      <template v-if="activeMenu === 'settings'">
-        <!-- CDK 生成 -->
-        <div class="card">
-          <div class="card-title"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg> CDK 生成器</div>
-          <div class="form-grid-3">
-            <div class="form-group">
-              <label>积分数</label>
-              <input type="number" v-model.number="settings.cdkCredits" placeholder="如：100" />
-            </div>
-            <div class="form-group">
-              <label>价格（元）</label>
-              <input type="number" step="0.01" v-model.number="settings.cdkPrice" placeholder="如：9.99" />
-            </div>
-            <div class="form-group">
-              <label>生成数量</label>
-              <input type="number" v-model.number="settings.cdkCount" placeholder="如：10" />
-            </div>
-          </div>
-          <button class="btn btn-primary mt-16" :disabled="settings.generating" @click="generateCdk">
-            <span v-html="cdkBtnText()"></span>
-          </button>
-          <div class="cdk-codes" v-if="settings.cdkList.length">
-            <div class="cdk-row" v-for="(code, i) in settings.cdkList" :key="i">
-              <span>{{ code }}</span>
-              <button class="copy-btn" @click="copyCdk(code)">复制</button>
-            </div>
-          </div>
-        </div>
-
-        <!-- CDK 列表 -->
-        <div class="card">
-          <div class="card-title"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v2c-1.1 0-2 .9-2 2s.9 2 2 2v2c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2v-2c1.1 0 2-.9 2-2s-.9-2-2-2V6c0-1.1.9-2 2-2z"/><circle cx="9" cy="12" r="1"/></svg> CDK 列表</div>
-          <div class="form-inline mb-16" style="max-width:320px">
-            <select v-model="settings.cdkFilter" @change="loadCdkList">
-              <option value="">全部</option>
-              <option value="0">未使用</option>
-              <option value="1">已使用</option>
-            </select>
-            <button class="btn btn-primary" @click="loadCdkList">查询</button>
-          </div>
-          <div class="table-wrap">
-            <table>
-              <thead>
-                <tr><th>CDK 码</th><th>积分</th><th>价格(元)</th><th>使用状态</th><th>创建时间</th></tr>
-              </thead>
-              <tbody>
-                <tr v-if="settings.cdkTableLoading"><td colspan="5" class="empty-row"><span class="spinner"></span></td></tr>
-                <tr v-else-if="settings.cdkTable.length === 0"><td colspan="5" class="empty-row">暂无 CDK</td></tr>
-                <tr v-for="item in settings.cdkTable" :key="item.id">
-                  <td style="font-family:monospace;font-size:12px">{{ item.code }}</td>
-                  <td>{{ item.credits }}</td>
-                  <td>¥{{ fmtNum(item.price_yuan) }}</td>
+                <tr v-for="ck in cookies.list" :key="ck.key">
+                  <td><strong>{{ ck.label }}</strong></td>
+                  <td>{{ ck.optional ? '可选（免登录也能采集）' : '需要' }}</td>
                   <td>
-                    <span class="badge-sm" :class="item.is_used || item.used ? 'badge-disabled' : 'badge-active'">
-                      {{ item.is_used || item.used ? '已使用' : '未使用' }}
+                    <span class="badge-sm" :class="{'badge-active': ck.status==='ok', 'badge-disabled': ck.status!=='ok'}">
+                      {{ ck.status==='ok' ? '正常' : ck.status==='aging' ? '即将过期' : ck.status==='expired' ? '已过期' : '未配置' }}
                     </span>
                   </td>
-                  <td>{{ formatDate(item.created_at) }}</td>
+                  <td>{{ ck.updated_at || '—' }}</td>
+                  <td>
+                    <label class="btn btn-sm btn-primary" style="cursor:pointer">
+                      <input type="file" accept=".json" style="display:none"
+                        @change="uploadCookie(ck, $event)" />
+                      {{ cookies.uploading === ck.key ? '上传中…' : '选择文件上传' }}
+                    </label>
+                  </td>
                 </tr>
               </tbody>
             </table>
           </div>
-          <div class="pagination" v-if="settings.cdkTotal > 0">
-            <button :disabled="settings.cdkPage <= 1" @click="settings.cdkPage--; loadCdkList()">上一页</button>
-            <span class="page-info">第 {{ settings.cdkPage }} / {{ Math.ceil(settings.cdkTotal / 20) }} 页（共 {{ settings.cdkTotal }} 条）</span>
-            <button :disabled="settings.cdkPage >= Math.ceil(settings.cdkTotal / 20)" @click="settings.cdkPage++; loadCdkList()">下一页</button>
+        </div>
+      </template>
+
+      <!-- ══ 订阅推送 ══ -->
+      <template v-if="activeMenu === 'subscription'">
+        <div class="card">
+          <div class="card-title"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg> 订阅推送设置</div>
+          <p style="font-size:13px;color:#666;line-height:1.8;margin-bottom:16px">
+            系统按设定周期扫描新岗位，向已绑定邮箱并上传简历的学生发送邮件通知（基于技能关键词粗筛，不使用 AI、不产生费用）。<br>
+            <strong>注意：发邮件需要先在「系统设置」中配置好 SMTP 邮件服务。</strong>
+          </p>
+          <div class="form-grid-3">
+            <div class="form-group">
+              <label>启用订阅推送</label>
+              <select v-model="subscription.enabled">
+                <option :value="true">启用</option>
+                <option :value="false">停用</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>扫描周期（小时）</label>
+              <input type="number" v-model.number="subscription.interval_hours" min="1" max="168" />
+            </div>
+          </div>
+          <div style="display:flex;gap:10px;align-items:center;margin-top:12px">
+            <button class="btn btn-primary" :disabled="subscription.saving" @click="saveSubscription">保存配置</button>
+            <button class="btn" :disabled="subscription.is_running" @click="scanSubNow">
+              {{ subscription.is_running ? '扫描中…' : '立即扫描一次' }}
+            </button>
+          </div>
+          <div style="margin-top:16px;font-size:13px;color:#888">
+            上次扫描：{{ subscription.last_run || '从未运行' }} ·
+            扫描 {{ subscription.last_scan_count }} 位订阅者 ·
+            通知 {{ subscription.last_notify_count }} 人
           </div>
         </div>
+      </template>
 
+      <template v-if="activeMenu === 'settings'">
         <!-- 修改密码 -->
         <div class="card">
           <div class="card-title"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 11-7.78 7.78 5.5 5.5 0 017.78-7.78zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg> 修改管理员密码</div>
@@ -1111,19 +1070,9 @@
 // ══════════════════════════════════════════════════════════
 // API Base URL
 // ══════════════════════════════════════════════════════════
-(function () {
-  const proto = window.location.protocol;
-  const host  = window.location.hostname;
-  const port  = window.location.port;
-  if (proto === 'file:' || !host) {
-    window.__API_BASE__ = 'http://127.0.0.1:5001';
-  } else if (port === '80' || port === '443' || port === '') {
-    window.__API_BASE__ = proto + '//' + host;
-  } else {
-    window.__API_BASE__ = proto + '//' + host + ':5001';
-  }
-})();
-const API = window.__API_BASE__ || 'http://localhost:5001';
+// 校园版单端口部署：前端与 API 同源，默认留空走相对路径
+window.__API_BASE__ = '';
+const API = window.__API_BASE__ || '';
 
 // ══════════════════════════════════════════════════════════
 // Token management
@@ -1172,10 +1121,12 @@ async function doLogin() {
       body: JSON.stringify({ username, password })
     });
     const data = await resp.json();
-    if (resp.ok && (data.token || data.access_token)) {
+    if (resp.ok && (data.token || data.access_token) && data.role === 'admin') {
       const token = data.token || data.access_token;
       setToken(token);
       unlockApp();
+    } else if (resp.ok && data.role !== 'admin') {
+      errEl.textContent = '该账号不是管理员，无法进入后台';
     } else {
       const inp = document.getElementById('lockPass');
       inp.classList.add('err');
@@ -1254,18 +1205,16 @@ function initVueApp() {
           { key: 'dashboard', icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="12" width="4" height="9"/><rect x="9" y="7" width="4" height="14"/><rect x="15" y="3" width="4" height="18"/></svg>', label: '仪表盘' },
           { key: 'hot', icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0011 12c0-1.38-.5-2-1-3-1.07-2.14-.23-4.05 0-6 .19-1.54.52-2.24 1-3 1.82 2.72 1.76 4.72 2 7 .19 1.82.38 3.55 0 5.5-.34 1.73-1.25 3.18-3 3.5-2.33.42-4.09-1.37-4.09-3.5 0-2.12 1.1-3.91 0-5.5"/></svg>', label: '热力图管理' },
           { key: 'users', icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>', label: '用户管理' },
+          { key: 'health', icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>', label: '数据源健康' },
           { key: 'crawler', icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2v4"/><path d="M12 18v4"/><path d="M2 12h4"/><path d="M18 12h4"/><path d="M5.5 5.5l3 3"/><path d="M15.5 8.5l3-3"/><path d="M8.5 15.5l-3 3"/><path d="M15.5 15.5l3 3"/></svg>', label: '爬虫系统', children: [
             { key: 'crawl', label: '社招爬虫' },
-            { key: 'gkcrawl', label: '公考爬虫' }
+            { key: 'gkcrawl', label: '公考爬虫' },
+            { key: 'cookies', label: 'Cookie 管理' }
           ]},
+          { key: 'subscription', icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>', label: '订阅推送' },
           { key: 'database', icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>', label: '数据库管理', children: [
             { key: 'dbbrowse', label: '数据浏览' },
             { key: 'sqlquery', label: 'SQL查询' }
-          ]},
-          { key: 'finance', icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>', label: '财务管理', children: [
-            { key: 'cost', label: '成本控制' },
-            { key: 'recharge', label: '充值记录' },
-            { key: 'profit', label: '当月利润' }
           ]},
           { key: 'settings', icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>', label: '系统设置' }
         ],
@@ -1297,19 +1246,17 @@ function initVueApp() {
         // SQL Query
         sqlquery: { sql: '', loading: false, result: false, columns: null, rows: [], error: '' },
 
-        // Cost
-        cost: { startDate: today, endDate: todayEnd, summary: null, details: [], chart: [], maxCost: 0 },
+        // 数据源健康面板
+        health: { loading: false, data: null },
 
-        // Recharge
-        recharge: { startDate: today, endDate: todayEnd, list: [], loading: false, page: 1, pageSize: 20, total: 0, totalPages: 1 },
+        // Cookie 管理
+        cookies: { list: [], uploading: '' },
 
-        // Profit
-        profit: { startDate: today, endDate: todayEnd, data: null },
+        // 订阅推送
+        subscription: { enabled: true, interval_hours: 48, last_run: '', last_scan_count: 0, last_notify_count: 0, is_running: false, saving: false },
 
         // Settings
         settings: {
-          cdkCredits: 100, cdkPrice: 9.99, cdkCount: 10, cdkList: [], generating: false,
-          cdkTable: [], cdkTableLoading: false, cdkPage: 1, cdkTotal: 0, cdkFilter: '',
           oldPwd: '', newPwd: '', changingPwd: false
         }
       };
@@ -1326,9 +1273,9 @@ crawl: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="curr
 gkcrawl: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2v4"/><path d="M12 18v4"/><path d="M2 12h4"/><path d="M18 12h4"/><path d="M5.5 5.5l3 3"/><path d="M15.5 8.5l3-3"/><path d="M8.5 15.5l-3 3"/><path d="M15.5 15.5l3 3"/></svg> 公考爬虫',
           dbbrowse: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg> 数据浏览',
           sqlquery: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg> SQL查询',
-          cost: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg> 成本控制',
-          recharge: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg> 充值记录',
-          profit: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg> 当月利润',
+          health: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg> 数据源健康',
+          cookies: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a10 10 0 1010 10 4 4 0 01-5-5 4 4 0 01-5-5"/><path d="M8.5 8.5v.01"/><path d="M16 15.5v.01"/><path d="M12 12v.01"/></svg> Cookie 管理',
+          subscription: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg> 订阅推送',
           settings: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg> 系统设置'
         };
         return map[this.activeMenu] || '管理后台';
@@ -1357,10 +1304,9 @@ gkcrawl: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="cu
           case 'crawl': await this.loadCrawlSchedule(); break;
           case 'gkcrawl': await this.loadGkCrawlSchedule(); break;
           case 'dbbrowse': await this.loadDbTables(); break;
-          case 'cost': await this.loadCost(); break;
-          case 'recharge': await this.loadRecharge(); break;
-          case 'profit': await this.loadProfit(); break;
-          case 'settings': await this.loadCdkList(); break;
+          case 'health': await this.loadHealth(); break;
+          case 'cookies': await this.loadHealth(); break;
+          case 'subscription': await this.loadSubscription(); break;
         }
         } catch (e) {
           console.error('[loadMenuData]', key, e);
@@ -1409,11 +1355,6 @@ gkcrawl: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="cu
         return this.sqlquery.loading
           ? '执行中…'
           : '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> 执行查询';
-      },
-      cdkBtnText() {
-        return this.settings.generating
-          ? '生成中…'
-          : '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:2px"><path d="M4 4h16c1.1 0 2 .9 2 2v2c-1.1 0-2 .9-2 2s.9 2 2 2v2c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2v-2c1.1 0 2-.9 2-2s-.9-2-2-2V6c0-1.1.9-2 2-2z"/><circle cx="9" cy="12" r="1"/></svg>生成 CDK';
       },
       pwdBtnText() {
         return this.settings.changingPwd
@@ -1538,23 +1479,11 @@ gkcrawl: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="cu
           const resp = await apiFetch(`${API}/api/admin/users?page=${this.users.page}&page_size=${this.users.pageSize}&keyword=${kw}`);
           const data = await resp.json();
           const list = Array.isArray(data) ? data : (data.users || data.list || data.data || data.items || []);
-          list.forEach(u => { u._credits = u.credits; });
           this.users.list = list;
           this.users.total = data.total || data.total_count || list.length;
           this.users.totalPages = Math.max(1, Math.ceil(this.users.total / this.users.pageSize));
         } catch (e) { if (e.message !== 'Unauthorized') showToast('加载用户失败', 'error'); }
         finally { this.users.loading = false; }
-      },
-      async saveUserCredits(user) {
-        const userId = user.id || user.user_id;
-        try {
-          await apiFetch(`${API}/api/admin/users/${userId}`, {
-            method: 'PUT',
-            body: JSON.stringify({ credits: user._credits })
-          });
-          user.credits = user._credits;
-          showToast('<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><polyline points="20 6 9 17 4 12"/></svg> 积分已更新', 'success');
-        } catch (e) { if (e.message !== 'Unauthorized') showToast('更新失败', 'error'); }
       },
       async toggleUserStatus(user) {
         const userId = user.id || user.user_id;
@@ -1760,86 +1689,74 @@ gkcrawl: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="cu
         finally { this.sqlquery.loading = false; }
       },
 
-      // ══ Cost ══
-      async loadCost() {
+      // ══ 数据源健康 / Cookie / 订阅推送 ══
+      async loadHealth() {
+        this.health.loading = true;
         try {
-          const resp = await apiFetch(`${API}/api/admin/cost?start_date=${this.cost.startDate}&end_date=${this.cost.endDate}`);
+          const resp = await apiFetch(`${API}/api/admin/health`);
           const data = await resp.json();
-          this.cost.summary = { total_calls: data.total_calls || 0, total_cost: data.total_cost || 0, total_credits: data.total_credits || 0 };
-          this.cost.details = data.details || data.breakdown || [];
-          this.cost.chart = data.daily || data.chart || [];
-          this.cost.maxCost = Math.max(1, ...this.cost.chart.map(c => c.cost || 0));
-        } catch (e) { if (e.message !== 'Unauthorized') showToast('加载成本数据失败', 'error'); }
+          this.health.data = data;
+          this.cookies.list = data.cookies || [];
+        } catch (e) { if (e.message !== 'Unauthorized') showToast('加载健康状态失败', 'error'); }
+        finally { this.health.loading = false; }
       },
-
-      // ══ Recharge ══
-      async loadRecharge() {
-        this.recharge.loading = true;
+      async uploadCookie(ck, event) {
+        const file = event.target.files && event.target.files[0];
+        if (!file) return;
+        this.cookies.uploading = ck.key;
         try {
-          const resp = await apiFetch(`${API}/api/admin/recharge/records?page=${this.recharge.page}&page_size=${this.recharge.pageSize}&start_date=${this.recharge.startDate}&end_date=${this.recharge.endDate}`);
-          const data = await resp.json();
-          this.recharge.list = data.records || data.list || data.data || [];
-          this.recharge.total = data.total || this.recharge.list.length;
-          this.recharge.totalPages = Math.max(1, Math.ceil(this.recharge.total / this.recharge.pageSize));
-        } catch (e) { if (e.message !== 'Unauthorized') showToast('加载充值记录失败', 'error'); }
-        finally { this.recharge.loading = false; }
-      },
-
-      // ══ Profit ══
-      async loadProfit() {
-        try {
-          const resp = await apiFetch(`${API}/api/admin/profit?start_date=${this.profit.startDate}&end_date=${this.profit.endDate}`);
-          const data = await resp.json();
-          this.profit.data = data;
-        } catch (e) { if (e.message !== 'Unauthorized') showToast('加载利润数据失败', 'error'); }
-      },
-
-      // ══ Settings ══
-      async generateCdk() {
-        if (!this.settings.cdkCredits || !this.settings.cdkCount) return showToast('请填写积分数和数量', 'error');
-        this.settings.generating = true;
-        try {
-          const resp = await apiFetch(`${API}/api/admin/cdk/generate`, {
+          const form = new FormData();
+          form.append('file', file);
+          const resp = await fetch(`${API}/api/admin/cookies/upload?platform=${encodeURIComponent(ck.key)}`, {
             method: 'POST',
-            body: JSON.stringify({
-              credits: this.settings.cdkCredits,
-              price_yuan: this.settings.cdkPrice,
-              count: this.settings.cdkCount
-            })
+            headers: { 'Authorization': 'Bearer ' + getToken() },
+            body: form
           });
           const data = await resp.json();
-          const codes = data.codes || data.cdk_codes || [];
-          this.settings.cdkList = codes;
-          showToast(`<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><polyline points="20 6 9 17 4 12"/></svg> 已生成 ${codes.length} 个 CDK`, 'success');
-          this.loadCdkList();
-        } catch (e) { if (e.message !== 'Unauthorized') showToast('生成失败', 'error'); }
-        finally { this.settings.generating = false; }
+          if (resp.ok && data.ok) {
+            showToast(data.message || '上传成功', 'success');
+            this.loadHealth();
+          } else {
+            showToast(data.detail || data.message || '上传失败', 'error');
+          }
+        } catch (e) { showToast('上传失败: ' + e.message, 'error'); }
+        finally { this.cookies.uploading = ''; event.target.value = ''; }
       },
-      async loadCdkList() {
-        this.settings.cdkTableLoading = true;
+      async loadSubscription() {
         try {
-          const used = this.settings.cdkFilter;
-          const resp = await apiFetch(`${API}/api/admin/cdk/list?page=${this.settings.cdkPage}&page_size=20&used=${used}`);
+          const resp = await apiFetch(`${API}/api/admin/subscription/schedule`);
           const data = await resp.json();
-          this.settings.cdkTable = data.list || data.cdks || data.data || [];
-          this.settings.cdkTotal = data.total || this.settings.cdkTable.length;
-        } catch (e) { if (e.message !== 'Unauthorized') showToast('加载 CDK 列表失败', 'error'); }
-        finally { this.settings.cdkTableLoading = false; }
+          this.subscription.enabled = data.enabled;
+          this.subscription.interval_hours = data.interval_hours || 48;
+          this.subscription.last_run = data.last_run || '';
+          this.subscription.last_scan_count = data.last_scan_count || 0;
+          this.subscription.last_notify_count = data.last_notify_count || 0;
+          this.subscription.is_running = !!data.is_running;
+        } catch (e) { if (e.message !== 'Unauthorized') showToast('加载订阅配置失败', 'error'); }
       },
-      async copyCdk(code) {
+      async saveSubscription() {
+        this.subscription.saving = true;
         try {
-          await navigator.clipboard.writeText(code);
-          showToast('<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><polyline points="20 6 9 17 4 12"/></svg> 已复制到剪贴板', 'success');
-        } catch {
-          // Fallback
-          const ta = document.createElement('textarea');
-          ta.value = code;
-          document.body.appendChild(ta);
-          ta.select();
-          document.execCommand('copy');
-          document.body.removeChild(ta);
-          showToast('<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><polyline points="20 6 9 17 4 12"/></svg> 已复制到剪贴板', 'success');
-        }
+          await apiFetch(`${API}/api/admin/subscription/schedule`, {
+            method: 'POST',
+            body: JSON.stringify({
+              enabled: this.subscription.enabled,
+              interval_hours: this.subscription.interval_hours
+            })
+          });
+          showToast('订阅推送配置已保存', 'success');
+          this.loadSubscription();
+        } catch (e) { if (e.message !== 'Unauthorized') showToast('保存失败', 'error'); }
+        finally { this.subscription.saving = false; }
+      },
+      async scanSubNow() {
+        this.subscription.is_running = true;
+        try {
+          const resp = await apiFetch(`${API}/api/admin/subscription/scan-now`, { method: 'POST' });
+          const data = await resp.json();
+          showToast(data.message || '扫描已启动', 'success');
+          setTimeout(() => this.loadSubscription(), 3000);
+        } catch (e) { if (e.message !== 'Unauthorized') showToast('启动失败', 'error'); this.loadSubscription(); }
       },
       async changePassword() {
         if (!this.settings.oldPwd || !this.settings.newPwd) return showToast('请填写完整信息', 'error');

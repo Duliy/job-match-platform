@@ -5,3 +5,7 @@ __pycache__/
 data/
 cookies/
 chrome_profile*/
+dist/
+dist_runtime_cache/
+data_backups/
+chromedriver.exe

@@ -20,6 +20,7 @@ cookie_collector.py — 一键采集招聘平台登录 Cookie
   - 国聘网            — 需要登录
   - Boss直聘          — 无法登录（跳过）
 """
+
 import os
 import sys
 import json
@@ -27,14 +28,14 @@ import time
 
 sys.stdout.reconfigure(encoding="utf-8")
 
-BASE_DIR  = os.path.dirname(os.path.abspath(__file__))
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 COOKIE_DIR = os.path.join(BASE_DIR, "cookies")
 os.makedirs(COOKIE_DIR, exist_ok=True)
 
 PLATFORMS = [
-    ("zhaopin",  "智联招聘",  "https://passport.zhaopin.com/login", True),
-    ("liepin",   "猎聘网",    "https://www.liepin.com/",            True),
-    ("guopin",   "国聘网",    "https://www.iguopin.com/",           True),
+    ("zhaopin", "智联招聘", "https://passport.zhaopin.com/login", True),
+    ("liepin", "猎聘网", "https://www.liepin.com/", True),
+    ("guopin", "国聘网", "https://www.iguopin.com/", True),
 ]
 
 
@@ -44,7 +45,12 @@ def load_driver():
     from selenium.webdriver.chrome.service import Service
 
     opts = webdriver.Chrome.options.Options()
-    opts.binary_location = r"C:\Program Files\Google\Chrome\Application\chrome.exe"
+    # 便携包优先用内置 Chrome，其次环境变量，最后系统 Chrome
+    from portable_env import find_chrome_binary, find_chromedriver
+
+    _chrome_bin = find_chrome_binary()
+    if _chrome_bin:
+        opts.binary_location = _chrome_bin
     opts.add_argument("--no-sandbox")
     opts.add_argument("--disable-dev-shm-usage")
     opts.add_argument("--disable-extensions")
@@ -57,19 +63,25 @@ def load_driver():
 
     # 使用临时用户目录，避免污染用户日常 Chrome
     import tempfile
+
     tmp_dir = os.path.join(tempfile.gettempdir(), "jb_cookie_profile")
     os.makedirs(tmp_dir, exist_ok=True)
     opts.add_argument(f"--user-data-dir={tmp_dir}")
 
     local_drv = os.path.join(BASE_DIR, "chromedriver.exe")
     try:
-        drv = webdriver.Chrome(service=Service(local_drv), options=opts)
+        drv = webdriver.Chrome(
+            service=Service(find_chromedriver() or local_drv), options=opts
+        )
     except Exception:
         drv = webdriver.Chrome(options=opts)
 
-    drv.execute_cdp_cmd("Page.addScriptToEvaluateOnNewDocument", {
-        "source": "Object.defineProperty(navigator, 'webdriver', {get: () => undefined})"
-    })
+    drv.execute_cdp_cmd(
+        "Page.addScriptToEvaluateOnNewDocument",
+        {
+            "source": "Object.defineProperty(navigator, 'webdriver', {get: () => undefined})"
+        },
+    )
     return drv
 
 
@@ -170,7 +182,7 @@ def main():
     print(f"    {COOKIE_DIR}")
     print()
     print("  现在可以关闭本窗口，然后启动 JobBoard 系统。")
-    print("  在管理后台中使用"立即采集"功能，系统将自动调用已保存的 Cookie。")
+    print("  在管理后台中使用「立即采集」功能，系统将自动调用已保存的 Cookie。")
     print()
     print("=" * 52)
 

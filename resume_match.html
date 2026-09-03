@@ -444,13 +444,12 @@ input:focus,select:focus,textarea:focus{border-color:var(--p-l);box-shadow:0 0 0
         </button>
       </nav>
       <div class="header-right">
+        <button class="btn-sm btn-outline" @click="switchTab(4)" :title="apiKeySet?'已设置 API Key':'点击设置你的 DeepSeek API Key'">
+          {{ apiKeySet ? '🔑 Key 已设置' : '🔑 设置 API Key' }}
+        </button>
         <template v-if="user">
           <div class="user-info">
             <span>{{ user.username }}</span>
-            <span class="credits-badge">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
-              {{ user.credits }}
-            </span>
           </div>
           <button class="btn-sm btn-outline" @click="logout">退出</button>
         </template>
@@ -680,7 +679,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--p-l);box-shadow:0 0 0
             <button class="btn btn-accent" @click="doRecommend" :disabled="aiRecommending" style="margin-top:.5rem">
               {{ aiRecommending?'匹配中...':'开始匹配' }}
             </button>
-            <div style="font-size:.75rem;color:var(--text-ll)">需要登录，消耗15积分</div>
+            <div style="font-size:.75rem;color:var(--text-ll)">需要登录，AI 匹配使用你自己的 DeepSeek API Key</div>
           </div>
         </div>
       </div>
@@ -733,7 +732,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--p-l);box-shadow:0 0 0
           <div class="uz-hint">系统将全面分析您的简历</div>
           <input type="file" ref="anFileInput" accept=".pdf,.docx,.doc" @change="anFileChange" style="position:absolute;inset:0;opacity:0;cursor:pointer">
         </div>
-        <div style="font-size:.75rem;color:var(--text-ll);text-align:center;margin-top:.75rem">需要登录，消耗20积分</div>
+        <div style="font-size:.75rem;color:var(--text-ll);text-align:center;margin-top:.75rem">需要登录，AI 分析使用你自己的 DeepSeek API Key</div>
       </div>
       <div v-if="analysisLoading" class="loading-wrap"><div class="spinner"></div><p>分析中，请稍候...</p></div>
       <div v-if="analysisResult&&!analysisLoading">
@@ -813,140 +812,82 @@ input:focus,select:focus,textarea:focus{border-color:var(--p-l);box-shadow:0 0 0
       </div>
     </div>
 
-    <!-- ===== TAB 4: Credits ===== -->
+    <!-- ===== TAB 4: API Key 设置 ===== -->
     <div :class="['tab-panel',{active:activeTab===4}]">
       <div class="credits-center">
         <div class="balance-card">
-          <div class="bc-label">当前积分余额</div>
-          <div class="bc-num">{{ user?user.credits:0 }}</div>
+          <div class="bc-label">DeepSeek API Key 状态</div>
+          <div class="bc-num" style="font-size:1.5rem">{{ apiKeySet ? '✅ 已设置' : '未设置' }}</div>
         </div>
-        <h3 class="section-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>CDK 兑换</h3>
+
+        <h3 class="section-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>设置你的 API Key</h3>
         <div class="cdk-form">
-          <input v-model="cdkCode" placeholder="请输入CDK兑换码" @keyup.enter="doRecharge">
-          <button class="btn btn-primary" @click="doRecharge" :disabled="recharging">{{ recharging?'兑换中...':'兑 换' }}</button>
+          <input v-model="apiKeyInput" type="password" placeholder="粘贴你的 DeepSeek API Key（sk- 开头）" @keyup.enter="saveApiKey">
+          <button class="btn btn-primary" @click="saveApiKey">保 存</button>
         </div>
-        <h3 class="section-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>充值记录</h3>
-        <ul class="history-list" v-if="rechargeHistory.length">
-          <li v-for="(h,i) in rechargeHistory" :key="i" class="history-item">
-            <span>{{ h.time||h.created_at||'-' }}</span>
-            <span style="color:var(--success);font-weight:600">+{{ h.credits_added||h.amount||0 }} 积分</span>
-          </li>
-        </ul>
-        <div v-else class="empty-state" style="padding:1.5rem"><p>暂无充值记录</p></div>
-        <h3 class="section-title" style="margin-top:2rem"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>服务定价</h3>
-        <div class="pricing-grid">
-          <div class="pricing-card"><div class="pc-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div><div class="pc-name">简历解析</div><div class="pc-price">10 积分</div></div>
-          <div class="pricing-card"><div class="pc-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div><div class="pc-name">岗位匹配</div><div class="pc-price">15 积分</div></div>
-          <div class="pricing-card"><div class="pc-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M21.21 15.89A10 10 0 118 2.83"/><path d="M22 12A10 10 0 0012 2v10z"/></svg></div><div class="pc-name">简历分析</div><div class="pc-price">20 积分</div></div>
-          <div class="pricing-card"><div class="pc-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg></div><div class="pc-name">兑换比率</div><div class="pc-price">10 积分 = 1 元</div></div>
+        <div v-if="apiKeySet" style="margin-bottom:1.5rem">
+          <button class="btn btn-outline btn-sm" @click="clearApiKey">清除已保存的 Key</button>
+        </div>
+
+        <h3 class="section-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>说明</h3>
+        <div style="font-size:.875rem;color:var(--text-l);line-height:1.9">
+          <p>🔍 <strong>浏览岗位不需要 Key</strong>，直接打开「岗位搜索」即可。</p>
+          <p>🤖 <strong>AI 功能需要你自己的 Key</strong>：简历解析、岗位智能匹配、简历深度分析会使用 DeepSeek 的 AI 服务，费用由你的 DeepSeek 账户承担（一次匹配约几分钱）。</p>
+          <p>📩 <strong>订阅推送不需要 Key</strong>：在「订阅推送」页上传简历并绑定邮箱，系统会自动把新岗位发到你的邮箱。</p>
+        </div>
+
+        <h3 class="section-title" style="margin-top:2rem"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>如何获取 Key</h3>
+        <div style="font-size:.875rem;color:var(--text-l);line-height:1.9">
+          <p>1. 打开 <a href="https://platform.deepseek.com" target="_blank" style="color:var(--p);font-weight:600">platform.deepseek.com</a> 注册账号</p>
+          <p>2. 进入「API Keys」页面，点击「创建 API Key」</p>
+          <p>3. 复制生成的 Key（sk- 开头），粘贴到上方输入框保存</p>
+          <p style="margin-top:.75rem;padding:.75rem;background:var(--p-bg);border-radius:8px;color:var(--p-d)">🔒 隐私说明：Key 只保存在你自己浏览器的 localStorage 中，每次请求时直接带给 DeepSeek 使用，<strong>平台服务器不会保存你的 Key</strong>。</p>
         </div>
       </div>
     </div>
 
-    <!-- Tab 5: VIP 会员中心 -->
+    <!-- ===== TAB 5: 订阅推送 ===== -->
     <div :class="['tab-panel',{active:activeTab===5}]">
       <div class="vip-center">
-        <!-- 状态卡片 -->
-        <div :class="['vip-status-card',{active:vipStatus.is_vip}]">
+        <!-- 订阅说明卡片 -->
+        <div class="vip-status-card active">
           <div class="vsc-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26"/></svg>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
           </div>
           <div class="vsc-body">
-            <template v-if="vipStatus.is_vip">
-              <div class="vsc-title">VIP 会员</div>
-              <div class="vsc-sub">剩余 <strong>{{ vipStatus.days_left }}</strong> 天 · 到期 {{ (vipStatus.expired_at||'').slice(0,10) }}</div>
-            </template>
-            <template v-else>
-              <div class="vsc-title">未开通会员</div>
-              <div class="vsc-sub">开通即享简历存储、AI分析免费、自动岗位匹配</div>
-            </template>
+            <div class="vsc-title">岗位订阅推送</div>
+            <div class="vsc-sub">上传简历 + 绑定邮箱，系统定期扫描新岗位并邮件通知你（无需 API Key）</div>
           </div>
-          <button v-if="!vipStatus.is_vip" class="btn btn-primary" @click="activateVip" :disabled="vipActivating">
-            {{ vipActivating?'开通中...':'立即开通 · 300 积分/月' }}
-          </button>
-          <button v-else class="btn btn-outline" @click="activateVip" :disabled="vipActivating">
-            {{ vipActivating?'续费中...':'续费 · 300 积分' }}
-          </button>
         </div>
 
         <!-- 功能入口 -->
         <div class="vip-features">
-          <h3 class="section-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18"/></svg>会员权益</h3>
+          <h3 class="section-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18"/></svg>订阅功能</h3>
           <div class="vf-grid">
             <div class="vf-card">
               <div class="vfc-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
               <div class="vfc-title">简历云端存储</div>
               <div class="vfc-desc" v-if="vipResume.has_resume">已存储 · {{ vipResume.text_length }} 字符</div>
               <div class="vfc-desc" v-else>尚未上传简历</div>
-              <label v-if="vipStatus.is_vip" class="btn btn-primary btn-sm" style="margin-top:.5rem;cursor:pointer">
+              <label v-if="user" class="btn btn-primary btn-sm" style="margin-top:.5rem;cursor:pointer">
                 <input type="file" accept=".pdf,.docx,.doc" @change="uploadVipResume($event)" style="display:none">
                 {{ vipResume.has_resume ? '更新简历' : '上传简历' }}
               </label>
-              <div v-else class="vfc-desc" style="color:var(--text-ll)">开通会员后可用</div>
+              <div v-else class="vfc-desc" style="color:var(--text-ll)">登录后可用</div>
             </div>
             <div class="vf-card">
               <div class="vfc-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M21.21 15.89A10 10 0 118 2.83"/><path d="M22 12A10 10 0 0012 2v10z"/></svg></div>
               <div class="vfc-title">AI 简历分析</div>
-              <div class="vfc-desc">深度多维度分析 · <strong>会员免费</strong></div>
-              <button v-if="vipStatus.is_vip&&vipResume.has_resume" class="btn btn-primary btn-sm" style="margin-top:.5rem" @click="analyzeVipResume" :disabled="vipAnalyzing">{{ vipAnalyzing?'分析中...':'开始分析' }}</button>
-              <div v-else class="vfc-desc" style="color:var(--text-ll)">开通会员并上传简历后可用</div>
+              <div class="vfc-desc">深度多维度分析 · 使用你自己的 API Key</div>
+              <button v-if="user&&vipResume.has_resume" class="btn btn-primary btn-sm" style="margin-top:.5rem" @click="analyzeVipResume" :disabled="vipAnalyzing">{{ vipAnalyzing?'分析中...':'开始分析' }}</button>
+              <div v-else class="vfc-desc" style="color:var(--text-ll)">登录并上传简历后可用</div>
             </div>
             <div class="vf-card">
               <div class="vfc-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg></div>
               <div class="vfc-title">自动岗位匹配</div>
-              <div class="vfc-desc">AI 智能匹配 · <strong>会员免费</strong></div>
-              <button v-if="vipStatus.is_vip&&vipResume.has_resume" class="btn btn-primary btn-sm" style="margin-top:.5rem" @click="matchVipJobs" :disabled="vipMatching">{{ vipMatching?'匹配中...':'开始匹配' }}</button>
-              <div v-else class="vfc-desc" style="color:var(--text-ll)">开通会员并上传简历后可用</div>
-            </div>
-          </div>
-        </div>
-
-        <!-- 会员权益详细介绍 -->
-        <div class="vip-benefits-intro">
-          <div class="vbi-header">
-            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26"/></svg>
-            <span class="vbi-title">VIP 会员专属权益</span>
-          </div>
-          <div class="vip-benefits-grid">
-            <div class="benefit-item">
-              <div class="bi-icon"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
-              <div class="bi-title">简历云存储</div>
-              <div class="bi-desc">PDF/DOCX永久保存，随时调用匹配</div>
-            </div>
-            <div class="benefit-item">
-              <div class="bi-icon"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M21.21 15.89A10 10 0 118 2.83"/><path d="M22 12A10 10 0 0012 2v10z"/></svg></div>
-              <div class="bi-title">AI 深度分析</div>
-              <div class="bi-desc">多维度评估优劣势，精准建议</div>
-            </div>
-            <div class="benefit-item">
-              <div class="bi-icon"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg></div>
-              <div class="bi-title">智能岗位匹配</div>
-              <div class="bi-desc">AI 匹配全平台岗位，精准排序</div>
-            </div>
-            <div class="benefit-item">
-              <div class="bi-icon"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg></div>
-              <div class="bi-title">高概率通知</div>
-              <div class="bi-desc">>80% 匹配岗位 · 48h 自动邮件提醒</div>
-            </div>
-            <div class="benefit-item">
-              <div class="bi-icon"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
-              <div class="bi-title">AI 调用免费</div>
-              <div class="bi-desc">分析/匹配均不扣积分，仅记录成本</div>
-            </div>
-            <div class="benefit-item">
-              <div class="bi-icon"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg></div>
-              <div class="bi-title">链接直达</div>
-              <div class="bi-desc">匹配结果含招聘原链接，一键跳转</div>
-            </div>
-            <div class="benefit-item">
-              <div class="bi-icon"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></div>
-              <div class="bi-title">全平台搜索</div>
-              <div class="bi-desc">社招+公考双通道，覆盖所有岗位</div>
-            </div>
-            <div class="benefit-item">
-              <div class="bi-icon"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
-              <div class="bi-title">30天周期</div>
-              <div class="bi-desc">一次开通享30天全部会员权益</div>
+              <div class="vfc-desc">AI 智能匹配 · 使用你自己的 API Key</div>
+              <button v-if="user&&vipResume.has_resume" class="btn btn-primary btn-sm" style="margin-top:.5rem" @click="matchVipJobs" :disabled="vipMatching">{{ vipMatching?'匹配中...':'开始匹配' }}</button>
+              <div v-else class="vfc-desc" style="color:var(--text-ll)">登录并上传简历后可用</div>
             </div>
           </div>
         </div>
@@ -958,12 +899,12 @@ input:focus,select:focus,textarea:focus{border-color:var(--p-l);box-shadow:0 0 0
             <span class="ves-title">邮件通知配置</span>
           </div>
           <div class="ves-desc">
-            绑定邮箱后，当系统检测到高于 60% 概率的匹配岗位时，将自动发送邮件通知。
+            绑定邮箱后，系统会定期扫描与你简历方向相关的新岗位，自动发送邮件通知（粗筛推送，不需要 API Key）。
           </div>
           <div :class="['ves-row',{editing:vipEmailEditing}]">
             <input type="email" v-model="vipEmail" placeholder="请输入你的邮箱地址 (选填 · 留空使用模拟通知)"
-              :disabled="!vipStatus.is_vip" @keyup.enter="saveVipEmail()">
-            <button class="btn btn-primary btn-sm" @click="saveVipEmail()" :disabled="!vipStatus.is_vip||vipEmailSaving">
+              :disabled="!user" @keyup.enter="saveVipEmail()">
+            <button class="btn btn-primary btn-sm" @click="saveVipEmail()" :disabled="!user||vipEmailSaving">
               {{ vipEmailSaving?'保存中...':'保存' }}
             </button>
           </div>
@@ -976,8 +917,8 @@ input:focus,select:focus,textarea:focus{border-color:var(--p-l);box-shadow:0 0 0
               <div class="mep-dot"><span></span><span></span><span></span></div>
             </div>
             <div class="mock-email-body">
-              <div class="meb-from">发件人: <strong>noreply@jobboard.cn</strong></div>
-              <div class="meb-subject">JobBoard — 发现 {{ vipHighProbCount||3 }} 个高匹配度岗位</div>
+              <div class="meb-from">发件人: <strong>就业服务平台</strong></div>
+              <div class="meb-subject">就业服务平台 — 发现 {{ vipHighProbCount||3 }} 个新岗位</div>
               <div class="meb-greeting">亲爱的 {{ user?.username||'用户' }}：</div>
               <div class="meb-content">
                 您好！系统刚刚完成了新一轮智能岗位匹配，我们发现以下岗位与您的简历高度匹配（匹配度 ≥ 60%）：
@@ -1064,7 +1005,8 @@ input:focus,select:focus,textarea:focus{border-color:var(--p-l);box-shadow:0 0 0
 <script>
 const {createApp,ref,reactive,computed,onMounted,watch,nextTick}=Vue;
 
-const API=window.__API_BASE__||'http://localhost:5001';
+// 校园版单端口部署：前端与 API 同源，默认留空走相对路径
+const API=window.__API_BASE__||'';
 
 function getToken(){return localStorage.getItem('job_board_token')}
 function setToken(t){if(t)localStorage.setItem('job_board_token',t);else localStorage.removeItem('job_board_token')}
@@ -1072,11 +1014,22 @@ function getUser(){try{return JSON.parse(localStorage.getItem('job_board_user'))
 function setUser(u){if(u)localStorage.setItem('job_board_user',JSON.stringify(u));else localStorage.removeItem('job_board_user')}
 function authHeaders(){const t=getToken();return t?{Authorization:'Bearer '+t}:{}}
 
+// 学生自己的 DeepSeek API Key —— 只存在浏览器 localStorage，服务器不留存
+function getApiKey(){return localStorage.getItem('deepseek_api_key')||''}
+function setApiKey(k){if(k)localStorage.setItem('deepseek_api_key',k);else localStorage.removeItem('deepseek_api_key')}
+
 async function api(path,opts={}){
   const url=path.startsWith('http')?path:API+path;
   const headers={...authHeaders(),...(opts.headers||{})};
+  const k=getApiKey();if(k)headers['X-User-Api-Key']=k;
   const res=await fetch(url,{...opts,headers});
-  if(!res.ok){const t=await res.text().catch(()=>'');throw new Error(t||res.statusText)}
+  if(!res.ok){
+    const t=await res.text().catch(()=>'');
+    if(res.status===402&&t.includes('NO_API_KEY'))throw new Error('NEED_API_KEY');
+    // FastAPI 错误格式 {"detail":"..."}，提取可读信息
+    try{const j=JSON.parse(t);if(j&&j.detail)throw new Error(typeof j.detail==='string'?j.detail:JSON.stringify(j.detail))}catch(e){if(e.message&&!e.message.startsWith('{'))throw e}
+    throw new Error(t||res.statusText)
+  }
   const ct=res.headers.get('content-type')||'';
   return ct.includes('json')?res.json():res;
 }
@@ -1090,8 +1043,8 @@ const app=createApp({
       {icon:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="10" r="7"/><line x1="15" y1="15" x2="21" y2="21"/></svg>',label:'岗位搜索'},
       {icon:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>',label:'简历匹配'},
       {icon:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21.21 15.89A10 10 0 118 2.83"/><path d="M22 12A10 10 0 0012 2v10z"/></svg>',label:'简历分析'},
-      {icon:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>',label:'积分充值'},
-      {icon:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26"/></svg>',label:'会员中心'}
+      {icon:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>',label:'API Key'},
+      {icon:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>',label:'订阅推送'}
     ];
     const user=ref(getUser());
     const showAuthModal=ref(false);
@@ -1137,14 +1090,11 @@ const app=createApp({
     const analysisLoading=ref(false);
     const analysisResult=ref(null);
 
-    // Tab 4: Credits
-    const cdkCode=ref('');
-    const recharging=ref(false);
-    const rechargeHistory=ref([]);
+    // Tab 4: API Key 设置
+    const apiKeyInput=ref('');
+    const apiKeySet=ref(!!getApiKey());
 
-    // Tab 5: VIP
-    const vipStatus=ref({is_vip:false,expired_at:null,days_left:null,message:'加载中...'});
-    const vipActivating=ref(false);
+    // Tab 5: 订阅推送（原会员中心，校园版无门槛）
     const vipResume=ref({has_resume:false,filename:'',text_length:0,parsed:{},analysis:{},uploaded_at:'',updated_at:''});
     const vipAnalyzing=ref(false);
     const vipAnalysis=ref(null);
@@ -1184,12 +1134,22 @@ const app=createApp({
       toast.timer=setTimeout(()=>{toast.show=false},duration);
     }
 
+    // AI 功能错误处理：缺少 API Key 时引导到设置页
+    function handleApiError(e,prefix='操作失败'){
+      if(e&&e.message==='NEED_API_KEY'){
+        showToast('请先填入你自己的 DeepSeek API Key','error',4000);
+        activeTab.value=4;
+        return;
+      }
+      showToast(prefix+': '+(e&&e.message||''),'error');
+    }
+
     async function checkLogin(){
       const token=getToken();
       if(!token){user.value=null;setUser(null);return}
       try{
         const data=await api('/api/auth/me');
-        user.value={username:data.username,credits:data.credits,role:data.role,id:data.id};
+        user.value={username:data.username,role:data.role,id:data.id};
         setUser(user.value);
         loadVipAll();
       }catch{
@@ -1209,7 +1169,7 @@ const app=createApp({
         const data=await api('/api/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:authForm.username,password:authForm.password})});
         if(data.ok!==false&&data.token){
           setToken(data.token);
-          user.value={username:data.username,credits:data.credits||0,role:data.role,id:data.user_id};
+          user.value={username:data.username,role:data.role,id:data.user_id};
           setUser(user.value);
           showAuthModal.value=false;
           authForm.username='';authForm.password='';
@@ -1228,7 +1188,7 @@ const app=createApp({
         const data=await api('/api/auth/register',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:authForm.username,password:authForm.password})});
         if(data.ok!==false&&data.token){
           setToken(data.token);
-          user.value={username:data.username,credits:data.credits||0,role:data.role,id:data.user_id};
+          user.value={username:data.username,role:data.role,id:data.user_id};
           setUser(user.value);
           showAuthModal.value=false;
           authForm.username='';authForm.password='';
@@ -1250,7 +1210,6 @@ const app=createApp({
       activeTab.value=i;
       if(i===0&&!hotJobs.value.length)loadHotJobs();
       if(i===1&&!jobList.value.length)loadJobs();
-      if(i===4)loadRechargeHistory();
       if(i===5)loadVipAll();
     }
 
@@ -1377,10 +1336,8 @@ const app=createApp({
         const fd=new FormData();fd.append('file',file);
         const data=await api('/api/match/parse-resume',{method:'POST',body:fd});
         aiParsedResume.value=data;
-        user.value.credits=(user.value.credits||0)-10;
-        setUser(user.value);
-        showToast('简历解析成功，消耗10积分');
-      }catch(e){showToast('简历解析失败: '+e.message,'error')}
+        showToast('简历解析成功');
+      }catch(e){handleApiError(e,'简历解析失败')}
     }
 
     function addAiCity(){
@@ -1396,7 +1353,6 @@ const app=createApp({
 
     async function doRecommend(){
       if(!requireLogin())return;
-      if((user.value.credits||0)<15)return showToast('积分不足，需要15积分','error');
       if(!aiParsedResume.value&&!aiResumeFile.value)return showToast('请先上传简历','error');
       aiRecommending.value=true;
       try{
@@ -1417,10 +1373,8 @@ const app=createApp({
         };
         const data=await api('/api/match/recommend',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
         aiRecommendResults.value=data.recommendations||data.results||data.jobs||[];
-        user.value.credits=(user.value.credits||0)-15;
-        setUser(user.value);
-        showToast('匹配完成，消耗15积分');
-      }catch(e){showToast('匹配失败: '+e.message,'error')}
+        showToast('匹配完成');
+      }catch(e){handleApiError(e,'匹配失败')}
       aiRecommending.value=false;
     }
 
@@ -1439,7 +1393,6 @@ const app=createApp({
     async function handleAnResume(file){
       if(!requireLogin())return;
       if(!file.name.toLowerCase().match(/\.(pdf|docx|doc)$/))return showToast('请上传PDF或Word文件','error');
-      if((user.value.credits||0)<20)return showToast('积分不足，需要20积分','error');
       anResumeFile.value=file;
       analysisLoading.value=true;
       analysisResult.value=null;
@@ -1447,63 +1400,28 @@ const app=createApp({
         const fd=new FormData();fd.append('file',file);
         const data=await api('/api/match/analyze-resume',{method:'POST',body:fd});
         analysisResult.value=data.analysis||data;
-        user.value.credits=(user.value.credits||0)-20;
-        setUser(user.value);
-        showToast('分析完成，消耗20积分');
-      }catch(e){showToast('简历分析失败: '+e.message,'error')}
+        showToast('分析完成');
+      }catch(e){handleApiError(e,'简历分析失败')}
       analysisLoading.value=false;
     }
 
-    // Tab 4
-    async function doRecharge(){
-      if(!requireLogin())return;
-      if(!cdkCode.value.trim())return showToast('请输入CDK兑换码','error');
-      recharging.value=true;
-      try{
-        const data=await api('/api/auth/recharge',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({cdk_code:cdkCode.value.trim()})});
-        if(data.ok!==false){
-          const added=data.credits_added||0;
-          user.value.credits=data.new_balance||(user.value.credits||0)+added;
-          setUser(user.value);
-          cdkCode.value='';
-          showToast(`兑换成功，+${added} 积分`);
-          rechargeHistory.value.unshift({time:new Date().toLocaleString(),credits_added:added});
-        }else{showToast(data.msg||data.detail||'兑换失败','error')}
-      }catch(e){showToast('兑换失败: '+e.message,'error')}
-      recharging.value=false;
+    // Tab 4: API Key 设置
+    function saveApiKey(){
+      const k=apiKeyInput.value.trim();
+      if(!k)return showToast('请输入 DeepSeek API Key','error');
+      if(!k.startsWith('sk-'))return showToast('Key 格式看起来不对（一般以 sk- 开头），请检查','error');
+      setApiKey(k);
+      apiKeySet.value=true;
+      apiKeyInput.value='';
+      showToast('API Key 已保存（仅保存在你自己的浏览器中）');
+    }
+    function clearApiKey(){
+      setApiKey('');
+      apiKeySet.value=false;
+      showToast('API Key 已清除');
     }
 
-    async function loadRechargeHistory(){}
-
-    // === VIP Methods ===
-    async function loadVipStatus(){
-      try{
-        const d=await api('/api/vip/status');
-        vipStatus.value=d;
-        user.value.credits=d.credits;
-        setUser(user.value);
-      }catch(e){vipStatus.value={is_vip:false,expired_at:null,days_left:null,message:'请登录后查看'}}
-    }
-
-    async function activateVip(){
-      if(!requireLogin())return;
-      if(user.value.credits<300)return showToast('积分不足，需要300积分开通','error');
-      vipActivating.value=true;
-      try{
-        const d=await api('/api/vip/activate',{method:'POST'});
-        if(d.ok!==false){
-          vipStatus.value.is_vip=true;
-          vipStatus.value.expired_at=d.expired_at;
-          vipStatus.value.days_left=d.days_left;
-          vipStatus.value.message=d.message;
-          user.value.credits=d.credits;
-          setUser(user.value);
-          showToast(d.message);
-        }else{showToast(d.message||'开通失败','error')}
-      }catch(e){showToast('开通失败: '+e.message,'error')}
-      vipActivating.value=false;
-    }
-
+    // === 订阅推送（原 VIP 方法，校园版无门槛） ===
     async function loadVipResume(){
       try{
         const d=await api('/api/vip/resume');
@@ -1518,7 +1436,9 @@ const app=createApp({
       const form=new FormData();
       form.append('file',f);
       try{
-        const res=await fetch(API+'/api/vip/resume/upload',{method:'POST',headers:authHeaders(),body:form});
+        const headers=authHeaders();
+        const k=getApiKey();if(k)headers['X-User-Api-Key']=k;
+        const res=await fetch(API+'/api/vip/resume/upload',{method:'POST',headers,body:form});
         const d=await res.json();
         if(d.ok!==false){
           showToast(d.message||'上传成功');
@@ -1538,7 +1458,7 @@ const app=createApp({
           vipAnalysis.value=d.analysis;
           showToast('分析完成');
         }else{showToast(d.detail||d.message||'分析失败','error')}
-      }catch(e){showToast('分析失败: '+e.message,'error')}
+      }catch(e){handleApiError(e,'分析失败')}
       vipAnalyzing.value=false;
     }
 
@@ -1554,7 +1474,7 @@ const app=createApp({
           vipHighProbCount.value=d.high_prob_count||0;
           showToast(`匹配完成，共 ${vipMatches.value.length} 个岗位`);
         }else{showToast(d.detail||'匹配失败','error')}
-      }catch(e){showToast('匹配失败: '+e.message,'error')}
+      }catch(e){handleApiError(e,'匹配失败')}
       vipMatching.value=false;
     }
 
@@ -1579,10 +1499,8 @@ const app=createApp({
     }
 
     async function loadVipAll(){
-      await loadVipStatus();
-      if(vipStatus.value.is_vip){
-        await Promise.all([loadVipResume(),loadVipNotifications()]);
-      }
+      if(!user.value)return;
+      await Promise.all([loadVipResume(),loadVipNotifications()]);
     }
 
     async function saveVipEmail(){
@@ -1627,8 +1545,7 @@ const app=createApp({
       scoreColor,admitClass,fieldLabel,
       anDragOver,anResumeFile,anFileInput,analysisLoading,analysisResult,
       anPickResume,anFileChange,anDropResume,
-      cdkCode,recharging,rechargeHistory,doRecharge,
-      vipStatus,vipActivating,activateVip,
+      apiKeyInput,apiKeySet,saveApiKey,clearApiKey,
       vipResume,uploadVipResume,
       vipAnalyzing,vipAnalysis,analyzeVipResume,
       vipMatching,vipMatches,vipHighProbCount,matchVipJobs,

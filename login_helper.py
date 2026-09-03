@@ -7,23 +7,24 @@
 需登录平台：智联（headless下会被安全验证拦截）| 猎聘
 登录墙平台（无法匿名）：国聘（iguopin.com）| Boss直聘
 """
+
 import os, sys, json, time, random, logging, argparse, re
 
 sys.stdout.reconfigure(encoding="utf-8")
 
-BASE_DIR    = os.path.dirname(os.path.abspath(__file__))
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 COOKIE_DIR = os.path.join(BASE_DIR, "cookies")
-DATA_DIR   = os.path.join(BASE_DIR, "data")
+DATA_DIR = os.path.join(BASE_DIR, "data")
 os.makedirs(COOKIE_DIR, exist_ok=True)
-os.makedirs(DATA_DIR,   exist_ok=True)
+os.makedirs(DATA_DIR, exist_ok=True)
 
 # 平台列表（供交互模式和自动模式共用）
 PLATFORMS = [
-    ("51job",   "前程无忧",  "https://www.51job.com/"),
-    ("zhaopin", "智联招聘",  "https://passport.zhaopin.com/login"),
-    ("liepin",  "猎聘网",    "https://www.liepin.com/"),
-    ("shixiseng","实习僧",   "https://www.shixiseng.com/"),
-    ("guopin",  "国聘网",    "https://www.iguopin.com/"),
+    ("51job", "前程无忧", "https://www.51job.com/"),
+    ("zhaopin", "智联招聘", "https://passport.zhaopin.com/login"),
+    ("liepin", "猎聘网", "https://www.liepin.com/"),
+    ("shixiseng", "实习僧", "https://www.shixiseng.com/"),
+    ("guopin", "国聘网", "https://www.iguopin.com/"),
 ]
 
 logging.basicConfig(
@@ -55,7 +56,13 @@ def load_driver(headless=False, profile_dir=None):
 
     local_drv = os.path.join(BASE_DIR, "chromedriver.exe")
     opts = Options()
-    opts.binary_location = r"C:\Program Files\Google\Chrome\Application\chrome.exe"
+
+    # 便携包优先用内置 Chrome，其次环境变量，最后系统 Chrome
+    from portable_env import find_chrome_binary, find_chromedriver
+
+    chrome_bin = find_chrome_binary()
+    if chrome_bin:
+        opts.binary_location = chrome_bin
 
     # headless 模式
     if headless:
@@ -75,6 +82,7 @@ def load_driver(headless=False, profile_dir=None):
     # headless 模式不使用持久化 profile（避免与新系统 Chrome 版本冲突）
     if headless:
         import tempfile
+
         tmp_dir = os.path.join(tempfile.gettempdir(), "chrome_profile_headless")
         os.makedirs(tmp_dir, exist_ok=True)
         opts.add_argument(f"--user-data-dir={tmp_dir}")
@@ -92,18 +100,25 @@ def load_driver(headless=False, profile_dir=None):
         opts.add_experimental_option("detach", True)
 
     try:
-        drv = webdriver.Chrome(service=Service(local_drv), options=opts)
-        drv.execute_cdp_cmd("Page.addScriptToEvaluateOnNewDocument", {
-            "source": "Object.defineProperty(navigator, 'webdriver', {get: () => undefined})"
-        })
+        drv_path = find_chromedriver() or local_drv
+        drv = webdriver.Chrome(service=Service(drv_path), options=opts)
+        drv.execute_cdp_cmd(
+            "Page.addScriptToEvaluateOnNewDocument",
+            {
+                "source": "Object.defineProperty(navigator, 'webdriver', {get: () => undefined})"
+            },
+        )
         return drv
     except Exception as e:
         log.error(f"Chrome 启动失败: {e}")
         log.info("尝试使用系统 ChromeDriver...")
         drv = webdriver.Chrome(options=opts)
-        drv.execute_cdp_cmd("Page.addScriptToEvaluateOnNewDocument", {
-            "source": "Object.defineProperty(navigator, 'webdriver', {get: () => undefined})"
-        })
+        drv.execute_cdp_cmd(
+            "Page.addScriptToEvaluateOnNewDocument",
+            {
+                "source": "Object.defineProperty(navigator, 'webdriver', {get: () => undefined})"
+            },
+        )
         return drv
 
 
@@ -131,6 +146,7 @@ def wait_el(driver, selector, timeout=12):
     from selenium.webdriver.support.ui import WebDriverWait
     from selenium.webdriver.support import expected_conditions as EC
     from selenium.webdriver.common.by import By
+
     try:
         WebDriverWait(driver, timeout).until(
             EC.presence_of_element_located((By.CSS_SELECTOR, selector))
@@ -203,7 +219,7 @@ def crawl_with_cookies(driver, keyword, success_keys):
                     try:
                         for shr_el in card.find_elements(By.CSS_SELECTOR, ".shrink-0"):
                             t = shr_el.text.strip()
-                            if t and any(k in t for k in ["市","区"]) and len(t) < 15:
+                            if t and any(k in t for k in ["市", "区"]) and len(t) < 15:
                                 area = t
                                 break
                     except Exception:
@@ -211,8 +227,12 @@ def crawl_with_cookies(driver, keyword, success_keys):
 
                     # ── 公司名（从 .cname / .hr-info 或全文） ─────
                     company = ""
-                    for sel in [".cname", ".hr-info", ".hr-position",
-                                ".detail-wrapper .hr-info"]:
+                    for sel in [
+                        ".cname",
+                        ".hr-info",
+                        ".hr-position",
+                        ".detail-wrapper .hr-info",
+                    ]:
                         try:
                             el = card.find_element(By.CSS_SELECTOR, sel)
                             t = el.text.strip()
@@ -229,18 +249,40 @@ def crawl_with_cookies(driver, keyword, success_keys):
                         else:
                             segs = [full]
                         for seg in segs:
-                            if any(k in seg for k in ["集团","有限","科技","公司","企业"]):
+                            if any(
+                                k in seg
+                                for k in ["集团", "有限", "科技", "公司", "企业"]
+                            ):
                                 if 2 < len(seg) < 30 and "投递" not in seg:
                                     company = seg
                                     break
                         # 兜底：倒数第2个有意义段
                         if not company:
-                            meaningful = [s for s in segs
-                                         if s and len(s) > 2
-                                         and not any(k in s for k in [
-                                             "千","万","元","经验","市","区","投递",
-                                             "本科","硕士","博士","天","招","在线","日"
-                                         ])]
+                            meaningful = [
+                                s
+                                for s in segs
+                                if s
+                                and len(s) > 2
+                                and not any(
+                                    k in s
+                                    for k in [
+                                        "千",
+                                        "万",
+                                        "元",
+                                        "经验",
+                                        "市",
+                                        "区",
+                                        "投递",
+                                        "本科",
+                                        "硕士",
+                                        "博士",
+                                        "天",
+                                        "招",
+                                        "在线",
+                                        "日",
+                                    ]
+                                )
+                            ]
                             if len(meaningful) >= 2:
                                 company = meaningful[-2]
 
@@ -249,21 +291,28 @@ def crawl_with_cookies(driver, keyword, success_keys):
                     # 直接取卡片第一个 <a> 的 href（跳转公司页可接受）
                     link = ""
                     try:
-                        link = card.find_element(By.CSS_SELECTOR, "a").get_attribute("href") or ""
+                        link = (
+                            card.find_element(By.CSS_SELECTOR, "a").get_attribute(
+                                "href"
+                            )
+                            or ""
+                        )
                     except Exception:
                         link = ""
 
                     if job_name:
-                        jobs.append({
-                            "职位名称":  job_name,
-                            "公司名称":  company,
-                            "薪资":      salary,
-                            "工作地点":  area,
-                            "学历要求": "",
-                            "来源平台": "前程无忧",
-                            "发布日期":  today,
-                            "链接":      link,
-                        })
+                        jobs.append(
+                            {
+                                "职位名称": job_name,
+                                "公司名称": company,
+                                "薪资": salary,
+                                "工作地点": area,
+                                "学历要求": "",
+                                "来源平台": "前程无忧",
+                                "发布日期": today,
+                                "链接": link,
+                            }
+                        )
                 except Exception:
                     pass
             log.info(f"[51job] 新增 {len(jobs) - before} 条")
@@ -309,12 +358,16 @@ def crawl_with_cookies(driver, keyword, success_keys):
                     area = ""
                     edu = ""
                     try:
-                        other_items = card.find_elements(By.CSS_SELECTOR, ".jobinfo__other-info-item")
+                        other_items = card.find_elements(
+                            By.CSS_SELECTOR, ".jobinfo__other-info-item"
+                        )
                         for item in other_items:
                             t = item.text.strip()
-                            if not area and any(k in t for k in ["市","区","·"]):
+                            if not area and any(k in t for k in ["市", "区", "·"]):
                                 area = t
-                            elif any(k in t for k in ["本科","硕士","博士","大专","学历"]):
+                            elif any(
+                                k in t for k in ["本科", "硕士", "博士", "大专", "学历"]
+                            ):
                                 edu = t
                     except Exception:
                         pass
@@ -330,21 +383,28 @@ def crawl_with_cookies(driver, keyword, success_keys):
                     # 链接
                     link = ""
                     try:
-                        link = card.find_element(By.CSS_SELECTOR, "a").get_attribute("href") or ""
+                        link = (
+                            card.find_element(By.CSS_SELECTOR, "a").get_attribute(
+                                "href"
+                            )
+                            or ""
+                        )
                     except Exception:
                         pass
 
                     if job_name:
-                        jobs.append({
-                            "职位名称":  job_name,
-                            "公司名称":  company,
-                            "薪资":      salary,
-                            "工作地点":  area,
-                            "学历要求":  edu,
-                            "来源平台": "智联招聘",
-                            "发布日期":  today,
-                            "链接":      link,
-                        })
+                        jobs.append(
+                            {
+                                "职位名称": job_name,
+                                "公司名称": company,
+                                "薪资": salary,
+                                "工作地点": area,
+                                "学历要求": edu,
+                                "来源平台": "智联招聘",
+                                "发布日期": today,
+                                "链接": link,
+                            }
+                        )
                 except Exception:
                     pass
             log.info(f"[智联] 新增 {len(jobs) - before} 条")
@@ -378,8 +438,9 @@ def crawl_with_cookies(driver, keyword, success_keys):
             time.sleep(random.uniform(5, 7))
 
             if wait_el(driver, "[class*='job-card-pc-container']", timeout=15):
-                cards = driver.find_elements(By.CSS_SELECTOR,
-                    "[class*='job-card-pc-container']")
+                cards = driver.find_elements(
+                    By.CSS_SELECTOR, "[class*='job-card-pc-container']"
+                )
             else:
                 cards = []
             log.info(f"[猎聘] 找到 {len(cards)} 张卡片")
@@ -399,22 +460,55 @@ def crawl_with_cookies(driver, keyword, success_keys):
                         if p in skip:
                             continue
                         # 城市：含"市"或"区"且较短
-                        if not area and any(k in p for k in ["市","区"]) and len(p) < 20:
+                        if (
+                            not area
+                            and any(k in p for k in ["市", "区"])
+                            and len(p) < 20
+                        ):
                             area = p
                         # 薪资：含 k/K/千/万/元
-                        elif not salary and any(k in p for k in ["k","K","千","万","元"]):
+                        elif not salary and any(
+                            k in p for k in ["k", "K", "千", "万", "元"]
+                        ):
                             salary = p
                         # 学历
-                        elif any(k in p for k in ["本科","硕士","博士","大专","学历"]):
+                        elif any(
+                            k in p for k in ["本科", "硕士", "博士", "大专", "学历"]
+                        ):
                             edu = p
                         # 公司：含常见后缀
-                        elif not company and any(k in p for k in
-                                ["有限","集团","科技","公司","企业","厂","院","基金","银行"]):
+                        elif not company and any(
+                            k in p
+                            for k in [
+                                "有限",
+                                "集团",
+                                "科技",
+                                "公司",
+                                "企业",
+                                "厂",
+                                "院",
+                                "基金",
+                                "银行",
+                            ]
+                        ):
                             if 3 < len(p) < 35:
                                 company = p
                         # 职位名：第一个有意义的短字符串
                         elif not job_name and len(p) > 1 and len(p) < 50:
-                            if not any(k in p for k in ["·招聘","在线","当前","担当","发布","岗位","猎头","HR","人事"]):
+                            if not any(
+                                k in p
+                                for k in [
+                                    "·招聘",
+                                    "在线",
+                                    "当前",
+                                    "担当",
+                                    "发布",
+                                    "岗位",
+                                    "猎头",
+                                    "HR",
+                                    "人事",
+                                ]
+                            ):
                                 job_name = p
 
                     link = ""
@@ -427,16 +521,18 @@ def crawl_with_cookies(driver, keyword, success_keys):
                         pass
 
                     if job_name:
-                        jobs.append({
-                            "职位名称":  job_name,
-                            "公司名称":  company,
-                            "薪资":      salary or "面议",
-                            "工作地点":  area,
-                            "学历要求":  edu,
-                            "来源平台": "猎聘网",
-                            "发布日期": today,
-                            "链接":      link,
-                        })
+                        jobs.append(
+                            {
+                                "职位名称": job_name,
+                                "公司名称": company,
+                                "薪资": salary or "面议",
+                                "工作地点": area,
+                                "学历要求": edu,
+                                "来源平台": "猎聘网",
+                                "发布日期": today,
+                                "链接": link,
+                            }
+                        )
                 except Exception:
                     pass
             log.info(f"[猎聘] 新增 {len(jobs) - before} 条")
@@ -472,14 +568,18 @@ def crawl_with_cookies(driver, keyword, success_keys):
                 # ── 城市 ──────────────────────────────────
                 area = ""
                 try:
-                    area = card.find_element(By.CSS_SELECTOR, ".city.ellipsis").text.strip()
+                    area = card.find_element(
+                        By.CSS_SELECTOR, ".city.ellipsis"
+                    ).text.strip()
                 except Exception:
                     pass
 
                 # ── 公司名 ───────────────────────────────
                 company = ""
                 try:
-                    co_a = card.find_element(By.CSS_SELECTOR, ".intern-detail__company a.title")
+                    co_a = card.find_element(
+                        By.CSS_SELECTOR, ".intern-detail__company a.title"
+                    )
                     company = co_a.text.strip()
                 except Exception:
                     pass
@@ -487,7 +587,9 @@ def crawl_with_cookies(driver, keyword, success_keys):
                 # ── 行业（公司区第二行）─────────────────
                 industry = ""
                 try:
-                    co_tip = card.find_element(By.CSS_SELECTOR, ".intern-detail__company .tip")
+                    co_tip = card.find_element(
+                        By.CSS_SELECTOR, ".intern-detail__company .tip"
+                    )
                     industry = co_tip.text.strip().split("/")[0]
                 except Exception:
                     pass
@@ -526,16 +628,18 @@ def crawl_with_cookies(driver, keyword, success_keys):
                     pass
 
                 if job_name or company:
-                    jobs.append({
-                        "职位名称":  job_name or (keyword + "实习"),
-                        "公司名称":  company,
-                        "薪资":      "（见实习僧）",  # 薪资图标无法解析
-                        "工作地点":  area,
-                        "学历要求":  edu,
-                        "来源平台": "实习僧",
-                        "发布日期": today,
-                        "链接":      link,
-                    })
+                    jobs.append(
+                        {
+                            "职位名称": job_name or (keyword + "实习"),
+                            "公司名称": company,
+                            "薪资": "（见实习僧）",  # 薪资图标无法解析
+                            "工作地点": area,
+                            "学历要求": edu,
+                            "来源平台": "实习僧",
+                            "发布日期": today,
+                            "链接": link,
+                        }
+                    )
             except Exception:
                 pass
         log.info(f"[实习僧] 新增 {len(jobs) - before} 条")
@@ -552,11 +656,15 @@ def crawl_with_cookies(driver, keyword, success_keys):
         driver.get(f"https://zwfw.mohrss.gov.cn/job/?searchText={kw_enc}")
         time.sleep(random.uniform(4, 6))
 
-        if wait_el(driver, "[class*='job'], article, .item, a[href*='job']", timeout=15):
-            cards = driver.find_elements(By.CSS_SELECTOR,
+        if wait_el(
+            driver, "[class*='job'], article, .item, a[href*='job']", timeout=15
+        ):
+            cards = driver.find_elements(
+                By.CSS_SELECTOR,
                 "[class*='job-item'], [class*='position-item'], "
                 "[class*='list'] li, article, .job-card, .item, "
-                "a[href*='job'], a[href*='position']")
+                "a[href*='job'], a[href*='position']",
+            )
         else:
             cards = []
         log.info(f"[公共招聘网] 找到 {len(cards)} 张卡片")
@@ -565,8 +673,14 @@ def crawl_with_cookies(driver, keyword, success_keys):
         for card in cards[:25]:
             try:
                 job_name = ""
-                for sel in ["[class*='job-name']", "[class*='title']", "h3",
-                            "h4", ".name", "strong"]:
+                for sel in [
+                    "[class*='job-name']",
+                    "[class*='title']",
+                    "h3",
+                    "h4",
+                    ".name",
+                    "strong",
+                ]:
                     try:
                         t = card.find_element(By.CSS_SELECTOR, sel).text.strip()
                         if t and 2 < len(t) < 60:
@@ -586,19 +700,26 @@ def crawl_with_cookies(driver, keyword, success_keys):
                         pass
 
                 area = ""
-                for sel in ["[class*='area']", "[class*='city']",
-                            "[class*='location']", "[class*='region']"]:
+                for sel in [
+                    "[class*='area']",
+                    "[class*='city']",
+                    "[class*='location']",
+                    "[class*='region']",
+                ]:
                     try:
                         t = card.find_element(By.CSS_SELECTOR, sel).text.strip()
-                        if t and 2 < len(t) < 20 and any(k in t for k in ["市","区"]):
+                        if t and 2 < len(t) < 20 and any(k in t for k in ["市", "区"]):
                             area = t
                             break
                     except Exception:
                         pass
 
                 company = ""
-                for sel in ["[class*='company']", "[class*='corp']",
-                            "[class*='enterprise']"]:
+                for sel in [
+                    "[class*='company']",
+                    "[class*='corp']",
+                    "[class*='enterprise']",
+                ]:
                     try:
                         t = card.find_element(By.CSS_SELECTOR, sel).text.strip()
                         if t and 2 < len(t) < 40:
@@ -620,16 +741,18 @@ def crawl_with_cookies(driver, keyword, success_keys):
                     pass
 
                 if job_name:
-                    jobs.append({
-                        "职位名称":  job_name,
-                        "公司名称":  company,
-                        "薪资":      salary or "面议",
-                        "工作地点":  area,
-                        "学历要求": "",
-                        "来源平台": "中国公共招聘网",
-                        "发布日期": today,
-                        "链接":      link,
-                    })
+                    jobs.append(
+                        {
+                            "职位名称": job_name,
+                            "公司名称": company,
+                            "薪资": salary or "面议",
+                            "工作地点": area,
+                            "学历要求": "",
+                            "来源平台": "中国公共招聘网",
+                            "发布日期": today,
+                            "链接": link,
+                        }
+                    )
             except Exception:
                 pass
         log.info(f"[公共招聘网] 新增 {len(jobs) - before} 条")
@@ -652,18 +775,24 @@ def save_results(new_jobs, keyword):
     today = datetime.today().strftime("%Y-%m-%d")  # 仅日期，文件名不能用冒号
     now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     expire_days = 7
-    expire_threshold = (datetime.now() - timedelta(days=expire_days)).strftime("%Y-%m-%d")
+    expire_threshold = (datetime.now() - timedelta(days=expire_days)).strftime(
+        "%Y-%m-%d"
+    )
 
     json_path = os.path.join(DATA_DIR, "jobs_latest.json")
 
     # ── 1. 读取已有数据 ────────────────────────────────
-    existing_jobs = {}   # key -> job dict（用于去重和保留 first_seen）
+    existing_jobs = {}  # key -> job dict（用于去重和保留 first_seen）
     if os.path.exists(json_path):
         try:
             with open(json_path, encoding="utf-8") as f:
                 old_data = json.load(f)
             for j in old_data.get("jobs", []):
-                key = (j.get("职位名称", ""), j.get("公司名称", ""), j.get("工作地点", ""))
+                key = (
+                    j.get("职位名称", ""),
+                    j.get("公司名称", ""),
+                    j.get("工作地点", ""),
+                )
                 existing_jobs[key] = j
         except Exception:
             existing_jobs = {}
@@ -722,10 +851,10 @@ def save_results(new_jobs, keyword):
 
     result = {
         "update_time": now_str,
-        "keyword":     keyword,
-        "keywords":    sorted(all_kw_set),
-        "total":       len(all_jobs),
-        "jobs":        all_jobs,
+        "keyword": keyword,
+        "keywords": sorted(all_kw_set),
+        "total": len(all_jobs),
+        "jobs": all_jobs,
     }
     with open(json_path, "w", encoding="utf-8") as f:
         json.dump(result, f, ensure_ascii=False, indent=2)
@@ -754,9 +883,13 @@ def save_results(new_jobs, keyword):
     log.info(f"   JSON  → {json_path}")
     log.info(f"   {ext}  → {excel_path}")
     if expired > 0:
-        log.info(f"   合并结果：本次新增 {added_count} 条 | 过期清理 {expired} 条 | 当前累计 {len(all_jobs)} 条")
+        log.info(
+            f"   合并结果：本次新增 {added_count} 条 | 过期清理 {expired} 条 | 当前累计 {len(all_jobs)} 条"
+        )
     else:
-        log.info(f"   合并结果：本次新增 {added_count} 条 | 当前累计 {len(all_jobs)} 条")
+        log.info(
+            f"   合并结果：本次新增 {added_count} 条 | 当前累计 {len(all_jobs)} 条"
+        )
 
     return len(all_jobs)
 
@@ -783,9 +916,11 @@ def run_crawl(driver, keywords, success_keys):
         total = save_results(all_jobs, "，".join(keywords))
         print(f"\n  🎉 全部完成！本次新增 {len(all_jobs)} 条，当前累计 {total} 条")
         for j in all_jobs[:8]:
-            print(f"    [{j['来源平台']}] {j['职位名称']} | {j['公司名称']} | {j['薪资']} | {j['工作地点']}")
+            print(
+                f"    [{j['来源平台']}] {j['职位名称']} | {j['公司名称']} | {j['薪资']} | {j['工作地点']}"
+            )
         if len(all_jobs) > 8:
-            print(f"    ... 还有 {len(all_jobs)-8} 条（见 data/ 目录）")
+            print(f"    ... 还有 {len(all_jobs) - 8} 条（见 data/ 目录）")
         return total
     else:
         print("\n  ⚠ 未采集到任何数据。可能原因：")
@@ -798,15 +933,22 @@ def run_crawl(driver, keywords, success_keys):
 
 def main():
     parser = argparse.ArgumentParser(description="招聘数据采集")
-    parser.add_argument("--keywords", type=str, default="",
-                        help="关键词，多个用逗号分隔（留空则进入交互模式）")
-    parser.add_argument("--auto", action="store_true",
-                        help="自动模式：跳过交互，直接用已有Cookie采集")
+    parser.add_argument(
+        "--keywords",
+        type=str,
+        default="",
+        help="关键词，多个用逗号分隔（留空则进入交互模式）",
+    )
+    parser.add_argument(
+        "--auto", action="store_true", help="自动模式：跳过交互，直接用已有Cookie采集"
+    )
     args = parser.parse_args()
 
     # 自动模式：跳过登录，直接采集
     if args.keywords:
-        keywords = [k.strip() for k in args.keywords.replace("，", ",").split(",") if k.strip()]
+        keywords = [
+            k.strip() for k in args.keywords.replace("，", ",").split(",") if k.strip()
+        ]
         print(f"\n[自动模式] 关键词：{keywords}")
         driver = load_driver(headless=True)
         try:
@@ -853,7 +995,9 @@ def main():
             except Exception as e:
                 log.warning(f"  打开失败: {e}")
 
-            input(f"  ✅ 请在浏览器完成【{label}】登录，完成后按 Enter（跳过直接按 Enter）...")
+            input(
+                f"  ✅ 请在浏览器完成【{label}】登录，完成后按 Enter（跳过直接按 Enter）..."
+            )
 
             path = os.path.join(COOKIE_DIR, f"{name}.json")
             cks = driver.get_cookies()
@@ -874,7 +1018,9 @@ def main():
             kw_input = "软件工程师"
             print(f"  未输入，使用默认关键词：【{kw_input}】")
 
-        keywords = [k.strip() for k in kw_input.replace("，", ",").split(",") if k.strip()]
+        keywords = [
+            k.strip() for k in kw_input.replace("，", ",").split(",") if k.strip()
+        ]
         print(f"\n  将依次采集关键词：{keywords}\n" + "─" * 50)
         run_crawl(driver, keywords, success_keys)
 
