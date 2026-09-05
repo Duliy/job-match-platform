@@ -1,12 +1,10 @@
 // 商贸就业平台 Service Worker
-const CACHE_NAME = 'job-board-v1';
+const CACHE_NAME = 'job-board-campus-v2';
 const PRE_CACHE = [
   '/',
   '/index.html',
   '/resume_match.html',
   '/admin.html',
-  '/static_app/index.html',
-  '/static_admin/index.html',
   '/manifest.json',
   '/icon-192.png',
   '/icon-512.png'

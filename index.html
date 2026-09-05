@@ -1,176 +1,450 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="theme-color" content="#9C6B3C" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-  <meta name="apple-mobile-web-app-title" content="商贸就业" />
-  <link rel="apple-touch-icon" href="/icon-192.png" />
-  <link rel="manifest" href="/manifest.json" />
-  <title>西南大学商贸学院 · 就业服务平台</title>
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23B8845A' stroke-width='1.6'><rect x='2' y='3' width='8' height='8' rx='1.5'/><rect x='14' y='3' width='8' height='8' rx='1.5'/><rect x='2' y='13' width='8' height='8' rx='1.5'/><rect x='14' y='13' width='8' height='8' rx='1.5'/></svg>">
-  <style>
-    :root {
-      --p: #9C6B3C;
-      --p-l: #B8845A;
-      --p-d: #7A5230;
-      --p-bg: #F2EAE0;
-      --bg: #FBF8F3;
-      --surface: #FFFFFF;
-      --border: #E8DDD0;
-      --text: #1C1814;
-      --sub: #6B5A4A;
-      --subl: #A08060;
-    }
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
-      background: linear-gradient(160deg, #FBF8F3 0%, #F5F0E8 35%, #F2EDE4 60%, #F8F4EE 100%);
-      color: var(--text);
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    body::before {
-      content: '';
-      position: fixed;
-      inset: 0;
-      background: radial-gradient(ellipse 800px 600px at 85% 5%, rgba(220,195,170,.35) 0%, transparent 55%),
-                  radial-gradient(ellipse 700px 500px at 10% 90%, rgba(210,180,150,.28) 0%, transparent 55%),
-                  radial-gradient(ellipse 500px 400px at 55% 38%, rgba(235,210,180,.20) 0%, transparent 50%),
-                  radial-gradient(ellipse 450px 350px at 72% 82%, rgba(200,165,140,.15) 0%, transparent 50%);
-      pointer-events: none;
-      z-index: 0;
-    }
-    body::after {
-      content: '';
-      position: fixed;
-      inset: 0;
-      background: radial-gradient(ellipse 800px 600px at 85% 5%, rgba(220,195,170,.38) 0%, transparent 70%),
-                  radial-gradient(ellipse 700px 500px at 10% 90%, rgba(210,180,150,.32) 0%, transparent 65%),
-                  radial-gradient(ellipse 600px 450px at 55% 38%, rgba(235,200,160,.28) 0%, transparent 60%),
-                  radial-gradient(ellipse 500px 400px at 72% 82%, rgba(200,165,140,.24) 0%, transparent 55%),
-                  radial-gradient(ellipse 550px 380px at 25% 15%, rgba(215,185,155,.22) 0%, transparent 58%);
-      pointer-events: none;
-      z-index: 0;
-    }
-    .card {
-      background: rgba(255,255,255,.92);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
-      border-radius: 20px;
-      padding: 48px 56px;
-      border: 1px solid var(--border);
-      text-align: center;
-      max-width: 520px;
-      width: 90%;
-      position: relative;
-      z-index: 1;
-      animation: fadeUp .5s cubic-bezier(.4,0,.2,1);
-    }
-    @keyframes fadeUp {
-      from { opacity: 0; transform: translateY(24px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
-    .card-icon { margin-bottom: 16px; }
-    .card-icon svg { width: 56px; height: 56px; color: var(--p); }
-    .card-title { font-size: 22px; font-weight: 600; color: var(--text); margin-bottom: 8px; letter-spacing: -.02em; }
-    .card-sub { font-size: 14px; color: var(--sub); margin-bottom: 32px; line-height: 1.6; }
-    .card-links { display: flex; flex-direction: column; gap: 14px; }
-    .card-link {
-      display: flex;
-      align-items: center;
-      gap: 14px;
-      padding: 18px 24px;
-      background: var(--bg);
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      text-decoration: none;
-      color: var(--text);
-      font-size: 15px;
-      font-weight: 500;
-      transition: all .2s cubic-bezier(.4,0,.2,1);
-    }
-    .card-link:hover {
-      border-color: var(--p-l);
-      background: #fff;
-    }
-    .card-link .icon {
-      width: 44px;
-      height: 44px;
-      border-radius: 10px;
-      background: var(--p-bg);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-shrink: 0;
-      color: var(--p);
-    }
-    .card-link .icon svg { width: 22px; height: 22px; }
-    .card-link .info { flex: 1; text-align: left; min-width: 0; }
-    .card-link .info .name { font-size: 15px; font-weight: 600; }
-    .card-link .info .desc { font-size: 12px; color: var(--sub); margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .card-link .arrow { color: var(--subl); flex-shrink: 0; transition: all .2s; }
-    .card-link .arrow svg { width: 18px; height: 18px; }
-    .card-link:hover .arrow { color: var(--p); transform: translateX(4px); }
-    .card-link.admin-link { border-color: #F0E0D8; background: #FDF7F5; }
-    .card-link.admin-link:hover { border-color: var(--p); }
-    .card-link.admin-link .icon { background: #F5E8E4; color: #8C4A3C; }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#fbfbfd">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="商贸就业">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%231d1d1f' stroke-width='1.6'><rect x='2' y='3' width='8' height='8' rx='1.5'/><rect x='14' y='3' width='8' height='8' rx='1.5'/><rect x='2' y='13' width='8' height='8' rx='1.5'/><rect x='14' y='13' width='8' height='8' rx='1.5'/></svg>">
+<title>西南大学商贸学院 · 就业服务平台</title>
+<style>
+  /* ═══════════ Apple Design Tokens ═══════════ */
+  :root {
+    --bg: #fbfbfd;
+    --bg-section: #f5f5f7;
+    --text: #1d1d1f;
+    --text-2: #6e6e73;
+    --text-3: #86868b;
+    --accent: #0071e3;
+    --accent-hover: #0077ed;
+    --link: #06c;
+    --card: #ffffff;
+    --hairline: rgba(0,0,0,.08);
+    --radius-lg: 28px;
+    --radius-md: 18px;
+    --font: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro SC",
+            "PingFang SC", "Helvetica Neue", "Microsoft YaHei", sans-serif;
+    --ease: cubic-bezier(.28,.11,.32,1);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: var(--font);
+    background: var(--bg);
+    color: var(--text);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    overflow-x: hidden;
+  }
+  ::selection { background: rgba(0,113,227,.15); }
+  a { color: var(--link); text-decoration: none; }
+
+  /* ═══════════ 毛玻璃导航 ═══════════ */
+  .nav {
+    position: fixed; inset: 0 0 auto 0; z-index: 100;
+    height: 52px;
+    background: rgba(251,251,253,.8);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    backdrop-filter: blur(20px) saturate(180%);
+    border-bottom: 1px solid var(--hairline);
+  }
+  .nav-inner {
+    max-width: 1024px; margin: 0 auto; height: 100%;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 22px;
+  }
+  .nav-logo {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 15px; font-weight: 600; letter-spacing: -.01em;
+    color: var(--text);
+  }
+  .nav-logo svg { width: 20px; height: 20px; }
+  .nav-links { display: flex; gap: 28px; align-items: center; }
+  .nav-links a {
+    font-size: 13px; color: var(--text); opacity: .8;
+    transition: opacity .2s var(--ease);
+  }
+  .nav-links a:hover { opacity: 1; }
+  .nav-cta {
+    font-size: 13px; font-weight: 500; color: #fff !important;
+    background: var(--accent); border-radius: 980px;
+    padding: 6px 16px; opacity: 1 !important;
+    transition: background .2s var(--ease), transform .2s var(--ease);
+  }
+  .nav-cta:hover { background: var(--accent-hover); transform: scale(1.02); }
+
+  /* ═══════════ Hero ═══════════ */
+  .hero {
+    min-height: 100svh;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    text-align: center;
+    padding: 120px 22px 80px;
+    position: relative;
+  }
+  .hero-eyebrow {
+    font-size: 17px; font-weight: 600; color: var(--text-2);
+    letter-spacing: .02em; margin-bottom: 18px;
+    animation: rise .9s var(--ease) both;
+  }
+  .hero h1 {
+    font-size: clamp(44px, 8.5vw, 96px);
+    font-weight: 700;
+    letter-spacing: -.022em;
+    line-height: 1.05;
+    animation: rise .9s .08s var(--ease) both;
+  }
+  .hero h1 .gradient {
+    background: linear-gradient(96deg, #0090f7 0%, #6a5cff 42%, #c86dd7 78%, #ff6482 100%);
+    -webkit-background-clip: text; background-clip: text;
+    -webkit-text-fill-color: transparent; color: transparent;
+  }
+  .hero-sub {
+    margin-top: 22px;
+    font-size: clamp(17px, 2.4vw, 24px);
+    font-weight: 500; color: var(--text-2);
+    max-width: 640px; line-height: 1.5;
+    letter-spacing: -.01em;
+    animation: rise .9s .16s var(--ease) both;
+  }
+  .hero-cta {
+    margin-top: 38px; display: flex; gap: 18px; flex-wrap: wrap;
+    justify-content: center;
+    animation: rise .9s .24s var(--ease) both;
+  }
+  .btn-pill {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 17px; font-weight: 500;
+    border-radius: 980px; padding: 14px 30px;
+    transition: transform .25s var(--ease), background .2s var(--ease), box-shadow .25s var(--ease);
+  }
+  .btn-pill.primary {
+    background: var(--accent); color: #fff;
+    box-shadow: 0 8px 24px rgba(0,113,227,.28);
+  }
+  .btn-pill.primary:hover { background: var(--accent-hover); transform: scale(1.03); }
+  .btn-pill.ghost { color: var(--link); }
+  .btn-pill.ghost:hover { text-decoration: underline; }
+  .btn-pill .arrow { font-family: none; }
+
+  @keyframes rise {
+    from { opacity: 0; transform: translateY(28px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Hero 底部产品预览（纯 CSS 绘制的界面 mockup） */
+  .hero-shot {
+    margin-top: 70px;
+    width: min(940px, 92vw);
+    animation: rise 1s .34s var(--ease) both;
+  }
+  .shot-frame {
+    background: var(--card);
+    border-radius: var(--radius-lg);
+    box-shadow: 0 4px 6px rgba(0,0,0,.03), 0 24px 60px rgba(0,0,0,.09);
+    overflow: hidden;
+    text-align: left;
+  }
+  .shot-bar {
+    height: 44px; display: flex; align-items: center; gap: 8px;
+    padding: 0 18px; border-bottom: 1px solid var(--hairline);
+    background: #fafafc;
+  }
+  .shot-dot { width: 11px; height: 11px; border-radius: 50%; }
+  .shot-dot:nth-child(1) { background: #ff5f57; }
+  .shot-dot:nth-child(2) { background: #febc2e; }
+  .shot-dot:nth-child(3) { background: #28c840; }
+  .shot-url {
+    margin-left: 10px; flex: 1; max-width: 340px;
+    height: 26px; border-radius: 8px; background: #eeeef0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; color: var(--text-3);
+  }
+  .shot-body { padding: 26px; display: grid; gap: 14px; grid-template-columns: repeat(3, 1fr); }
+  .shot-card {
+    border: 1px solid var(--hairline); border-radius: var(--radius-md);
+    padding: 18px; background: #fff;
+  }
+  .shot-card .sk { border-radius: 6px; background: #ececf0; }
+  .shot-card .sk.t { height: 15px; width: 72%; background: #e2e2e8; }
+  .shot-card .sk.c { height: 11px; width: 52%; margin-top: 10px; }
+  .shot-card .sk.s { height: 13px; width: 40%; margin-top: 12px; background: #dceafe; }
+  .shot-card .sk.tag { height: 18px; width: 64px; margin-top: 14px; border-radius: 980px; background: #f0f0f3; }
+  .shot-card .score {
+    float: right; width: 40px; height: 40px; border-radius: 50%;
+    border: 3px solid #0071e3; display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 700; color: var(--accent);
+  }
+
+  /* ═══════════ 通用 Section ═══════════ */
+  .section { padding: 110px 22px; }
+  .section.gray { background: var(--bg-section); }
+  .section-inner { max-width: 1024px; margin: 0 auto; }
+  .sec-head { text-align: center; margin-bottom: 64px; }
+  .sec-head .eyebrow {
+    font-size: 15px; font-weight: 600; color: var(--accent);
+    letter-spacing: .04em; text-transform: uppercase;
+  }
+  .sec-head h2 {
+    font-size: clamp(32px, 5vw, 56px); font-weight: 700;
+    letter-spacing: -.02em; line-height: 1.1; margin-top: 12px;
+  }
+  .sec-head p {
+    margin-top: 16px; font-size: clamp(16px, 2vw, 19px);
+    color: var(--text-2); max-width: 620px; margin-inline: auto;
+    line-height: 1.55;
+  }
+
+  /* ═══════════ 特性卡片网格 ═══════════ */
+  .grid { display: grid; gap: 22px; grid-template-columns: repeat(2, 1fr); }
+  .card {
+    background: var(--card); border-radius: var(--radius-lg);
+    padding: 44px 40px; overflow: hidden; position: relative;
+    transition: transform .35s var(--ease), box-shadow .35s var(--ease);
+  }
+  .card:hover { transform: translateY(-4px); box-shadow: 0 20px 50px rgba(0,0,0,.08); }
+  .card .c-icon {
+    width: 52px; height: 52px; border-radius: 14px;
+    display: flex; align-items: center; justify-content: center;
+    margin-bottom: 22px;
+  }
+  .card .c-icon svg { width: 26px; height: 26px; }
+  .card h3 { font-size: 24px; font-weight: 700; letter-spacing: -.015em; }
+  .card p { margin-top: 10px; font-size: 15px; line-height: 1.6; color: var(--text-2); }
+  .card .c-link {
+    display: inline-flex; align-items: center; gap: 4px;
+    margin-top: 20px; font-size: 15px; font-weight: 500;
+  }
+  .card .c-link:hover { text-decoration: underline; }
+
+  .i-blue  { background: rgba(0,113,227,.1);  color: #0071e3; }
+  .i-purple{ background: rgba(106,92,255,.1); color: #6a5cff; }
+  .i-pink  { background: rgba(255,100,130,.1);color: #e0446b; }
+  .i-green { background: rgba(40,180,99,.1);  color: #1e8e4e; }
+
+  /* ═══════════ 数据条 ═══════════ */
+  .stats {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px;
+    text-align: center;
+  }
+  .stat .num {
+    font-size: clamp(34px, 4.6vw, 52px); font-weight: 700;
+    letter-spacing: -.02em;
+    background: linear-gradient(180deg, #1d1d1f, #4a4a4c);
+    -webkit-background-clip: text; background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .stat .lbl { margin-top: 6px; font-size: 14px; color: var(--text-2); }
+
+  /* ═══════════ 公考深色横幅 ═══════════ */
+  .banner {
+    border-radius: var(--radius-lg);
+    background: linear-gradient(135deg, #16161a 0%, #1d1d22 55%, #2a2340 100%);
+    color: #f5f5f7;
+    padding: 70px 56px;
+    display: grid; grid-template-columns: 1.2fr .8fr; gap: 40px;
+    align-items: center; overflow: hidden; position: relative;
+  }
+  .banner::after {
+    content: ""; position: absolute; right: -120px; top: -120px;
+    width: 420px; height: 420px; border-radius: 50%;
+    background: radial-gradient(circle, rgba(106,92,255,.35), transparent 65%);
+  }
+  .banner h3 { font-size: clamp(28px, 3.6vw, 42px); font-weight: 700; letter-spacing: -.02em; line-height: 1.15; }
+  .banner p { margin-top: 16px; font-size: 16px; line-height: 1.6; color: #a1a1a6; }
+  .banner .b-tags { display: flex; flex-wrap: wrap; gap: 10px; position: relative; z-index: 1; }
+  .banner .b-tag {
+    font-size: 13px; padding: 8px 16px; border-radius: 980px;
+    background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.14);
+    color: #d7d7dc;
+  }
+
+  /* ═══════════ 底部 CTA + Footer ═══════════ */
+  .final { text-align: center; }
+  .final h2 { font-size: clamp(34px, 5.4vw, 60px); font-weight: 700; letter-spacing: -.022em; }
+  .final p { margin-top: 16px; font-size: 18px; color: var(--text-2); }
+  .final .hero-cta { margin-top: 34px; }
+
+  footer {
+    border-top: 1px solid var(--hairline);
+    padding: 34px 22px; text-align: center;
+    font-size: 12px; color: var(--text-3); line-height: 1.9;
+  }
+  footer .f-admin { margin-top: 8px; }
+  footer .f-admin a { color: var(--text-3); }
+  footer .f-admin a:hover { color: var(--link); }
+
+  /* ═══════════ 响应式 ═══════════ */
+  @media (max-width: 768px) {
+    .nav-links a:not(.nav-cta) { display: none; }
+    .grid { grid-template-columns: 1fr; }
+    .stats { grid-template-columns: repeat(2, 1fr); gap: 32px; }
+    .banner { grid-template-columns: 1fr; padding: 48px 30px; }
+    .shot-body { grid-template-columns: 1fr; }
+    .section { padding: 72px 20px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    * { animation: none !important; transition: none !important; }
+  }
+</style>
 </head>
 <body>
 
-<div class="card">
-  <div class="card-icon">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
-      <rect x="2" y="3" width="8" height="8" rx="1.5"/>
-      <rect x="14" y="3" width="8" height="8" rx="1.5"/>
-      <rect x="2" y="13" width="8" height="8" rx="1.5"/>
-      <rect x="14" y="13" width="8" height="8" rx="1.5"/>
-    </svg>
-  </div>
-  <div class="card-title">西南大学商贸学院 · 就业服务平台</div>
-  <div class="card-sub">岗位浏览 · 智能匹配 · 简历分析 · 数据洞察</div>
-  <div class="card-links">
-    <a href="resume_match.html" class="card-link">
-      <span class="icon">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="10" cy="10" r="7"/>
-          <line x1="15" y1="15" x2="21" y2="21"/>
-        </svg>
-      </span>
-      <span class="info">
-        <span class="name">就业服务平台</span>
-        <span class="desc">岗位浏览 / 智能匹配 / 简历分析 / 订阅推送</span>
-      </span>
-      <span class="arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span>
+<!-- ═══════ 毛玻璃导航 ═══════ -->
+<nav class="nav">
+  <div class="nav-inner">
+    <a class="nav-logo" href="/">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="2" y="3" width="8" height="8" rx="1.5"/><rect x="14" y="3" width="8" height="8" rx="1.5"/><rect x="2" y="13" width="8" height="8" rx="1.5"/><rect x="14" y="13" width="8" height="8" rx="1.5"/></svg>
+      商贸就业
     </a>
-    <a href="admin.html" class="card-link admin-link">
-      <span class="icon">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-          <rect x="3" y="11" width="18" height="11" rx="2"/>
-          <path d="M7 11V7a5 5 0 0110 0v4"/>
-        </svg>
-      </span>
-      <span class="info">
-        <span class="name">管理后台</span>
-        <span class="desc">爬虫管理 / 用户管理 / 财务统计 / 系统设置</span>
-      </span>
-      <span class="arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span>
-    </a>
+    <div class="nav-links">
+      <a href="resume_match.html">岗位</a>
+      <a href="resume_match.html" data-tab="2">简历匹配</a>
+      <a href="#features">功能</a>
+      <a href="resume_match.html" class="nav-cta">开始使用</a>
+    </div>
   </div>
-</div>
+</nav>
+
+<!-- ═══════ Hero ═══════ -->
+<header class="hero">
+  <div class="hero-eyebrow">西南大学商贸学院 · 就业服务平台</div>
+  <h1>好工作，<br><span class="gradient">会来找你。</span></h1>
+  <p class="hero-sub">汇聚五大招聘平台与全国公考职位库，<br class="br-m">AI 智能匹配，新岗位主动推送到你的邮箱。</p>
+  <div class="hero-cta">
+    <a href="resume_match.html" class="btn-pill primary">浏览岗位</a>
+    <a href="#features" class="btn-pill ghost">了解更多 <span>›</span></a>
+  </div>
+
+  <!-- 纯 CSS 产品预览 -->
+  <div class="hero-shot">
+    <div class="shot-frame">
+      <div class="shot-bar">
+        <span class="shot-dot"></span><span class="shot-dot"></span><span class="shot-dot"></span>
+        <span class="shot-url">就业服务平台 · 智能匹配</span>
+      </div>
+      <div class="shot-body">
+        <div class="shot-card"><span class="score">92</span><div class="sk t"></div><div class="sk c"></div><div class="sk s"></div><div class="sk tag"></div></div>
+        <div class="shot-card"><span class="score" style="border-color:#6a5cff;color:#6a5cff">87</span><div class="sk t"></div><div class="sk c"></div><div class="sk s"></div><div class="sk tag"></div></div>
+        <div class="shot-card"><span class="score" style="border-color:#28b463;color:#1e8e4e">81</span><div class="sk t"></div><div class="sk c"></div><div class="sk s"></div><div class="sk tag"></div></div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- ═══════ 功能特性 ═══════ -->
+<section class="section gray" id="features">
+  <div class="section-inner">
+    <div class="sec-head">
+      <div class="eyebrow">功能</div>
+      <h2>为求职的每一步，<br>都准备好了。</h2>
+      <p>从发现岗位到简历诊断，一个平台全部覆盖。全部功能对全院师生免费开放。</p>
+    </div>
+    <div class="grid">
+      <div class="card">
+        <div class="c-icon i-blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="10" r="7"/><line x1="15" y1="15" x2="21" y2="21"/></svg></div>
+        <h3>岗位搜索</h3>
+        <p>前程无忧、实习僧、智联、猎聘多平台岗位一站聚合，按城市、薪资、学历自由筛选，无需注册。</p>
+        <a class="c-link" href="resume_match.html">立即搜索 <span>›</span></a>
+      </div>
+      <div class="card">
+        <div class="c-icon i-purple"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg></div>
+        <h3>AI 简历匹配</h3>
+        <p>上传简历，AI 从技能、经验、学历、薪资、地点五个维度打分排序，并给出每个岗位的录用概率。</p>
+        <a class="c-link" href="resume_match.html" data-tab="2">试试匹配 <span>›</span></a>
+      </div>
+      <div class="card">
+        <div class="c-icon i-pink"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21.21 15.89A10 10 0 118 2.83"/><path d="M22 12A10 10 0 0012 2v10z"/></svg></div>
+        <h3>简历深度分析</h3>
+        <p>资深 HR 视角的全面诊断：优势、短板、修改建议、关键词优化，让简历通过率更进一步。</p>
+        <a class="c-link" href="resume_match.html" data-tab="3">分析简历 <span>›</span></a>
+      </div>
+      <div class="card">
+        <div class="c-icon i-green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg></div>
+        <h3>订阅推送</h3>
+        <p>上传简历并绑定邮箱，系统定期扫描全网新岗位，与你匹配的岗位自动发送到邮箱，不再错过机会。</p>
+        <a class="c-link" href="resume_match.html" data-tab="5">开启订阅 <span>›</span></a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════ 数据 ═══════ -->
+<section class="section">
+  <div class="section-inner">
+    <div class="sec-head">
+      <div class="eyebrow">覆盖</div>
+      <h2>实时更新，持续汇聚。</h2>
+    </div>
+    <div class="stats" id="stats">
+      <div class="stat"><div class="num" id="stat-jobs">—</div><div class="lbl">在招社招岗位</div></div>
+      <div class="stat"><div class="num" id="stat-gk">—</div><div class="lbl">公考职位</div></div>
+      <div class="stat"><div class="num" id="stat-cities">—</div><div class="lbl">覆盖城市</div></div>
+      <div class="stat"><div class="num" id="stat-platforms">—</div><div class="lbl">数据来源平台</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════ 公考横幅 ═══════ -->
+<section class="section gray">
+  <div class="section-inner">
+    <div class="banner">
+      <div>
+        <h3>考公考编，<br>也不缺席。</h3>
+        <p>覆盖全国 31 省市公务员与事业单位职位库，每日更新。专业要求、学历门槛、招录人数，一目了然。</p>
+      </div>
+      <div class="b-tags">
+        <span class="b-tag">公务员</span><span class="b-tag">事业单位</span>
+        <span class="b-tag">选调生</span><span class="b-tag">三支一扶</span>
+        <span class="b-tag">31 省职位库</span><span class="b-tag">每日更新</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════ 底部 CTA ═══════ -->
+<section class="section final">
+  <div class="section-inner">
+    <h2>你的下一份好工作，<br>从这里开始。</h2>
+    <p>无需下载 App，打开浏览器就能用。</p>
+    <div class="hero-cta">
+      <a href="resume_match.html" class="btn-pill primary">进入就业服务平台</a>
+    </div>
+  </div>
+</section>
+
+<footer>
+  西南大学商贸学院 · 就业服务平台 · 仅供本院师生使用<br>
+  AI 功能由学生使用自己的 DeepSeek API Key 驱动，平台不存储任何 Key
+  <div class="f-admin"><a href="admin.html">管理入口</a>（仅限辅导员）</div>
+</footer>
 
 <script>
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('/sw.js').then(function(reg) {
-    console.log('[PWA] Service Worker registered:', reg.scope);
-  }).catch(function(err) {
-    console.warn('[PWA] SW registration failed:', err);
+// 首页实时统计数据
+fetch('api/match/stats').then(r => r.json()).then(d => {
+  const set = (id, v) => {
+    const el = document.getElementById(id);
+    if (el && v != null && v !== '') el.textContent = Number(v).toLocaleString();
+  };
+  set('stat-jobs', d.jobs && d.jobs.total);
+  set('stat-gk', d.gk_jobs && d.gk_jobs.total);
+  set('stat-cities', d.jobs && d.jobs.cities);
+  set('stat-platforms', d.jobs && d.jobs.platforms);
+}).catch(() => {});
+
+// 「了解更多」等链接支持指定 tab：resume_match.html#tab=N
+document.querySelectorAll('[data-tab]').forEach(a => {
+  a.addEventListener('click', e => {
+    e.preventDefault();
+    location.href = 'resume_match.html#tab=' + a.dataset.tab;
   });
+});
+
+// PWA
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/sw.js').catch(() => {});
 }
 </script>
 </body>
