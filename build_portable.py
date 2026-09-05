@@ -172,6 +172,28 @@ def step_code():
     # 空目录占位
     for d in ["data", "cookies"]:
         os.makedirs(os.path.join(PKG_DIR, d), exist_ok=True)
+
+    # 种子数据：如果构建机的 data/jobs.db 有真实岗位数据，打包进去，
+    # 让平台首次打开就有内容（辅导员之后点一次「立即采集」即可更新）
+    seed_db = os.path.join(BASE_DIR, "data", "jobs.db")
+    if os.path.isfile(seed_db):
+        import sqlite3 as _sq
+        _conn = _sq.connect(seed_db)
+        try:
+            n_jobs = _conn.execute("SELECT COUNT(*) FROM jobs").fetchone()[0]
+            n_gk = _conn.execute("SELECT COUNT(*) FROM gk_jobs").fetchone()[0]
+        except Exception:
+            n_jobs = n_gk = 0
+        _conn.close()
+        if n_jobs + n_gk > 0:
+            # 用备份接口导出一个干净的 db（避免 WAL 不一致）
+            dst = os.path.join(PKG_DIR, "data", "jobs.db")
+            src_conn = _sq.connect(seed_db)
+            dst_conn = _sq.connect(dst)
+            src_conn.backup(dst_conn)
+            dst_conn.close()
+            src_conn.close()
+            print(f"  [种子数据] 打包岗位数据：社招 {n_jobs} 条 + 公考 {n_gk} 条")
     print(f"  [复制] {len(CODE_FILES)} 个项目文件")
 
 

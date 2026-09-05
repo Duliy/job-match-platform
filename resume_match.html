@@ -69,7 +69,7 @@ input:focus,select:focus,textarea:focus{
 }
 .header-inner{
   max-width:1100px;margin:0 auto;
-  display:flex;align-items:center;gap:18px;
+  display:flex;align-items:center;gap:14px;
   padding:10px 22px;min-height:56px;
 }
 .logo{
@@ -81,15 +81,17 @@ input:focus,select:focus,textarea:focus{
 
 /* 苹果分段控件式 Tab */
 .nav-tabs{
-  flex:1;display:flex;justify-content:center;
+  flex:1 1 auto;min-width:0;display:flex;justify-content:flex-start;
   background:var(--seg);border-radius:12px;padding:3px;
   gap:2px;max-width:640px;margin:0 auto;
   overflow-x:auto;scrollbar-width:none;
+  -webkit-overflow-scrolling:touch;
 }
 .nav-tabs::-webkit-scrollbar{display:none}
 .nav-tab{
-  display:flex;align-items:center;gap:5px;
-  padding:6px 14px;border-radius:9px;
+  display:flex;align-items:center;justify-content:center;gap:5px;
+  flex:1 0 auto;
+  padding:7px 14px;border-radius:9px;
   font-size:13px;font-weight:500;color:var(--text-2);
   white-space:nowrap;
   transition:all .25s var(--ease);
@@ -203,7 +205,7 @@ input:focus,select:focus,textarea:focus{
 .hot-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:18px}
 .hot-card{position:relative;overflow:hidden}
 .hot-card .card-body{padding:22px}
-.hot-card .job-title{font-size:17px;font-weight:700;letter-spacing:-.01em;line-height:1.3}
+.hot-card .job-title{font-size:17px;font-weight:700;letter-spacing:-.01em;line-height:1.3;padding-right:38px}
 .hot-card .company{margin-top:6px;font-size:13.5px;color:var(--text-2)}
 .hot-card .salary{margin-top:12px;font-size:19px;font-weight:700;color:var(--accent);letter-spacing:-.01em}
 .hot-card .meta{display:flex;flex-wrap:wrap;gap:12px;margin-top:12px;font-size:12.5px;color:var(--text-3)}
@@ -265,30 +267,44 @@ input:focus,select:focus,textarea:focus{
 .job-card .jc-meta{display:flex;gap:10px;margin-top:6px;font-size:12px;color:var(--text-3);flex-wrap:wrap}
 .job-card .jc-chevron{flex-shrink:0;color:var(--text-3);transition:transform .25s var(--ease)}
 .job-card .jc-chevron.open{transform:rotate(90deg)}
-.job-card .jc-detail{border-top:1px solid var(--hairline);padding:20px 22px;animation:cardExpandIn .3s var(--ease)}
+.job-card .jc-detail{border-top:1px solid var(--hairline);padding:24px;background:#fbfbfd;animation:cardExpandIn .3s var(--ease)}
 @keyframes cardExpandIn{from{opacity:0}to{opacity:1}}
-.jc-detail .jd-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:14px}
-.jc-detail .jd-item{display:flex;flex-direction:column;gap:3px}
-.jc-detail .jd-label{font-size:11.5px;color:var(--text-3);text-transform:uppercase;letter-spacing:.04em}
-.jc-detail .jd-value{font-size:13.5px;font-weight:500}
-.jc-detail .jd-salary{color:var(--accent);font-weight:700}
-.jc-detail .jd-desc{margin-top:14px;font-size:13px;line-height:1.7;color:var(--text-2)}
-.jc-detail .jd-actions{margin-top:16px;display:flex;gap:10px;align-items:center}
-.jc-detail .jd-link-btn{display:inline-flex;align-items:center;gap:5px;font-size:13px;font-weight:500;color:var(--link)}
-.jc-detail .jd-link-btn:hover{text-decoration:underline}
+.jc-detail .jd-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px 28px}
+.jc-detail .jd-item{display:flex;flex-direction:column;gap:4px}
+.jc-detail .jd-label{font-size:11.5px;color:var(--text-3);letter-spacing:.03em}
+.jc-detail .jd-value{font-size:14px;font-weight:500;line-height:1.4}
+.jc-detail .jd-salary{color:var(--accent);font-weight:700;font-size:15px}
+.jc-detail .jd-desc{
+  margin-top:20px;padding:16px 18px;
+  background:#fff;border:1px solid var(--hairline);border-radius:12px;
+  font-size:13px;line-height:1.8;color:var(--text-2);
+}
+.jc-detail .jd-actions{margin-top:20px;display:flex;gap:12px;align-items:center}
+.jc-detail .jd-link-btn{
+  display:inline-flex;align-items:center;gap:6px;
+  font-size:13px;font-weight:600;color:#fff;
+  background:var(--accent);border-radius:980px;padding:8px 20px;
+  transition:background .2s var(--ease),transform .2s var(--ease);
+}
+.jc-detail .jd-link-btn:hover{background:var(--accent-hover);transform:scale(1.03);text-decoration:none}
 .jc-detail .jd-no-url{font-size:12.5px;color:var(--text-3)}
 
 /* 热力卡片展开 */
 .hot-card.expanded{grid-column:1/-1}
-.hot-detail{border-top:1px solid var(--hairline);margin-top:14px;padding-top:16px}
-.hot-detail .hd-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:14px}
+.hot-detail{border-top:1px solid var(--hairline);margin-top:16px;padding-top:20px}
+.hot-detail .hd-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px 28px}
 .hot-detail .hd-item{display:flex;flex-direction:column;gap:3px}
 .hot-detail .hd-label{font-size:11.5px;color:var(--text-3);text-transform:uppercase;letter-spacing:.04em}
 .hot-detail .hd-value{font-size:13.5px;font-weight:500}
 .hot-detail .hd-salary{color:var(--accent);font-weight:700}
 .hot-detail .hd-actions{margin-top:14px}
-.hot-detail .hd-link-btn{display:inline-flex;align-items:center;gap:5px;font-size:13px;font-weight:500;color:var(--link)}
-.hot-detail .hd-link-btn:hover{text-decoration:underline}
+.hot-detail .hd-link-btn{
+  display:inline-flex;align-items:center;gap:6px;
+  font-size:13px;font-weight:600;color:#fff;
+  background:var(--accent);border-radius:980px;padding:8px 20px;
+  transition:background .2s var(--ease),transform .2s var(--ease);
+}
+.hot-detail .hd-link-btn:hover{background:var(--accent-hover);transform:scale(1.03);text-decoration:none}
 .hot-detail .hd-no-url{font-size:12.5px;color:var(--text-3)}
 
 .card-expand-enter-active,.card-expand-leave-active{transition:all .25s var(--ease)}
@@ -609,12 +625,16 @@ input:focus,select:focus,textarea:focus{
 .mock-email-body .meb-footer{margin-top:18px;padding-top:12px;border-top:1px solid var(--hairline);font-size:11px;color:var(--text-3)}
 
 /* ═══════════ 响应式 ═══════════ */
+@media(max-width:1100px){
+  .nav-tab svg{display:none}
+  .nav-tab{padding:7px 12px}
+}
 @media(max-width:640px){
   .vip-benefits-grid{grid-template-columns:repeat(2,1fr)}
   .ves-row{flex-direction:column}
   .header-inner{padding:8px 14px;gap:10px}
   .logo span{display:none}
-  .nav-tab{padding:6px 10px;font-size:12px}
+  .nav-tab{padding:7px 12px;font-size:12.5px;flex:0 0 auto}
   .nav-tab .tab-text{display:inline}
   .main-content{padding:20px 14px 64px}
   .stats-row{grid-template-columns:repeat(2,1fr)}
