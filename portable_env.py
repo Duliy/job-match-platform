@@ -16,9 +16,18 @@ import shutil
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 _SYSTEM_CHROME_PATHS = [
+    # Windows
     r"C:\Program Files\Google\Chrome\Application\chrome.exe",
     r"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe",
     os.path.expandvars(r"%LOCALAPPDATA%\Google\Chrome\Application\chrome.exe"),
+    # Linux
+    "/usr/bin/google-chrome",
+    "/usr/bin/google-chrome-stable",
+    "/usr/bin/chromium",
+    "/usr/bin/chromium-browser",
+    "/snap/bin/chromium",
+    # macOS
+    "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
 ]
 
 
@@ -36,7 +45,13 @@ def find_chrome_binary():
         if os.path.isfile(p):
             return p
 
-    which = shutil.which("chrome") or shutil.which("chrome.exe")
+    which = (
+        shutil.which("chrome")
+        or shutil.which("chrome.exe")
+        or shutil.which("google-chrome")
+        or shutil.which("chromium")
+        or shutil.which("chromium-browser")
+    )
     if which:
         return which
     return None

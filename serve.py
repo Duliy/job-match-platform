@@ -126,14 +126,47 @@ def setup_firewall():
 
 # ── 4. 局域网 IP ─────────────────────────────────────────────
 def get_lan_ip():
+    """获取局域网 IP：优先 RFC1918 地址，排除代理假 IP（如 Clash 的 198.18.x.x）"""
+    candidates = []
+    # 途径 1：hostname -I（Linux 下最可靠，列出所有接口）
+    try:
+        out = subprocess.check_output(["hostname", "-I"], timeout=5).decode()
+        candidates.extend(out.split())
+    except Exception:
+        pass
+    # 途径 2：UDP 连接探测（拿到默认路由出口 IP）
     try:
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         s.connect(("8.8.8.8", 80))
-        ip = s.getsockname()[0]
+        candidates.append(s.getsockname()[0])
         s.close()
-        return ip
     except Exception:
+        pass
+    # 途径 3：主机名解析
+    try:
+        hostname = socket.gethostname()
+        for info in socket.getaddrinfo(hostname, None, socket.AF_INET):
+            candidates.append(info[4][0])
+    except Exception:
+        pass
+
+    def _score(ip):
+        if ip.startswith("198.18.") or ip.startswith("198.19."):
+            return -1  # Clash 等代理的假 IP 段
+        if ip.startswith("192.168."):
+            return 3
+        if ip.startswith("10."):
+            return 2
+        if ip.startswith("172.") and 16 <= int(ip.split(".")[1]) <= 31:
+            return 2
+        if ip.startswith("127."):
+            return -2
+        return 1  # 公网 IP 也能用
+
+    candidates = [ip for ip in dict.fromkeys(candidates) if _score(ip) >= 0]
+    if not candidates:
         return "127.0.0.1"
+    return max(candidates, key=_score)
 
 
 # ── 5. 启动服务 ──────────────────────────────────────────────
