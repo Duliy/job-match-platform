@@ -1,15 +1,15 @@
 @echo off
 chcp 65001 >nul
-title å–æ¶ˆå¼€æœºè‡ªå¯ - å°±ä¸šæœåŠ¡å¹³å°
+title È¡Ïû¿ª»ú×ÔÆô - ¾ÍÒµ·şÎñÆ½Ì¨
 
 net session >nul 2>&1
 if errorlevel 1 (
-  echo æ­£åœ¨è¯·æ±‚ç®¡ç†å‘˜æƒé™...
+  echo ÕıÔÚÇëÇó¹ÜÀíÔ±È¨ÏŞ...
   powershell -Command "Start-Process '%~f0' -Verb RunAs"
   exit /b
 )
 
-schtasks /delete /tn "JobBoardå°±ä¸šæœåŠ¡å¹³å°" /f
-if %errorlevel%==0 (echo [OK] å¼€æœºè‡ªå¯å·²å–æ¶ˆ) else (echo [æç¤º] æœªæ‰¾åˆ°å¼€æœºè‡ªå¯ä»»åŠ¡ï¼Œå¯èƒ½æœ¬æ¥å°±æœªå®‰è£…)
+schtasks /delete /tn "JobBoard¾ÍÒµ·şÎñÆ½Ì¨" /f
+if %errorlevel%==0 (echo [OK] ¿ª»ú×ÔÆôÒÑÈ¡Ïû) else (echo [ÌáÊ¾] Î´ÕÒµ½¿ª»ú×ÔÆôÈÎÎñ£¬¿ÉÄÜ±¾À´¾ÍÎ´°²×°)
 echo.
 pause

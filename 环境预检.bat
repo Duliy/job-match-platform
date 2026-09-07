@@ -1,11 +1,11 @@
 @echo off
 chcp 65001 >nul
 cd /d "%~dp0"
-title 环境预检 - 就业服务平台
+title ����Ԥ�� - ��ҵ����ƽ̨
 if exist "runtime\python\python.exe" (
-  runtime\python\python.exe 环境预检.py
+  runtime\python\python.exe ����Ԥ��.py
 ) else (
-  echo 未找到内嵌 Python，尝试使用系统 Python...
-  python 环境预检.py
+  echo δ�ҵ���Ƕ Python������ʹ��ϵͳ Python...
+  python ����Ԥ��.py
 )
 pause

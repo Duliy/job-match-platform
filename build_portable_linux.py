@@ -146,6 +146,12 @@ def step_code():
     for f in os.listdir(PKG_DIR):
         if f.endswith(".bat"):
             os.remove(os.path.join(PKG_DIR, f))
+    # Cookie 采集工具（若已构建则纳入包内，供管理后台直接下载）
+    tool_zip = os.path.join(DIST_DIR, "..", "dist_runtime_cache", "cookie-tool-windows.zip")
+    if os.path.isfile(tool_zip):
+        os.makedirs(os.path.join(PKG_DIR, "downloads"), exist_ok=True)
+        shutil.copy2(tool_zip, os.path.join(PKG_DIR, "downloads", "cookie-tool-windows.zip"))
+        print("  [打包] Cookie 采集工具已内置")
     for d in ["data", "cookies"]:
         os.makedirs(os.path.join(PKG_DIR, d), exist_ok=True)
     # 种子数据

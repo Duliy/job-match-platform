@@ -241,7 +241,10 @@ _STATIC_FILES = {
 # ══════════════════════════════════════════════════════
 @app.get("/", include_in_schema=False)
 async def root():
-    return FileResponse(os.path.join(BASE_DIR, "index.html"))
+    return FileResponse(
+        os.path.join(BASE_DIR, "index.html"),
+        headers={"Cache-Control": "no-cache"},
+    )
 
 
 # ══════════════════════════════════════════════════════
@@ -1412,14 +1415,48 @@ def save_cache(resume_hash: str, pref_hash: str, job_type: str, result: dict):
     conn.close()
 
 
+@app.get("/downloads/{filename}", include_in_schema=False)
+async def download_files(filename: str):
+    """可下载的工具包（如 Cookie 采集工具）。白名单控制。"""
+    _ALLOWED = {"cookie-tool-windows.zip"}
+    if filename not in _ALLOWED:
+        raise HTTPException(404, "文件不存在")
+    path = os.path.join(BASE_DIR, "downloads", filename)
+    if not os.path.isfile(path):
+        raise HTTPException(404, "工具包未内置到本部署中，请联系管理员获取")
+    return FileResponse(path, media_type="application/zip", filename=filename)
+
+
+@app.get("/favicon.ico", include_in_schema=False)
+async def favicon():
+    """浏览器自动请求 /favicon.ico，用 SVG 图标代替，避免 404 噪声"""
+    from fastapi.responses import Response
+
+    svg = (
+        "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' "
+        "stroke='#1d1d1f' stroke-width='1.6'>"
+        "<rect x='2' y='3' width='8' height='8' rx='1.5'/><rect x='14' y='3' width='8' height='8' rx='1.5'/>"
+        "<rect x='2' y='13' width='8' height='8' rx='1.5'/><rect x='14' y='13' width='8' height='8' rx='1.5'/>"
+        "</svg>"
+    )
+    return Response(content=svg, media_type="image/svg+xml")
+
+
 # ── 前端静态页面（白名单，放在最后避免遮挡 API 路由）─────────────
 @app.get("/{filename}", include_in_schema=False)
 async def static_pages(filename: str):
-    """提供项目根目录下的前端页面与图标（index/resume_match/admin/manifest/图标）"""
+    """提供项目根目录下的前端页面与图标（index/resume_match/admin/manifest/图标）
+
+    HTML 页面禁止缓存，保证发新版后用户刷新即得；图标/manifest 可缓存。
+    """
     if filename in _STATIC_FILES and os.path.isfile(os.path.join(BASE_DIR, filename)):
+        headers = {}
+        if filename.endswith(".html"):
+            headers["Cache-Control"] = "no-cache"
         return FileResponse(
             os.path.join(BASE_DIR, filename),
             media_type=_STATIC_FILES[filename],
+            headers=headers,
         )
     raise HTTPException(404, "页面不存在")
 

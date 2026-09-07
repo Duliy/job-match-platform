@@ -170,6 +170,16 @@ def step_code():
             continue
         shutil.copy2(src, os.path.join(PKG_DIR, f))
     # 空目录占位
+    # Cookie 采集工具（若已构建则纳入包内，供管理后台直接下载）
+    tool_zip = os.path.join(
+        DIST_DIR, "..", "dist_runtime_cache", "cookie-tool-windows.zip"
+    )
+    if os.path.isfile(tool_zip):
+        os.makedirs(os.path.join(PKG_DIR, "downloads"), exist_ok=True)
+        shutil.copy2(
+            tool_zip, os.path.join(PKG_DIR, "downloads", "cookie-tool-windows.zip")
+        )
+        print("  [打包] Cookie 采集工具已内置")
     for d in ["data", "cookies"]:
         os.makedirs(os.path.join(PKG_DIR, d), exist_ok=True)
 
@@ -178,6 +188,7 @@ def step_code():
     seed_db = os.path.join(BASE_DIR, "data", "jobs.db")
     if os.path.isfile(seed_db):
         import sqlite3 as _sq
+
         _conn = _sq.connect(seed_db)
         try:
             n_jobs = _conn.execute("SELECT COUNT(*) FROM jobs").fetchone()[0]
@@ -203,12 +214,11 @@ def step_zip():
         os.remove(zip_path)
     print("  [打包] 生成 zip ...")
     with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED, compresslevel=6) as z:
-        for root, _dirs, files in os.walk(DIST_DIR):
+        # 只打包 PKG_DIR 自身，避免把 dist/ 里的其他产物（如 linux tar.gz）递归吞入
+        for root, _dirs, files in os.walk(PKG_DIR):
             for fn in files:
                 full = os.path.join(root, fn)
                 rel = os.path.relpath(full, DIST_DIR)
-                if full == zip_path:
-                    continue
                 z.write(full, rel)
     size_mb = os.path.getsize(zip_path) / 1024 / 1024
     print(f"\n✅ 构建完成: {zip_path} ({size_mb:.0f} MB)")

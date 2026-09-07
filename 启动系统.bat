@@ -1,11 +1,11 @@
 @echo off
 chcp 65001 >nul
 cd /d "%~dp0"
-title å°±ä¸šæœåŠ¡å¹³å°ï¼ˆæœåŠ¡è¿è¡Œä¸­ï¼Œè¯·å‹¿å…³é—­æœ¬çª—å£ï¼‰
+title ¾ÍÒµ·þÎñÆ½Ì¨£¨·þÎñÔËÐÐÖÐ£¬ÇëÎð¹Ø±Õ±¾´°¿Ú£©
 
 if not exist "runtime\python\python.exe" (
-  echo [é”™è¯¯] æœªæ‰¾åˆ°å†…åµŒè¿è¡ŒçŽ¯å¢ƒ runtime\python\python.exe
-  echo è¯·ç¡®è®¤å®Œæ•´è§£åŽ‹äº†æ•´ä¸ªæ–‡ä»¶å¤¹ï¼Œè€Œä¸æ˜¯åªå¤åˆ¶äº†æœ¬æ–‡ä»¶ã€‚
+  echo [´íÎó] Î´ÕÒµ½ÄÚÇ¶ÔËÐÐ»·¾³ runtime\python\python.exe
+  echo ÇëÈ·ÈÏÍêÕû½âÑ¹ÁËÕû¸öÎÄ¼þ¼Ð£¬¶ø²»ÊÇÖ»¸´ÖÆÁË±¾ÎÄ¼þ¡£
   echo.
   pause
   exit /b 1
@@ -13,5 +13,5 @@ if not exist "runtime\python\python.exe" (
 
 runtime\python\python.exe serve.py
 echo.
-echo æœåŠ¡å·²åœæ­¢ã€‚
+echo ·þÎñÒÑÍ£Ö¹¡£
 pause

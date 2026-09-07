@@ -1,12 +1,12 @@
 @echo off
 chcp 65001 >nul
 cd /d "%~dp0"
-title åœæ­¢æœåŠ¡ - å°±ä¸šæœåŠ¡å¹³å°
+title Í£Ö¹·þÎñ - ¾ÍÒµ·þÎñÆ½Ì¨
 
-:: ç»“æŸå ç”¨ 8000 ç«¯å£çš„ python è¿›ç¨‹
+:: ½áÊøÕ¼ÓÃ 8000 ¶Ë¿ÚµÄ python ½ø³Ì
 for /f "tokens=5" %%a in ('netstat -ano ^| findstr ":8000 " ^| findstr "LISTENING"') do (
-  echo æ­£åœ¨åœæ­¢æœåŠ¡è¿›ç¨‹ PID=%%a
+  echo ÕýÔÚÍ£Ö¹·þÎñ½ø³Ì PID=%%a
   taskkill /PID %%a /F >nul 2>&1
 )
-echo [OK] æœåŠ¡å·²åœæ­¢
+echo [OK] ·þÎñÒÑÍ£Ö¹
 timeout /t 2 >nul

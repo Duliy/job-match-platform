@@ -1,31 +1,31 @@
 @echo off
 chcp 65001 >nul
 cd /d "%~dp0"
-title å®‰è£…å¼€æœºè‡ªå¯ - å°±ä¸šæœåŠ¡å¹³å°
+title °²×°¿ª»ú×ÔÆô - ¾ÍÒµ·þÎñÆ½Ì¨
 
-:: éœ€è¦ç®¡ç†å‘˜æƒé™ï¼Œè‡ªåŠ¨ææƒ
+:: ÐèÒª¹ÜÀíÔ±È¨ÏÞ£¬×Ô¶¯ÌáÈ¨
 net session >nul 2>&1
 if errorlevel 1 (
-  echo æ­£åœ¨è¯·æ±‚ç®¡ç†å‘˜æƒé™...
+  echo ÕýÔÚÇëÇó¹ÜÀíÔ±È¨ÏÞ...
   powershell -Command "Start-Process '%~f0' -Verb RunAs"
   exit /b
 )
 
-echo æ­£åœ¨é…ç½®å¼€æœºè‡ªåŠ¨å¯åŠ¨...
+echo ÕýÔÚÅäÖÃ¿ª»ú×Ô¶¯Æô¶¯...
 echo.
 
-:: é˜²ç«å¢™æ”¾è¡Œï¼ˆé¡ºæ‰‹åšæŽ‰ï¼Œä¸€åŠ³æ°¸é€¸ï¼‰
+:: ·À»ðÇ½·ÅÐÐ£¨Ë³ÊÖ×öµô£¬Ò»ÀÍÓÀÒÝ£©
 netsh advfirewall firewall delete rule name="JobBoard-8000" >nul 2>&1
 netsh advfirewall firewall add rule name="JobBoard-8000" dir=in action=allow protocol=TCP localport=8000 >nul 2>&1
-if %errorlevel%==0 (echo [OK] é˜²ç«å¢™å·²æ”¾è¡Œç«¯å£ 8000) else (echo [æç¤º] é˜²ç«å¢™è§„åˆ™æ·»åŠ å¤±è´¥ï¼Œå¯å¿½ç•¥)
+if %errorlevel%==0 (echo [OK] ·À»ðÇ½ÒÑ·ÅÐÐ¶Ë¿Ú 8000) else (echo [ÌáÊ¾] ·À»ðÇ½¹æÔòÌí¼ÓÊ§°Ü£¬¿ÉºöÂÔ)
 
-:: åˆ›å»ºå¼€æœºè®¡åˆ’ä»»åŠ¡ï¼ˆSYSTEM è´¦æˆ·ï¼Œæ— éœ€ç™»å½•å³è¿è¡Œï¼‰
-schtasks /delete /tn "JobBoardå°±ä¸šæœåŠ¡å¹³å°" /f >nul 2>&1
-schtasks /create /tn "JobBoardå°±ä¸šæœåŠ¡å¹³å°" /tr "\"%~dp0runtime\python\pythonw.exe\" \"%~dp0serve.py\" --background" /sc onstart /ru SYSTEM /rl HIGHEST /f
+:: ´´½¨¿ª»ú¼Æ»®ÈÎÎñ£¨SYSTEM ÕË»§£¬ÎÞÐèµÇÂ¼¼´ÔËÐÐ£©
+schtasks /delete /tn "JobBoard¾ÍÒµ·þÎñÆ½Ì¨" /f >nul 2>&1
+schtasks /create /tn "JobBoard¾ÍÒµ·þÎñÆ½Ì¨" /tr "\"%~dp0runtime\python\pythonw.exe\" \"%~dp0serve.py\" --background" /sc onstart /ru SYSTEM /rl HIGHEST /f
 if %errorlevel%==0 (
-  echo [OK] å¼€æœºè‡ªå¯å·²å®‰è£…ã€‚æœåŠ¡å™¨é‡å¯åŽæœåŠ¡ä¼šè‡ªåŠ¨è¿è¡Œã€‚
+  echo [OK] ¿ª»ú×ÔÆôÒÑ°²×°¡£·þÎñÆ÷ÖØÆôºó·þÎñ»á×Ô¶¯ÔËÐÐ¡£
 ) else (
-  echo [é”™è¯¯] è®¡åˆ’ä»»åŠ¡åˆ›å»ºå¤±è´¥ï¼Œè¯·æˆªå›¾æœ¬çª—å£è”ç³»æŠ€æœ¯æ”¯æŒã€‚
+  echo [´íÎó] ¼Æ»®ÈÎÎñ´´½¨Ê§°Ü£¬Çë½ØÍ¼±¾´°¿ÚÁªÏµ¼¼ÊõÖ§³Ö¡£
 )
 echo.
 pause
