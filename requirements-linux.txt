@@ -1,0 +1,20 @@
+# Linux 便携包依赖（Python 3.12）
+# 与 Windows 版（py3.8 锁定）区分：此处使用现代版本，构建时取最新兼容
+fastapi
+uvicorn
+pydantic
+httpx
+PyPDF2
+pdfplumber
+pymupdf
+python-docx
+python-multipart
+python-jose[cryptography]
+bcrypt
+schedule
+requests
+beautifulsoup4
+lxml
+pandas
+openpyxl
+selenium

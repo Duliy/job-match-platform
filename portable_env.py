@@ -32,14 +32,16 @@ _SYSTEM_CHROME_PATHS = [
 
 
 def find_chrome_binary():
-    """返回可用的 chrome.exe 路径，找不到返回 None"""
+    """返回可用的 chrome 路径，找不到返回 None"""
     env = os.environ.get("CHROME_BINARY", "").strip()
     if env and os.path.isfile(env):
         return env
 
-    bundled = os.path.join(BASE_DIR, "runtime", "chrome", "chrome.exe")
-    if os.path.isfile(bundled):
-        return bundled
+    # 便携包内置 Chrome（Windows 为 chrome.exe，Linux/macOS 为 chrome）
+    for name in ("chrome.exe", "chrome"):
+        bundled = os.path.join(BASE_DIR, "runtime", "chrome", name)
+        if os.path.isfile(bundled):
+            return bundled
 
     for p in _SYSTEM_CHROME_PATHS:
         if os.path.isfile(p):
@@ -63,9 +65,10 @@ def find_chromedriver():
     if env and os.path.isfile(env):
         return env
 
-    bundled = os.path.join(BASE_DIR, "runtime", "chrome", "chromedriver.exe")
-    if os.path.isfile(bundled):
-        return bundled
+    for name in ("chromedriver.exe", "chromedriver"):
+        bundled = os.path.join(BASE_DIR, "runtime", "chrome", name)
+        if os.path.isfile(bundled):
+            return bundled
 
     local = os.path.join(BASE_DIR, "chromedriver.exe")
     if os.path.isfile(local):
