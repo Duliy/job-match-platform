@@ -624,6 +624,74 @@ input:focus,select:focus,textarea:focus{
 }
 .mock-email-body .meb-footer{margin-top:18px;padding-top:12px;border-top:1px solid var(--hairline);font-size:11px;color:var(--text-3)}
 
+
+/* ═══════════ 汉堡按钮 + 侧边抽屉菜单 ═══════════ */
+.menu-btn{
+  width:38px;height:38px;border-radius:10px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  color:var(--text);transition:background .2s var(--ease);
+}
+.menu-btn:hover{background:var(--seg)}
+.menu-btn svg{width:20px;height:20px}
+
+.drawer-overlay{
+  position:fixed;inset:0;z-index:190;
+  background:rgba(0,0,0,.3);
+  -webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);
+  opacity:0;pointer-events:none;transition:opacity .3s var(--ease);
+}
+.drawer-overlay.open{opacity:1;pointer-events:auto}
+
+.drawer{
+  position:fixed;top:0;left:0;bottom:0;z-index:200;
+  width:280px;max-width:84vw;
+  background:#fff;
+  box-shadow:0 0 40px rgba(0,0,0,.15);
+  transform:translateX(-100%);
+  transition:transform .35s var(--ease);
+  display:flex;flex-direction:column;
+}
+.drawer.open{transform:translateX(0)}
+
+.drawer-head{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:18px 20px 14px;border-bottom:1px solid var(--hairline);
+}
+.drawer-title{font-size:17px;font-weight:700;letter-spacing:-.01em}
+.drawer-close{
+  width:30px;height:30px;border-radius:50%;background:var(--seg);
+  display:flex;align-items:center;justify-content:center;color:var(--text-2);
+  transition:all .2s var(--ease);
+}
+.drawer-close:hover{background:#d8d8de;color:var(--text)}
+
+.drawer-nav{flex:1;overflow-y:auto;padding:12px}
+.drawer-item{
+  width:100%;display:flex;align-items:center;gap:12px;
+  padding:11px 14px;border-radius:12px;margin-bottom:2px;
+  font-size:14.5px;font-weight:500;color:var(--text);
+  text-align:left;transition:all .2s var(--ease);
+}
+.drawer-item:hover{background:var(--bg)}
+.drawer-item.active{background:var(--p-bg);color:var(--accent);font-weight:600}
+.drawer-item .di-icon{display:flex;align-items:center;flex-shrink:0;color:var(--text-3)}
+.drawer-item.active .di-icon{color:var(--accent)}
+.drawer-item.sub{padding-left:26px;font-size:13.5px;color:var(--text-2)}
+.drawer-item.sub.active{color:var(--accent)}
+.drawer-group-btn .di-chevron{margin-left:auto;color:var(--text-3);transition:transform .25s var(--ease)}
+.drawer-group-btn.expanded .di-chevron{transform:rotate(90deg)}
+
+.drawer-sub{
+  overflow:hidden;max-height:0;
+  transition:max-height .3s var(--ease);
+}
+.drawer-sub.open{max-height:260px}
+
+.drawer-foot{
+  padding:16px 20px;border-top:1px solid var(--hairline);
+  font-size:12px;color:var(--text-3);line-height:1.7;
+}
+
 /* ═══════════ 响应式 ═══════════ */
 @media(max-width:1100px){
   .nav-tab svg{display:none}
@@ -665,13 +733,9 @@ input:focus,select:focus,textarea:focus{
         </svg>
         <span>就业服务平台</span>
       </div>
-      <nav class="nav-tabs">
-        <button v-for="(t,i) in tabs" :key="i"
-          :class="['nav-tab',{active:activeTab===i}]"
-          @click="switchTab(i)">
-          <span v-html="t.icon"></span><span class="tab-text">{{ t.label }}</span>
-        </button>
-      </nav>
+      <button class="menu-btn" @click="drawerOpen=true" title="菜单">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="17" x2="20" y2="17"/></svg>
+      </button>
       <div class="header-right">
         <button class="btn-sm btn-outline" @click="switchTab(4)" :title="apiKeySet?'已设置 API Key':'点击设置你的 DeepSeek API Key'">
           {{ apiKeySet ? '🔑 Key 已设置' : '🔑 设置 API Key' }}
@@ -688,6 +752,44 @@ input:focus,select:focus,textarea:focus{
       </div>
     </div>
   </header>
+
+  <!-- 侧边抽屉菜单（隐藏式设计：平时收起，点击汉堡滑出） -->
+  <div class="drawer-overlay" :class="{open:drawerOpen}" @click="drawerOpen=false"></div>
+  <aside class="drawer" :class="{open:drawerOpen}">
+    <div class="drawer-head">
+      <span class="drawer-title">菜单</span>
+      <button class="drawer-close" @click="drawerOpen=false">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <nav class="drawer-nav">
+      <button :class="['drawer-item',{active:activeTab===0}]" @click="switchTab(0)">
+        <span class="di-icon" v-html="tabs[0].icon"></span><span>热门岗位</span>
+      </button>
+      <button :class="['drawer-item',{active:activeTab===1}]" @click="switchTab(1)">
+        <span class="di-icon" v-html="tabs[1].icon"></span><span>岗位搜索</span>
+      </button>
+      <button class="drawer-item drawer-group-btn" :class="{expanded:aiExpanded}" @click="aiExpanded=!aiExpanded">
+        <span class="di-icon" v-html="tabs[2].icon"></span><span>AI 功能</span>
+        <svg class="di-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+      </button>
+      <div class="drawer-sub" :class="{open:aiExpanded}">
+        <button :class="['drawer-item','sub',{active:activeTab===2}]" @click="switchTab(2)">
+          <span class="di-icon" v-html="tabs[2].icon"></span><span>简历匹配</span>
+        </button>
+        <button :class="['drawer-item','sub',{active:activeTab===3}]" @click="switchTab(3)">
+          <span class="di-icon" v-html="tabs[3].icon"></span><span>简历分析</span>
+        </button>
+        <button :class="['drawer-item','sub',{active:activeTab===5}]" @click="switchTab(5)">
+          <span class="di-icon" v-html="tabs[5].icon"></span><span>订阅推送</span>
+        </button>
+        <button :class="['drawer-item','sub',{active:activeTab===4}]" @click="switchTab(4)">
+          <span class="di-icon" v-html="tabs[4].icon"></span><span>API Key 设置</span>
+        </button>
+      </div>
+    </nav>
+    <div class="drawer-foot">浏览岗位无需登录<br>AI 功能使用你自己的 DeepSeek Key</div>
+  </aside>
 
   <!-- Auth Modal -->
   <div class="modal-overlay" v-if="showAuthModal" @click.self="showAuthModal=false" style="position:fixed">
@@ -1273,6 +1375,8 @@ const app=createApp({
   setup(){
     const activeTab=ref(0);
     const tabDirection=ref(0);
+    const drawerOpen=ref(false);
+    const aiExpanded=ref(false);
     const tabs=[
       {icon:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="8" height="8" rx="1.5"/><rect x="15" y="3" width="8" height="8" rx="1.5"/><rect x="1" y="13" width="8" height="8" rx="1.5"/><rect x="15" y="13" width="8" height="8" rx="1.5"/></svg>',label:'热力图'},
       {icon:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="10" r="7"/><line x1="15" y1="15" x2="21" y2="21"/></svg>',label:'岗位搜索'},
@@ -1443,6 +1547,8 @@ const app=createApp({
       const old=activeTab.value;
       tabDirection.value=i>old?1:-1;
       activeTab.value=i;
+      drawerOpen.value=false;
+      if(i>=2)aiExpanded.value=true;
       if(i===0&&!hotJobs.value.length)loadHotJobs();
       if(i===1&&!jobList.value.length)loadJobs();
       if(i===5)loadVipAll();
@@ -1774,6 +1880,7 @@ const app=createApp({
 
     return {
       activeTab,tabs,user,showAuthModal,authMode,authForm,authLoading,toast,
+      drawerOpen,aiExpanded,
       switchTab,doLogin,doRegister,logout,platformClass,
       hotType,hotJobs,hotLoading,clickHotJob,toggleHotExpand,isHotExpanded,
       jobType,jobFilter,jobList,jobsLoading,jobPage,totalJobs,pageSize,stats,
