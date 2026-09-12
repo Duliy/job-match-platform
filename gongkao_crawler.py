@@ -267,7 +267,12 @@ def crawl_gk_jobs(province_code, keyword, year=DEFAULT_YEAR, max_pages=None, del
     # 第1页：获取总数和总页数
     resp = make_request(province_code, keyword, year, page=1)
     if not resp or resp.status_code != 200:
-        print(f"[考公] ❌ HTTP 请求失败 [{province_code}]")
+        code = resp.status_code if resp else "无响应"
+        if code == 403:
+            print(f"[考公] ❌ HTTP 403 被拦截 [{province_code}]：目标网站拒绝了本服务器的访问"
+                  "（数据中心 IP 被封锁，在校园网/家庭网络环境下可正常采集）")
+        else:
+            print(f"[考公] ❌ HTTP 请求失败 [{province_code}] (状态码: {code})")
         return []
 
     html = resp.text

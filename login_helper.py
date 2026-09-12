@@ -968,7 +968,21 @@ def main():
             count = run_crawl(driver, keywords, success_keys)
             print(f"\n[完成] 共采集 {count} 条")
         finally:
-            driver.quit()
+            # driver.quit() 在异常会话上可能永久挂起（无人值守服务器的真实事故），
+            # 用看门狗强制退出，保证调度器不会被拖到超时
+            import threading as _th
+
+            def _force_exit():
+                print("[Watchdog] driver.quit() 超时，强制退出进程")
+                os._exit(0)
+
+            _wd = _th.Timer(15, _force_exit)
+            _wd.daemon = True
+            _wd.start()
+            try:
+                driver.quit()
+            finally:
+                _wd.cancel()
         return
 
     # ── 交互模式（原流程）──────────────────────────────

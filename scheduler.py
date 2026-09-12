@@ -172,7 +172,18 @@ def _run_crawler_subprocess(args, log_file, timeout):
             creationflags=creationflags,
             env=env,
         )
-        return proc.wait(timeout=timeout)
+        return_code = 0
+        try:
+            return_code = proc.wait(timeout=timeout)
+        except subprocess.TimeoutExpired:
+            # 先杀进程再抛出，避免孤儿进程和卡死的调度状态
+            try:
+                proc.kill()
+                proc.wait(timeout=10)
+            except Exception:
+                pass
+            raise
+        return return_code
 
 
 def _sync_db(incremental=True, gk=False):
