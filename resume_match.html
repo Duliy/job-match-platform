@@ -726,16 +726,12 @@ input:focus,select:focus,textarea:focus{
   <!-- Header -->
   <header class="app-header">
     <div class="header-inner">
-      <div class="logo">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-          <rect x="2" y="3" width="8" height="8" rx="1.5"/><rect x="14" y="3" width="8" height="8" rx="1.5"/>
-          <rect x="2" y="13" width="8" height="8" rx="1.5"/><rect x="14" y="13" width="8" height="8" rx="1.5"/>
-        </svg>
-        <span>就业服务平台</span>
-      </div>
       <button class="menu-btn" @click="drawerOpen=true" title="菜单">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="17" x2="20" y2="17"/></svg>
       </button>
+      <div class="logo">
+        <span>就业服务平台</span>
+      </div>
       <div class="header-right">
         <button class="btn-sm btn-outline" @click="switchTab(4)" :title="apiKeySet?'已设置 API Key':'点击设置你的 DeepSeek API Key'">
           {{ apiKeySet ? '🔑 Key 已设置' : '🔑 设置 API Key' }}
