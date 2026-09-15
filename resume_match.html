@@ -759,11 +759,11 @@ input:focus,select:focus,textarea:focus{
       </button>
     </div>
     <nav class="drawer-nav">
-      <button :class="['drawer-item',{active:activeTab===0}]" @click="switchTab(0)">
-        <span class="di-icon" v-html="tabs[0].icon"></span><span>热门岗位</span>
-      </button>
       <button :class="['drawer-item',{active:activeTab===1}]" @click="switchTab(1)">
         <span class="di-icon" v-html="tabs[1].icon"></span><span>岗位搜索</span>
+      </button>
+      <button :class="['drawer-item',{active:activeTab===0}]" @click="switchTab(0)">
+        <span class="di-icon" v-html="tabs[0].icon"></span><span>热门岗位</span>
       </button>
       <button class="drawer-item drawer-group-btn" :class="{expanded:aiExpanded}" @click="aiExpanded=!aiExpanded">
         <span class="di-icon" v-html="tabs[2].icon"></span><span>AI 功能</span>
@@ -1369,7 +1369,7 @@ async function api(path,opts={}){
 
 const app=createApp({
   setup(){
-    const activeTab=ref(0);
+    const activeTab=ref(1);  // 默认进入岗位搜索页
     const tabDirection=ref(0);
     const drawerOpen=ref(false);
     const aiExpanded=ref(false);
