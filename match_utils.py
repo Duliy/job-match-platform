@@ -161,7 +161,40 @@ def extract_city(location: str) -> str:
     if not location or not location.strip():
         return ""
     city = re.split(r'[·\-\uff65\u2014]', location)[0].strip()
-    return city
+    return normalize_city(city)
+
+
+# 明显不是城市的脏值（公司标签、融资阶段、行政碎片等）
+CITY_BLACKLIST = {
+    "已上市", "未上市", "上市公司", "未融资", "不需要融资",
+    "天使轮", "A轮", "B轮", "C轮", "D轮", "D轮及以上",
+    "省", "市", "区", "县", "其他", "未知", "不限",
+}
+
+
+def normalize_city(city: str) -> str:
+    """城市名归一化：剔除脏值，去掉冗余的"市"后缀（"北京市"→"北京"）"""
+    if not city:
+        return ""
+    c = city.strip()
+    if not c or c in CITY_BLACKLIST:
+        return ""
+    if len(c) > 2 and c.endswith("市"):
+        c = c[:-1]
+    return c
+
+
+# 学历词表：education 字段只保留含这些词的值，其余（如实习僧的"4天/周，可转正"）清空
+_EDU_VOCAB = ("初中", "高中", "中专", "中技", "大专", "本科", "硕士", "博士",
+              "MBA", "EMBA", "学历", "不限")
+
+
+def normalize_education(edu: str) -> str:
+    """学历字段归一化：非学历描述（实习时长/转正标记等）返回空"""
+    if not edu:
+        return ""
+    e = edu.strip()
+    return e if any(k in e for k in _EDU_VOCAB) else ""
 
 
 def format_salary_display(salary_min: float, salary_max: float, salary_type: str) -> str:

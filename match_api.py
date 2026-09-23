@@ -698,14 +698,15 @@ async def list_jobs(
     salary_min: float = Query(0),
     salary_max: float = Query(999999),
     job_type: str = Query("社招"),
+    education: str = Query(""),
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),
 ):
     """岗位列表 (公开，分页 + 筛选)"""
     if job_type == "公考":
-        rows, total = query_gk_jobs(keyword, city, page, page_size)
+        rows, total = query_gk_jobs(keyword, city, page, page_size, education)
     else:
-        rows, total = query_jobs(keyword, city, salary_min, salary_max, page, page_size)
+        rows, total = query_jobs(keyword, city, salary_min, salary_max, page, page_size, education)
 
     return {
         "items": rows,

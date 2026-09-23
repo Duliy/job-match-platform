@@ -1,5 +1,5 @@
 // 商贸就业平台 Service Worker
-const CACHE_NAME = 'job-board-campus-v2';
+const CACHE_NAME = 'job-board-campus-v3';
 const PRE_CACHE = [
   '/',
   '/index.html',

@@ -14,7 +14,7 @@ import sqlite3
 import os
 import sys
 
-from match_utils import parse_salary, extract_city
+from match_utils import parse_salary, extract_city, normalize_education
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DB_PATH = os.path.join(BASE_DIR, "data", "jobs.db")
@@ -200,7 +200,7 @@ def import_jobs(conn):
                 salary_info['salary_type'],
                 job.get('工作地点', ''),
                 city,
-                job.get('学历要求', ''),
+                normalize_education(job.get('学历要求', '')),
                 job.get('来源平台', ''),
                 job.get('发布日期', ''),
                 job.get('链接', ''),
@@ -257,7 +257,7 @@ def import_gk_jobs(conn):
                 job.get('职位简介', ''),
                 job.get('职位类别', ''),
                 job.get('招收人数', 1),
-                job.get('学历要求', ''),
+                normalize_education(job.get('学历要求', '')),
                 job.get('专业要求', ''),
                 job.get('政治面貌', ''),
                 job.get('省份', ''),
@@ -323,7 +323,7 @@ def import_jobs_incremental(conn):
                 salary_info['salary_type'],
                 job.get('工作地点', ''),
                 city,
-                job.get('学历要求', ''),
+                normalize_education(job.get('学历要求', '')),
                 job.get('来源平台', ''),
                 job.get('发布日期', ''),
                 link,
@@ -400,7 +400,7 @@ def import_gk_jobs_incremental(conn):
                 job.get('职位简介', ''),
                 job.get('职位类别', ''),
                 job.get('招收人数', 1),
-                job.get('学历要求', ''),
+                normalize_education(job.get('学历要求', '')),
                 job.get('专业要求', ''),
                 job.get('政治面貌', ''),
                 job.get('省份', ''),

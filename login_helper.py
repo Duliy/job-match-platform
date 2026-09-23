@@ -43,6 +43,13 @@ def clean(text):
     return " ".join(str(text).split()) if text else ""
 
 
+_COMPANY_TAG_TOKENS = ("上市", "融资", "轮", "人规模", "不需要")
+
+def _is_company_tag(text):
+    """判断是否为公司标签（融资阶段/规模等），防止误识别为城市"""
+    return any(k in text for k in _COMPANY_TAG_TOKENS)
+
+
 def load_driver(headless=False, profile_dir=None):
     """
     Windows 兼容的 Chrome 启动配置
@@ -214,16 +221,29 @@ def crawl_with_cookies(driver, keyword, success_keys):
                     except Exception:
                         salary = ""
 
-                    # ── 地点（从 .shrink-0 找含"市/区"） ─────────────────
+                    # ── 地点（从 .shrink-0 找含"市/区"，排除公司标签如"已上市"） ─────────────────
                     area = ""
                     try:
                         for shr_el in card.find_elements(By.CSS_SELECTOR, ".shrink-0"):
                             t = shr_el.text.strip()
-                            if t and any(k in t for k in ["市", "区"]) and len(t) < 15:
+                            if (t and any(k in t for k in ["市", "区"]) and len(t) < 15
+                                    and not _is_company_tag(t)):
                                 area = t
                                 break
                     except Exception:
                         area = ""
+
+                    # ── 学历（卡片文本里找学历词） ─────
+                    edu = ""
+                    try:
+                        m_edu = re.search(
+                            r"(学历不限|本科及以上|硕士及以上|大专及以上|本科|硕士|博士|大专|高中|中专)",
+                            card.text,
+                        )
+                        if m_edu:
+                            edu = m_edu.group(1)
+                    except Exception:
+                        pass
 
                     # ── 公司名（从 .cname / .hr-info 或全文） ─────
                     company = ""
@@ -307,7 +327,7 @@ def crawl_with_cookies(driver, keyword, success_keys):
                                 "公司名称": company,
                                 "薪资": salary,
                                 "工作地点": area,
-                                "学历要求": "",
+                                "学历要求": edu,
                                 "来源平台": "前程无忧",
                                 "发布日期": today,
                                 "链接": link,
@@ -363,7 +383,7 @@ def crawl_with_cookies(driver, keyword, success_keys):
                         )
                         for item in other_items:
                             t = item.text.strip()
-                            if not area and any(k in t for k in ["市", "区", "·"]):
+                            if not area and any(k in t for k in ["市", "区", "·"]) and not _is_company_tag(t):
                                 area = t
                             elif any(
                                 k in t for k in ["本科", "硕士", "博士", "大专", "学历"]
@@ -459,11 +479,12 @@ def crawl_with_cookies(driver, keyword, success_keys):
                     for p in lines:
                         if p in skip:
                             continue
-                        # 城市：含"市"或"区"且较短
+                        # 城市：含"市"或"区"且较短（排除公司标签如"已上市"）
                         if (
                             not area
                             and any(k in p for k in ["市", "区"])
                             and len(p) < 20
+                            and not _is_company_tag(p)
                         ):
                             area = p
                         # 薪资：含 k/K/千/万/元
@@ -595,6 +616,8 @@ def crawl_with_cookies(driver, keyword, success_keys):
                     pass
 
                 # ── 实习期 + 转正（从卡片文本解析）────────
+                # 注意：实习时长不是学历，不再写入"学历要求"字段，
+                # 追加到职位名供展示/检索（如 "软件实习（4天/周，可转正）"）
                 edu_parts = []
                 card_text = card.text
                 m = re.search(r"(\d+)天/周", card_text)
@@ -605,7 +628,7 @@ def crawl_with_cookies(driver, keyword, success_keys):
                     edu_parts.append(f"{m2.group(1)}个月")
                 if "转正" in card_text:
                     edu_parts.append("可转正")
-                edu = "，".join(edu_parts)
+                duration_note = "，".join(edu_parts)
 
                 # ── 职位名 + 详情页链接（无需访问详情页）────
                 #   搜索页 <a> 文字格式：图标(CSS注入搜索词) + 中文基础词（如"实习"）
@@ -628,13 +651,16 @@ def crawl_with_cookies(driver, keyword, success_keys):
                     pass
 
                 if job_name or company:
+                    title = job_name or (keyword + "实习")
+                    if duration_note:
+                        title = f"{title}（{duration_note}）"
                     jobs.append(
                         {
-                            "职位名称": job_name or (keyword + "实习"),
+                            "职位名称": title,
                             "公司名称": company,
                             "薪资": "（见实习僧）",  # 薪资图标无法解析
                             "工作地点": area,
-                            "学历要求": edu,
+                            "学历要求": "",
                             "来源平台": "实习僧",
                             "发布日期": today,
                             "链接": link,

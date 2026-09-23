@@ -57,7 +57,8 @@ def get_db():
 
 
 def query_jobs(keyword: str = "", city: str = "", salary_min: float = 0,
-               salary_max: float = 999999, page: int = 1, page_size: int = 20):
+               salary_max: float = 999999, page: int = 1, page_size: int = 20,
+               education: str = ""):
     """查询社招岗位 (分页+筛选)
 
     Returns:
@@ -86,6 +87,12 @@ def query_jobs(keyword: str = "", city: str = "", salary_min: float = 0,
         conditions.append("(salary_type='negotiable' OR salary_min <= ?)")
         params.append(salary_max)
 
+    # 学历：宽松语义 —— 未标注学历/不限 的岗位不排除（与 pre_filter 设计一致），
+    # 只排除明确要求更高/其他学历的岗位
+    if education and education not in ("不限", "学历不限"):
+        conditions.append("(education IS NULL OR education='' OR education LIKE '%不限%' OR education LIKE ?)")
+        params.append(f"%{education}%")
+
     where = " AND ".join(conditions)
 
     # 查询总数
@@ -107,7 +114,7 @@ def query_jobs(keyword: str = "", city: str = "", salary_min: float = 0,
 
 
 def query_gk_jobs(keyword: str = "", province: str = "",
-                  page: int = 1, page_size: int = 20):
+                  page: int = 1, page_size: int = 20, education: str = ""):
     """查询公考岗位 (分页+筛选)
 
     Returns:
@@ -127,6 +134,11 @@ def query_gk_jobs(keyword: str = "", province: str = "",
     if province:
         conditions.append("province LIKE ?")
         params.append(f"%{province}%")
+
+    # 学历：宽松语义 —— 未标注/不限 不排除；"本科"可匹配"本科及以上"但排除"仅限硕士"
+    if education and education not in ("不限", "学历不限"):
+        conditions.append("(education IS NULL OR education='' OR education LIKE '%不限%' OR education LIKE ?)")
+        params.append(f"%{education}%")
 
     where = " AND ".join(conditions)
 
