@@ -179,6 +179,9 @@ def normalize_city(city: str) -> str:
     c = city.strip()
     if not c or c in CITY_BLACKLIST:
         return ""
+    # 中国城市名最长不超过5字（"乌鲁木齐"/"呼和浩特"等），超长必是解析错位的碎片
+    if len(c) > 5:
+        return ""
     if len(c) > 2 and c.endswith("市"):
         c = c[:-1]
     return c
