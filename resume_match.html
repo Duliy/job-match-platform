@@ -867,8 +867,8 @@ input:focus,select:focus,textarea:focus{
     <div :class="['tab-panel',{active:activeTab===1}]">
       <div class="page-head"><h2>岗位搜索</h2><p>多平台岗位一站聚合，按城市、薪资、学历自由筛选。无需登录。</p></div>
       <div class="sub-tabs">
-        <button :class="['sub-tab',{active:jobType==='社招'}]" @click="jobType='社招';loadJobs()">社招</button>
-        <button :class="['sub-tab',{active:jobType==='公考'}]" @click="jobType='公考';loadJobs()">公考</button>
+        <button :class="['sub-tab',{active:jobType==='社招'}]" @click="jobType='社招';jobFilter.city='';loadJobs();loadCities()">社招</button>
+        <button :class="['sub-tab',{active:jobType==='公考'}]" @click="jobType='公考';jobFilter.city='';loadJobs();loadCities()">公考</button>
       </div>
       <div class="stats-row">
         <div class="stat-card"><div class="stat-num">{{ stats.totalJobs||0 }}</div><div class="stat-label">岗位总数</div></div>
@@ -1607,12 +1607,17 @@ const app=createApp({
         const data=await api('/api/match/jobs?'+params.toString());
         jobList.value=data.jobs||data.items||data||[];
         totalJobs.value=data.total||jobList.value.length;
-        const cities=new Set();
-        jobList.value.forEach(j=>{if(j.city)cities.add(j.city);if(j.location)cities.add(j.location)});
-        if(cities.size)cityOptions.value=[...cities];
         loadStats();
       }catch(e){showToast('加载岗位失败','error');jobList.value=[]}
       jobsLoading.value=false;
+    }
+
+    // 城市下拉：全库去重，而非当前页（服务端 /api/match/cities）
+    async function loadCities(){
+      try{
+        const data=await api('/api/match/cities?job_type='+encodeURIComponent(jobType.value));
+        cityOptions.value=data.cities||[];
+      }catch{}
     }
 
     function displaySalary(job){
@@ -1865,6 +1870,7 @@ const app=createApp({
       await checkLogin();
       loadHotJobs();
       loadJobs();
+      loadCities();
       loadVipAll();
       // 支持 resume_match.html#tab=N 从首页直达指定功能页
       const m = location.hash.match(/tab=(\d)/);
@@ -1881,7 +1887,7 @@ const app=createApp({
       hotType,hotJobs,hotLoading,clickHotJob,toggleHotExpand,isHotExpanded,
       jobType,jobFilter,jobList,jobsLoading,jobPage,totalJobs,pageSize,stats,
       cityOptions,eduOptions,totalPages,pageNumbers,
-      loadJobs,salaryPercent,displaySalary,openJobLink,toggleJobExpand,isJobExpanded,
+      loadJobs,loadCities,salaryPercent,displaySalary,openJobLink,toggleJobExpand,isJobExpanded,
       aiDragOver,aiResumeFile,aiParsedResume,aiFileInput,
       aiCityInput,aiPrefCities,aiPrefSalaryMin,aiPrefSalaryMax,aiPrefType,
       aiRecommending,aiRecommendResults,

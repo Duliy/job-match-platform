@@ -43,6 +43,7 @@ from match_db import (
     get_db,
     query_jobs,
     query_gk_jobs,
+    get_all_cities,
     get_stats,
     pre_filter,
     record_hot_click,
@@ -713,6 +714,12 @@ async def list_jobs(
         "page_size": page_size,
         "total_pages": (total + page_size - 1) // page_size if total > 0 else 0,
     }
+
+
+@app.get("/api/match/cities")
+async def list_cities(job_type: str = Query("社招")):
+    """全库城市/省份列表 (公开，供筛选下拉)"""
+    return {"cities": get_all_cities(job_type)}
 
 
 @app.get("/api/match/stats")

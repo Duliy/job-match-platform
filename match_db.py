@@ -145,6 +145,19 @@ def query_gk_jobs(keyword: str = "", province: str = "",
     return rows, total
 
 
+def get_all_cities(job_type: str = "社招") -> list:
+    """全库去重城市列表（社招取 jobs.city，公考取 gk_jobs.province）"""
+    conn = get_db()
+    cursor = conn.cursor()
+    if job_type == "公考":
+        cursor.execute("SELECT DISTINCT province FROM gk_jobs WHERE province != '' ORDER BY province")
+    else:
+        cursor.execute("SELECT DISTINCT city FROM jobs WHERE city != '' ORDER BY city")
+    cities = [row[0] for row in cursor.fetchall()]
+    conn.close()
+    return cities
+
+
 def pre_filter(skills: list = None, cities: list = None,
                salary_min: float = 0, salary_max: float = 999999,
                education: str = "", job_type: str = "社招",
