@@ -236,6 +236,19 @@ def _sync_db(incremental=True, gk=False):
         raise RuntimeError(f"数据库同步失败: {e}") from e
 
 
+def social_batch_plan(cfg, keywords=None):
+    """轮换一个专业；完整轮次保持原配置周期，批次至少间隔一小时。"""
+    words = list(dict.fromkeys(keywords or cfg.get("keywords", [])))
+    if not words:
+        return [], 0
+    gap = max(3600, float(cfg.get("interval_hours", 12)) * 3600 / len(words))
+    due = float(cfg.get("batch_last_attempt", 0)) + gap
+    if time.time() < due:
+        return [], due
+    index = int(cfg.get("batch_cursor", 0)) % len(words)
+    return [words[index]], due
+
+
 @exclusive_task(_social_lock, "社招采集正在进行中")
 def run_social_crawl(keywords=None):
     """执行社招采集（前程无忧/实习僧免登录；智联/猎聘用 Cookie）"""
@@ -248,6 +261,15 @@ def run_social_crawl(keywords=None):
     if not keywords:
         return {"success": False, "message": "未配置采集关键词"}
 
+    keywords, due = social_batch_plan(cfg, keywords)
+    if not keywords:
+        return {"success": False, "message": "采集冷却中，下次可运行时间：" +
+                datetime.fromtimestamp(due).strftime("%Y-%m-%d %H:%M:%S")}
+    # 在启动前持久化：失败或服务重启也不会马上再次集中请求。
+    cfg["batch_last_attempt"] = time.time()
+    cfg["batch_cursor"] = int(cfg.get("batch_cursor", 0)) + 1
+    cfg["batch_keyword"] = keywords[0]
+    save_crawl_config(cfg)
     ts = datetime.now().strftime("%Y%m%d_%H%M%S")
     log_file = os.path.join(LOG_DIR, f"crawl_{ts}.log")
     start_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -256,7 +278,7 @@ def run_social_crawl(keywords=None):
         social_running = True
         script = os.path.join(BASE_DIR, "login_helper.py")
         return_code = _run_crawler_subprocess(
-            [sys.executable, script, "--keywords", ",".join(keywords), "--auto"],
+            [sys.executable, script, "--keywords", ",".join(keywords), "--auto", "--max-pages", "50"],
             log_file,
             CRAWL_TIMEOUT,
         )
@@ -634,8 +656,8 @@ def _reload_schedules_unlocked():
         def _social_job():
             _start_background(run_social_crawl, load_crawl_config().get("keywords", []))
 
-        _sched.every(hours).hours.do(_social_job)
-        print(f"[Scheduler] 社招采集：每 {hours} 小时，关键词 {cfg.get('keywords')}")
+        _sched.every(1).minutes.do(_social_job)
+        print(f"[Scheduler] 社招分批：每轮 {hours} 小时，每批一个专业、最多50页")
 
     gk = load_gk_config()
     if gk.get("enabled"):

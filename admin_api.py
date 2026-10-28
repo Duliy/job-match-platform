@@ -400,11 +400,14 @@ async def trigger_crawl_now(admin: dict = Depends(get_admin_user)):
     if not keywords:
         raise HTTPException(400, "请先配置关键词")
 
+    selected, due = scheduler.social_batch_plan(cfg, keywords)
+    if not selected:
+        raise HTTPException(409, "采集冷却中，请等待下个采集时段")
     kw_copy = list(keywords)
     threading.Thread(
         target=scheduler.run_social_crawl, args=(kw_copy,), daemon=True
     ).start()
-    return {"ok": True, "message": f"采集已启动，关键词：{keywords}"}
+    return {"ok": True, "message": f"分批采集已启动，本次关键词：{selected[0]}，最多50页"}
 
 
 @router.get("/crawl/gk/schedule")
