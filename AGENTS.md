@@ -2,7 +2,7 @@
 
 > 写给接手的 agent：读完本文档你应该能无缝接手这个项目的开发、部署和运维。
 > 本文档在仓库中持续更新，以 `delivery-campus` 分支最新版本为准。
-> 最后更新：2026-10-13
+> 最后更新：2026-10-28
 
 ---
 
@@ -60,6 +60,7 @@ scheduler.py     # 定时调度引擎（社招采集/公考采集/订阅扫描/�
 db_schema_v2.py  # 建表 + schema 升级（含默认 admin 创建）
 import_data.py   # 爬虫 JSON → SQLite 增量导入
 clean_dirty_data.py # 存量数据清洗脚本（一次性，可随时重跑）
+crawler_51job.py # 前程无忧：公开页批量读取、SPA全量翻页、限速/重试/逐页保存
 login_helper.py  # 社招爬虫（Selenium，headless；driver.quit() 有15s看门狗防挂死）
 gongkao_crawler.py # 公考爬虫（纯 HTTP，POST {province}.offcn.com/zw/search/）
 cookie_collector.py # Cookie 采集工具（辅导员在自己电脑运行）
@@ -159,3 +160,15 @@ portable_env.py  # Chrome/chromedriver 路径解析（内嵌 > 环境变量 > �
 ## 九、迭代节奏（维护者习惯）
 
 改代码 → 本机起服务验证（含浏览器截图自审，**验证完杀进程**）→ `git push origin delivery-campus` → 服务器 `git pull && systemctl restart jobboard` → 汇报。两个便携包按需重建（前端改动必须 `--skip-downloads` 重建一次刷新代码）。
+
+## 十、2026-10-28 前程无忧采集改进
+
+- 原实现固定 `pageNum=1` 且 `cards[:25]`，没有翻页；现默认采到分页末尾。
+- 一次 JavaScript 批量读取整页公开 DOM/sensorsdata，使用职位 ID 生成岗位链接，获取准确地点、学历和发布日期；下一页使用站点按钮，避免整页重载。
+- 每页额外等待 1 秒温和限速；等待实际页码及卡片元数据更新，失败页最多重试一次（站点忽略 URL 页码时通过分页控件恢复目标页），重复页不算正常完成；每页日志记录进度、去重数和耗时。
+- 每页原子保存 JSON，最终才导出 Excel。中断/超时时调度器仍导入已保存结果，并记录错误，不误报成功。
+- JSON 读写使用一致去重规则；保留不同岗位链接、不同地点，合并关键词，按 `last_seen` 清理超过 7 天未再次采到的记录。
+- 已知失效的公共招聘网默认停用，仍可用 `--platforms mohrss` 单独排查；其余数据源保留原采集逻辑，去掉已有显式等待前的固定 sleep。
+- 手动限定来源/页数：`python login_helper.py --auto --keywords 信息管理与信息系统 --platforms 51job --max-pages 0`（0=全部）。
+- 回归测试：`python -m unittest discover -s tests`。离线便携包共用的 `CODE_FILES` 已加入 `crawler_51job.py`，下次构建会包含新模块。
+- 实测（2026-10-28，本机）：关键词「信息管理与信息系统」50 页全部完成，847 个不同岗位，122.14 秒（含第 38 页异常后的恢复）；临时 JSON 和内存 SQLite 均 847 条，地点/链接缺失均为 0。回归测试 12 项通过。网站实时排序与广告重复会影响每次去重数量，不能以页数×20作为唯一岗位数。

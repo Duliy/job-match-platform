@@ -63,6 +63,7 @@ def load_driver(headless=False, profile_dir=None):
 
     local_drv = os.path.join(BASE_DIR, "chromedriver.exe")
     opts = Options()
+    opts.page_load_strategy = "eager"
 
     # 便携包优先用内置 Chrome，其次环境变量，最后系统 Chrome
     from portable_env import find_chrome_binary, find_chromedriver
@@ -115,6 +116,7 @@ def load_driver(headless=False, profile_dir=None):
                 "source": "Object.defineProperty(navigator, 'webdriver', {get: () => undefined})"
             },
         )
+        drv.set_page_load_timeout(30)
         return drv
     except Exception as e:
         log.error(f"Chrome 启动失败: {e}")
@@ -126,6 +128,7 @@ def load_driver(headless=False, profile_dir=None):
                 "source": "Object.defineProperty(navigator, 'webdriver', {get: () => undefined})"
             },
         )
+        drv.set_page_load_timeout(30)
         return drv
 
 
@@ -163,7 +166,7 @@ def wait_el(driver, selector, timeout=12):
         return False
 
 
-def crawl_with_cookies(driver, keyword, success_keys):
+def crawl_with_cookies(driver, keyword, success_keys, max_pages=0, on_page=None, report=None):
     """
     使用已保存的 Cookie 采集招聘数据
     选择器已通过 debug 脚本在真实页面验证（2026-05-13）
@@ -176,168 +179,11 @@ def crawl_with_cookies(driver, keyword, success_keys):
 
     kw_enc = urllib.parse.quote(keyword)
 
-    # ═════════════════════════════════════════════════════
-    # 平台1：前程无忧 51job  (匿名可访问，无需登录)
-    #   卡片选择器：.joblist-item  (已验证20条)
-    #   关键字段：
-    #     .joblist-item-jobname → 职位名
-    #     .sal                    → "5-7千\n重庆"
-    #     .joblist-item-jobinfo     → "5-7千\n重庆"
-    #     .hr-info / card.text     → 公司名
-    # ═════════════════════════════════════════════════════
-    try:
-        log.info(f"[51job] 开始采集「{keyword}」...")
-        url = f"https://we.51job.com/pc/search?keyword={kw_enc}&searchType=2&sortType=0&pageNum=1"
-        driver.get(url)
-        time.sleep(random.uniform(4, 6))
-
-        if not wait_el(driver, ".joblist-item", timeout=12):
-            log.warning("[51job] 页面无数据，跳过")
-        else:
-            cards = driver.find_elements(By.CSS_SELECTOR, ".joblist-item")
-            log.info(f"[51job] 找到 {len(cards)} 张卡片")
-
-            before = len(jobs)
-            for card in cards[:25]:
-                try:
-                    # ── 职位名 ──────────────
-                    try:
-                        jn_el = card.find_element(By.CSS_SELECTOR, ".jname")
-                        job_name = jn_el.text.strip()
-                    except Exception:
-                        job_name = ""
-
-                    # ── 薪资 ─────────────────
-                    try:
-                        sal_el = card.find_element(By.CSS_SELECTOR, ".sal")
-                        raw_sal = sal_el.text.strip()
-                        # 格式 "5-7千\n重庆" 或 "6千-1万"
-                        if "\n" in raw_sal:
-                            salary = raw_sal.split("\n")[0].strip()
-                        elif "|" in raw_sal:
-                            salary = raw_sal.split("|")[0].strip()
-                        else:
-                            salary = raw_sal
-                    except Exception:
-                        salary = ""
-
-                    # ── 地点（从 .shrink-0 找含"市/区"，排除公司标签如"已上市"） ─────────────────
-                    area = ""
-                    try:
-                        for shr_el in card.find_elements(By.CSS_SELECTOR, ".shrink-0"):
-                            t = shr_el.text.strip()
-                            if (t and any(k in t for k in ["市", "区"]) and len(t) < 15
-                                    and not _is_company_tag(t)):
-                                area = t
-                                break
-                    except Exception:
-                        area = ""
-
-                    # ── 学历（卡片文本里找学历词） ─────
-                    edu = ""
-                    try:
-                        m_edu = re.search(
-                            r"(学历不限|本科及以上|硕士及以上|大专及以上|本科|硕士|博士|大专|高中|中专)",
-                            card.text,
-                        )
-                        if m_edu:
-                            edu = m_edu.group(1)
-                    except Exception:
-                        pass
-
-                    # ── 公司名（从 .cname / .hr-info 或全文） ─────
-                    company = ""
-                    for sel in [
-                        ".cname",
-                        ".hr-info",
-                        ".hr-position",
-                        ".detail-wrapper .hr-info",
-                    ]:
-                        try:
-                            el = card.find_element(By.CSS_SELECTOR, sel)
-                            t = el.text.strip()
-                            if t and len(t) > 2:
-                                company = t
-                                break
-                        except Exception:
-                            pass
-                    if not company:
-                        # 从全文按 "集团/有限/科技/公司" 识别
-                        full = card.text
-                        if "|" in full:
-                            segs = [s.strip() for s in full.split("|")]
-                        else:
-                            segs = [full]
-                        for seg in segs:
-                            if any(
-                                k in seg
-                                for k in ["集团", "有限", "科技", "公司", "企业"]
-                            ):
-                                if 2 < len(seg) < 30 and "投递" not in seg:
-                                    company = seg
-                                    break
-                        # 兜底：倒数第2个有意义段
-                        if not company:
-                            meaningful = [
-                                s
-                                for s in segs
-                                if s
-                                and len(s) > 2
-                                and not any(
-                                    k in s
-                                    for k in [
-                                        "千",
-                                        "万",
-                                        "元",
-                                        "经验",
-                                        "市",
-                                        "区",
-                                        "投递",
-                                        "本科",
-                                        "硕士",
-                                        "博士",
-                                        "天",
-                                        "招",
-                                        "在线",
-                                        "日",
-                                    ]
-                                )
-                            ]
-                            if len(meaningful) >= 2:
-                                company = meaningful[-2]
-
-                    # ── 链接 ─────────────────
-                    # 51job 列表页职位链接通过 JS 动态生成，DOM 里只有公司主页链接
-                    # 直接取卡片第一个 <a> 的 href（跳转公司页可接受）
-                    link = ""
-                    try:
-                        link = (
-                            card.find_element(By.CSS_SELECTOR, "a").get_attribute(
-                                "href"
-                            )
-                            or ""
-                        )
-                    except Exception:
-                        link = ""
-
-                    if job_name:
-                        jobs.append(
-                            {
-                                "职位名称": job_name,
-                                "公司名称": company,
-                                "薪资": salary,
-                                "工作地点": area,
-                                "学历要求": edu,
-                                "来源平台": "前程无忧",
-                                "发布日期": today,
-                                "链接": link,
-                            }
-                        )
-                except Exception:
-                    pass
-            log.info(f"[51job] 新增 {len(jobs) - before} 条")
-    except Exception as e:
-        log.error(f"[51job] 采集失败: {e}")
+    # 前程无忧：逐页采集，单次脚本批量读取整页，不逐字段往返 WebDriver。
+    if "51job" in success_keys:
+        from crawler_51job import crawl_51job
+        jobs.extend(crawl_51job(driver, keyword, max_pages=max_pages,
+                                on_page=on_page, report=report))
 
     # ═════════════════════════════════════════════════════
     # 平台2：智联招聘
@@ -349,7 +195,6 @@ def crawl_with_cookies(driver, keyword, success_keys):
             log.info(f"[智联] 开始采集「{keyword}」...")
             load_cookies(driver, "zhaopin", "https://www.zhaopin.com")
             driver.get(f"https://sou.zhaopin.com/?kw={kw_enc}&p=1")
-            time.sleep(random.uniform(5, 7))
 
             wait_el(driver, ".joblist-box__item", timeout=14)
             cards = driver.find_elements(By.CSS_SELECTOR, ".joblist-box__item")
@@ -455,7 +300,6 @@ def crawl_with_cookies(driver, keyword, success_keys):
             log.info(f"[猎聘] 开始采集「{keyword}」...")
             load_cookies(driver, "liepin", "https://www.liepin.com")
             driver.get(f"https://www.liepin.com/zhaopin/?key={kw_enc}&curPage=0")
-            time.sleep(random.uniform(5, 7))
 
             if wait_el(driver, "[class*='job-card-pc-container']", timeout=15):
                 cards = driver.find_elements(
@@ -572,230 +416,242 @@ def crawl_with_cookies(driver, keyword, success_keys):
     #     职位名 → 需访问详情页 <title>（额外请求，但保证准确）
     #     薪资   → ⚠️ 字体图标编码，无法直接解析
     # ═════════════════════════════════════════════════════
-    try:
-        log.info(f"[实习僧] 开始采集「{keyword}」...")
-        driver.get(f"https://www.shixiseng.com/interns/?k={kw_enc}")
-        time.sleep(random.uniform(3, 5))
+    if "shixiseng" in success_keys:
+        try:
+            log.info(f"[实习僧] 开始采集「{keyword}」...")
+            driver.get(f"https://www.shixiseng.com/interns/?k={kw_enc}")
 
-        if wait_el(driver, ".intern-item", timeout=12):
-            cards = driver.find_elements(By.CSS_SELECTOR, ".intern-item")
-        else:
-            cards = []
-        log.info(f"[实习僧] 找到 {len(cards)} 张卡片")
+            if wait_el(driver, ".intern-item", timeout=12):
+                cards = driver.find_elements(By.CSS_SELECTOR, ".intern-item")
+            else:
+                cards = []
+            log.info(f"[实习僧] 找到 {len(cards)} 张卡片")
 
-        before = len(jobs)
-        for card in cards[:25]:
-            try:
-                # ── 城市 ──────────────────────────────────
-                area = ""
+            before = len(jobs)
+            for card in cards[:25]:
                 try:
-                    area = card.find_element(
-                        By.CSS_SELECTOR, ".city.ellipsis"
-                    ).text.strip()
+                    # ── 城市 ──────────────────────────────────
+                    area = ""
+                    try:
+                        area = card.find_element(
+                            By.CSS_SELECTOR, ".city.ellipsis"
+                        ).text.strip()
+                    except Exception:
+                        pass
+
+                    # ── 公司名 ───────────────────────────────
+                    company = ""
+                    try:
+                        co_a = card.find_element(
+                            By.CSS_SELECTOR, ".intern-detail__company a.title"
+                        )
+                        company = co_a.text.strip()
+                    except Exception:
+                        pass
+
+                    # ── 行业（公司区第二行）─────────────────
+                    industry = ""
+                    try:
+                        co_tip = card.find_element(
+                            By.CSS_SELECTOR, ".intern-detail__company .tip"
+                        )
+                        industry = co_tip.text.strip().split("/")[0]
+                    except Exception:
+                        pass
+
+                    # ── 实习期 + 转正（从卡片文本解析）────────
+                    # 注意：实习时长不是学历，不再写入"学历要求"字段，
+                    # 追加到职位名供展示/检索（如 "软件实习（4天/周，可转正）"）
+                    edu_parts = []
+                    card_text = card.text
+                    m = re.search(r"(\d+)天/周", card_text)
+                    if m:
+                        edu_parts.append(f"{m.group(1)}天/周")
+                    m2 = re.search(r"(\d+)个月", card_text)
+                    if m2:
+                        edu_parts.append(f"{m2.group(1)}个月")
+                    if "转正" in card_text:
+                        edu_parts.append("可转正")
+                    duration_note = "，".join(edu_parts)
+
+                    # ── 职位名 + 详情页链接（无需访问详情页）────
+                    #   搜索页 <a> 文字格式：图标(CSS注入搜索词) + 中文基础词（如"实习"）
+                    #   URL slug 是唯一的，直接作为去重 key
+                    #   职位名 = 基础词；若基础词不含中文则用 keyword（搜索词）
+                    job_name = ""
+                    link = ""
+                    try:
+                        a_el = card.find_element(By.CSS_SELECTOR, ".intern-detail__job a")
+                        link = a_el.get_attribute("href") or ""
+                        # 去掉私有区图标，保留中文基础词
+                        raw_text = a_el.text or ""
+                        base = re.sub(r"[\uE000-\uF8FF]", "", raw_text).strip()
+                        # 基础词包含中文（非纯图标）→ 直接用；否则用 keyword
+                        if base and re.search(r"[\u4e00-\u9fa5]", base):
+                            job_name = base
+                        else:
+                            job_name = keyword
+                    except Exception:
+                        pass
+
+                    if job_name or company:
+                        title = job_name or (keyword + "实习")
+                        if duration_note:
+                            title = f"{title}（{duration_note}）"
+                        jobs.append(
+                            {
+                                "职位名称": title,
+                                "公司名称": company,
+                                "薪资": "（见实习僧）",  # 薪资图标无法解析
+                                "工作地点": area,
+                                "学历要求": "",
+                                "来源平台": "实习僧",
+                                "发布日期": today,
+                                "链接": link,
+                            }
+                        )
                 except Exception:
                     pass
-
-                # ── 公司名 ───────────────────────────────
-                company = ""
-                try:
-                    co_a = card.find_element(
-                        By.CSS_SELECTOR, ".intern-detail__company a.title"
-                    )
-                    company = co_a.text.strip()
-                except Exception:
-                    pass
-
-                # ── 行业（公司区第二行）─────────────────
-                industry = ""
-                try:
-                    co_tip = card.find_element(
-                        By.CSS_SELECTOR, ".intern-detail__company .tip"
-                    )
-                    industry = co_tip.text.strip().split("/")[0]
-                except Exception:
-                    pass
-
-                # ── 实习期 + 转正（从卡片文本解析）────────
-                # 注意：实习时长不是学历，不再写入"学历要求"字段，
-                # 追加到职位名供展示/检索（如 "软件实习（4天/周，可转正）"）
-                edu_parts = []
-                card_text = card.text
-                m = re.search(r"(\d+)天/周", card_text)
-                if m:
-                    edu_parts.append(f"{m.group(1)}天/周")
-                m2 = re.search(r"(\d+)个月", card_text)
-                if m2:
-                    edu_parts.append(f"{m2.group(1)}个月")
-                if "转正" in card_text:
-                    edu_parts.append("可转正")
-                duration_note = "，".join(edu_parts)
-
-                # ── 职位名 + 详情页链接（无需访问详情页）────
-                #   搜索页 <a> 文字格式：图标(CSS注入搜索词) + 中文基础词（如"实习"）
-                #   URL slug 是唯一的，直接作为去重 key
-                #   职位名 = 基础词；若基础词不含中文则用 keyword（搜索词）
-                job_name = ""
-                link = ""
-                try:
-                    a_el = card.find_element(By.CSS_SELECTOR, ".intern-detail__job a")
-                    link = a_el.get_attribute("href") or ""
-                    # 去掉私有区图标，保留中文基础词
-                    raw_text = a_el.text or ""
-                    base = re.sub(r"[\uE000-\uF8FF]", "", raw_text).strip()
-                    # 基础词包含中文（非纯图标）→ 直接用；否则用 keyword
-                    if base and re.search(r"[\u4e00-\u9fa5]", base):
-                        job_name = base
-                    else:
-                        job_name = keyword
-                except Exception:
-                    pass
-
-                if job_name or company:
-                    title = job_name or (keyword + "实习")
-                    if duration_note:
-                        title = f"{title}（{duration_note}）"
-                    jobs.append(
-                        {
-                            "职位名称": title,
-                            "公司名称": company,
-                            "薪资": "（见实习僧）",  # 薪资图标无法解析
-                            "工作地点": area,
-                            "学历要求": "",
-                            "来源平台": "实习僧",
-                            "发布日期": today,
-                            "链接": link,
-                        }
-                    )
-            except Exception:
-                pass
-        log.info(f"[实习僧] 新增 {len(jobs) - before} 条")
-    except Exception as e:
-        log.error(f"[实习僧] 采集失败: {e}")
+            log.info(f"[实习僧] 新增 {len(jobs) - before} 条")
+        except Exception as e:
+            log.error(f"[实习僧] 采集失败: {e}")
 
     # ═════════════════════════════════════════════════════
     # 平台5：中国公共招聘网（人社部）
     #   URL: https://zwfw.mohrss.gov.cn/job/?searchText=XXX
     #   卡片：[class*='job-item'], article, .item
     # ═════════════════════════════════════════════════════
-    try:
-        log.info(f"[公共招聘网] 开始采集「{keyword}」...")
-        driver.get(f"https://zwfw.mohrss.gov.cn/job/?searchText={kw_enc}")
-        time.sleep(random.uniform(4, 6))
+    if "mohrss" in success_keys:
+        try:
+            log.info(f"[公共招聘网] 开始采集「{keyword}」...")
+            driver.get(f"https://zwfw.mohrss.gov.cn/job/?searchText={kw_enc}")
+            time.sleep(random.uniform(4, 6))
 
-        if wait_el(
-            driver, "[class*='job'], article, .item, a[href*='job']", timeout=15
-        ):
-            cards = driver.find_elements(
-                By.CSS_SELECTOR,
-                "[class*='job-item'], [class*='position-item'], "
-                "[class*='list'] li, article, .job-card, .item, "
-                "a[href*='job'], a[href*='position']",
-            )
-        else:
-            cards = []
-        log.info(f"[公共招聘网] 找到 {len(cards)} 张卡片")
+            if wait_el(
+                driver, "[class*='job'], article, .item, a[href*='job']", timeout=15
+            ):
+                cards = driver.find_elements(
+                    By.CSS_SELECTOR,
+                    "[class*='job-item'], [class*='position-item'], "
+                    "[class*='list'] li, article, .job-card, .item, "
+                    "a[href*='job'], a[href*='position']",
+                )
+            else:
+                cards = []
+            log.info(f"[公共招聘网] 找到 {len(cards)} 张卡片")
 
-        before = len(jobs)
-        for card in cards[:25]:
-            try:
-                job_name = ""
-                for sel in [
-                    "[class*='job-name']",
-                    "[class*='title']",
-                    "h3",
-                    "h4",
-                    ".name",
-                    "strong",
-                ]:
-                    try:
-                        t = card.find_element(By.CSS_SELECTOR, sel).text.strip()
-                        if t and 2 < len(t) < 60:
-                            job_name = t
-                            break
-                    except Exception:
-                        pass
-
-                salary = ""
-                for sel in ["[class*='salary']", "[class*='money']", ".salary"]:
-                    try:
-                        t = card.find_element(By.CSS_SELECTOR, sel).text.strip()
-                        if t and len(t) < 20:
-                            salary = t
-                            break
-                    except Exception:
-                        pass
-
-                area = ""
-                for sel in [
-                    "[class*='area']",
-                    "[class*='city']",
-                    "[class*='location']",
-                    "[class*='region']",
-                ]:
-                    try:
-                        t = card.find_element(By.CSS_SELECTOR, sel).text.strip()
-                        if t and 2 < len(t) < 20 and any(k in t for k in ["市", "区"]):
-                            area = t
-                            break
-                    except Exception:
-                        pass
-
-                company = ""
-                for sel in [
-                    "[class*='company']",
-                    "[class*='corp']",
-                    "[class*='enterprise']",
-                ]:
-                    try:
-                        t = card.find_element(By.CSS_SELECTOR, sel).text.strip()
-                        if t and 2 < len(t) < 40:
-                            company = t
-                            break
-                    except Exception:
-                        pass
-
-                link = ""
+            before = len(jobs)
+            for card in cards[:25]:
                 try:
-                    if card.tag_name == "a":
-                        link = card.get_attribute("href") or ""
-                    else:
-                        a_el = card.find_element(By.CSS_SELECTOR, "a")
-                        link = a_el.get_attribute("href") or ""
-                    if link and not link.startswith("http"):
-                        link = "https://zwfw.mohrss.gov.cn" + link
+                    job_name = ""
+                    for sel in [
+                        "[class*='job-name']",
+                        "[class*='title']",
+                        "h3",
+                        "h4",
+                        ".name",
+                        "strong",
+                    ]:
+                        try:
+                            t = card.find_element(By.CSS_SELECTOR, sel).text.strip()
+                            if t and 2 < len(t) < 60:
+                                job_name = t
+                                break
+                        except Exception:
+                            pass
+
+                    salary = ""
+                    for sel in ["[class*='salary']", "[class*='money']", ".salary"]:
+                        try:
+                            t = card.find_element(By.CSS_SELECTOR, sel).text.strip()
+                            if t and len(t) < 20:
+                                salary = t
+                                break
+                        except Exception:
+                            pass
+
+                    area = ""
+                    for sel in [
+                        "[class*='area']",
+                        "[class*='city']",
+                        "[class*='location']",
+                        "[class*='region']",
+                    ]:
+                        try:
+                            t = card.find_element(By.CSS_SELECTOR, sel).text.strip()
+                            if t and 2 < len(t) < 20 and any(k in t for k in ["市", "区"]):
+                                area = t
+                                break
+                        except Exception:
+                            pass
+
+                    company = ""
+                    for sel in [
+                        "[class*='company']",
+                        "[class*='corp']",
+                        "[class*='enterprise']",
+                    ]:
+                        try:
+                            t = card.find_element(By.CSS_SELECTOR, sel).text.strip()
+                            if t and 2 < len(t) < 40:
+                                company = t
+                                break
+                        except Exception:
+                            pass
+
+                    link = ""
+                    try:
+                        if card.tag_name == "a":
+                            link = card.get_attribute("href") or ""
+                        else:
+                            a_el = card.find_element(By.CSS_SELECTOR, "a")
+                            link = a_el.get_attribute("href") or ""
+                        if link and not link.startswith("http"):
+                            link = "https://zwfw.mohrss.gov.cn" + link
+                    except Exception:
+                        pass
+
+                    if job_name:
+                        jobs.append(
+                            {
+                                "职位名称": job_name,
+                                "公司名称": company,
+                                "薪资": salary or "面议",
+                                "工作地点": area,
+                                "学历要求": "",
+                                "来源平台": "中国公共招聘网",
+                                "发布日期": today,
+                                "链接": link,
+                            }
+                        )
                 except Exception:
                     pass
-
-                if job_name:
-                    jobs.append(
-                        {
-                            "职位名称": job_name,
-                            "公司名称": company,
-                            "薪资": salary or "面议",
-                            "工作地点": area,
-                            "学历要求": "",
-                            "来源平台": "中国公共招聘网",
-                            "发布日期": today,
-                            "链接": link,
-                        }
-                    )
-            except Exception:
-                pass
-        log.info(f"[公共招聘网] 新增 {len(jobs) - before} 条")
-    except Exception as e:
-        log.error(f"[公共招聘网] 采集失败: {e}")
+            log.info(f"[公共招聘网] 新增 {len(jobs) - before} 条")
+        except Exception as e:
+            log.error(f"[公共招聘网] 采集失败: {e}")
 
     return jobs
 
 
-def save_results(new_jobs, keyword):
+def job_identity(job):
+    """同一岗位跨页/跨关键词合并，不合并异地岗位或不同岗位详情链接。"""
+    from urllib.parse import urlsplit
+    link = job.get("链接", "").strip()
+    parts = urlsplit(link)
+    # 旧 51job 数据误用了公司主页，该链接不能作为岗位 ID。
+    if link and not ("51job.com" in (parts.hostname or "") and "/co" in parts.path):
+        return (job.get("来源平台", ""), parts.netloc, parts.path, parts.query)
+    return tuple(job.get(k, "") for k in
+                 ("来源平台", "职位名称", "公司名称", "工作地点"))
+
+
+def save_results(new_jobs, keyword, export_excel=True):
     """
     合并保存招聘数据（不覆盖，只追加去重）
     - 读取已有 jobs_latest.json，与新数据合并去重
-    - 每条记录标记 first_seen（首次发现时间），用于 7 天过期清理
-    - 每次保存时自动清理 7 天前的记录
+    - 保留 first_seen，以 last_seen 标记最近采到时间
+    - 每次保存清理超过 7 天未再次采到的记录
     """
-    import pandas as pd
     from datetime import datetime, timedelta
 
     today = datetime.today().strftime("%Y-%m-%d")  # 仅日期，文件名不能用冒号
@@ -814,37 +670,19 @@ def save_results(new_jobs, keyword):
             with open(json_path, encoding="utf-8") as f:
                 old_data = json.load(f)
             for j in old_data.get("jobs", []):
-                key = (
-                    j.get("职位名称", ""),
-                    j.get("公司名称", ""),
-                    j.get("工作地点", ""),
-                )
+                key = job_identity(j)
                 existing_jobs[key] = j
         except Exception:
             existing_jobs = {}
 
     # ── 2. 合并新数据 ─────────────────────────────────
     added_count = 0
-    for idx, job in enumerate(new_jobs):
+    for job in new_jobs:
         # 每条记录标记本次采集的关键词
-        job["关键词"] = keyword
+        job["关键词"] = job.get("关键词") or keyword
 
-        platform = job.get("来源平台", "")
-        if platform == "实习僧":
-            # 实习僧搜索页每张卡片都是不同的实习岗位
-            # → 用完整链接作为唯一 key；若链接为空则用 (公司+地点+职位名+序号) 防重
-            link = job.get("链接", "").strip()
-            if link:
-                key = link
-            else:
-                key = "sx__%s__%s__%s__%d" % (
-                    job.get("公司名称", ""),
-                    job.get("工作地点", ""),
-                    job.get("职位名称", ""),
-                    idx,
-                )
-        else:
-            key = (job.get("职位名称", ""), job.get("公司名称", ""))
+        job["last_seen"] = today
+        key = job_identity(job)
         if key not in existing_jobs:
             # 新职位：标记首次出现时间
             job["first_seen"] = today
@@ -853,18 +691,18 @@ def save_results(new_jobs, keyword):
         else:
             # 已存在：保留原有的 first_seen，同时追加关键词（多关键词搜索时）
             old = existing_jobs[key]
-            old["first_seen"] = old.get("first_seen", today)
-            # 合并关键词（逗号分隔，去重）
-            old_kw = old.get("关键词", "")
-            if old_kw and keyword not in old_kw.split(","):
-                old["关键词"] = old_kw + "," + keyword
-            elif not old_kw:
-                old["关键词"] = keyword
+            previous_keywords = old.get("关键词", "")
+            first_seen = old.get("first_seen", today)
+            old.update(job)
+            old["first_seen"] = first_seen
+            old["关键词"] = ",".join(dict.fromkeys(
+                k.strip() for value in (previous_keywords, job["关键词"])
+                for k in value.split(",") if k.strip()))
 
     # ── 3. 过滤 7 天前过期数据 ─────────────────────────
     all_jobs = list(existing_jobs.values())
     before_count = len(all_jobs)
-    all_jobs = [j for j in all_jobs if j.get("first_seen", "") >= expire_threshold]
+    all_jobs = [j for j in all_jobs if j.get("last_seen", j.get("first_seen", "")) >= expire_threshold]
     expired = before_count - len(all_jobs)
 
     # ── 4. 保存 jobs_latest.json ───────────────────────
@@ -882,8 +720,13 @@ def save_results(new_jobs, keyword):
         "total": len(all_jobs),
         "jobs": all_jobs,
     }
-    with open(json_path, "w", encoding="utf-8") as f:
+    temp_path = json_path + ".tmp"
+    with open(temp_path, "w", encoding="utf-8") as f:
         json.dump(result, f, ensure_ascii=False, indent=2)
+    os.replace(temp_path, json_path)
+    if not export_excel:
+        return len(all_jobs)
+    import pandas as pd
 
     # ── 5. 保存 Excel（当日独立文件） ───────────────────
     excel_path = os.path.join(DATA_DIR, f"jobs_{today}.xlsx")
@@ -926,12 +769,20 @@ def save_results(new_jobs, keyword):
 #   交互模式：python login_helper.py
 #   自动模式：python login_helper.py --keywords 软件工程师,数据分析
 # ══════════════════════════════════════════════════════════
-def run_crawl(driver, keywords, success_keys):
+def run_crawl(driver, keywords, success_keys, max_pages=0):
     """执行采集（供交互模式和API调用共用）"""
     all_jobs = []
+    incomplete = []
     for kw in keywords:
         print(f"\n  ▶ 正在采集：【{kw}】")
-        jobs = crawl_with_cookies(driver, kw, success_keys)
+        report = {}
+        jobs = crawl_with_cookies(
+            driver, kw, success_keys, max_pages=max_pages,
+            on_page=lambda batch: save_results(batch, kw, export_excel=False), report=report)
+        if report and not report["complete"]:
+            incomplete.append("{}: {}".format(kw, report["reason"]))
+        for job in jobs:
+            job["关键词"] = kw
         if jobs:
             print(f"  ✅ 【{kw}】采集到 {len(jobs)} 条")
             all_jobs.extend(jobs)
@@ -940,13 +791,16 @@ def run_crawl(driver, keywords, success_keys):
 
     if all_jobs:
         total = save_results(all_jobs, "，".join(keywords))
-        print(f"\n  🎉 全部完成！本次新增 {len(all_jobs)} 条，当前累计 {total} 条")
+        state = "部分完成（详见错误）" if incomplete else "全部完成"
+        print(f"\n  {state}！本次读取 {len(all_jobs)} 条，去重后当前累计 {total} 条")
         for j in all_jobs[:8]:
             print(
                 f"    [{j['来源平台']}] {j['职位名称']} | {j['公司名称']} | {j['薪资']} | {j['工作地点']}"
             )
         if len(all_jobs) > 8:
             print(f"    ... 还有 {len(all_jobs) - 8} 条（见 data/ 目录）")
+        if incomplete:
+            raise RuntimeError("前程无忧采集未完成，已保存部分结果：" + "; ".join(incomplete))
         return total
     else:
         print("\n  ⚠ 未采集到任何数据。可能原因：")
@@ -954,6 +808,8 @@ def run_crawl(driver, keywords, success_keys):
         print("    2. 网站临时风控      → 稍后再试")
         print("    3. 网络连接问题      → 检查网络")
         total = save_results([], "，".join(keywords))
+        if incomplete:
+            raise RuntimeError("前程无忧采集未完成：" + "; ".join(incomplete))
         return total
 
 
@@ -968,7 +824,16 @@ def main():
     parser.add_argument(
         "--auto", action="store_true", help="自动模式：跳过交互，直接用已有Cookie采集"
     )
+    parser.add_argument("--max-pages", type=int, default=0,
+                        help="前程无忧每关键词页数，0=全部（默认）")
+    parser.add_argument("--platforms", default="51job,liepin,shixiseng,zhaopin",
+                        help="采集平台，逗号分隔；如仅前程无忧：51job")
     args = parser.parse_args()
+    if args.max_pages < 0:
+        parser.error("--max-pages 不能为负数")
+    platforms = {p.strip() for p in args.platforms.split(",") if p.strip()}
+    if not platforms or platforms - {p[0] for p in PLATFORMS} - {"mohrss"}:
+        parser.error("--platforms 包含未知平台或为空")
 
     # 自动模式：跳过登录，直接采集
     if args.keywords:
@@ -979,28 +844,30 @@ def main():
         driver = load_driver(headless=True)
         try:
             # 匿名平台（无需Cookie，直接参与采集）
-            success_keys = ["51job", "liepin", "shixiseng"]
+            success_keys = [p for p in ("51job", "liepin", "shixiseng", "mohrss") if p in platforms]
 
             # 尝试加载已有 Cookie（传入真实 domain URL）
             for name, label, domain_url in PLATFORMS:
                 path = os.path.join(COOKIE_DIR, f"{name}.json")
-                if os.path.exists(path):
-                    load_cookies(driver, name, domain_url)
+                if name in platforms and os.path.exists(path):
+                    # 各平台采集时再注入，避免重复打开登录页。
                     if name not in success_keys:
                         success_keys.append(name)
-                    print(f"  已加载 Cookie: {name}")
+                    print(f"  发现可用 Cookie: {name}")
 
             print(f"  有效平台：{success_keys}")
-            count = run_crawl(driver, keywords, success_keys)
+            count = run_crawl(driver, keywords, success_keys, max_pages=args.max_pages)
             print(f"\n[完成] 共采集 {count} 条")
         finally:
             # driver.quit() 在异常会话上可能永久挂起（无人值守服务器的真实事故），
             # 用看门狗强制退出，保证调度器不会被拖到超时
             import threading as _th
 
+            quit_exit_code = 1 if sys.exc_info()[0] else 0
+
             def _force_exit():
                 print("[Watchdog] driver.quit() 超时，强制退出进程")
-                os._exit(0)
+                os._exit(quit_exit_code)
 
             _wd = _th.Timer(15, _force_exit)
             _wd.daemon = True
@@ -1062,7 +929,7 @@ def main():
             k.strip() for k in kw_input.replace("，", ",").split(",") if k.strip()
         ]
         print(f"\n  将依次采集关键词：{keywords}\n" + "─" * 50)
-        run_crawl(driver, keywords, success_keys)
+        run_crawl(driver, keywords, success_keys, max_pages=args.max_pages)
 
     finally:
         driver.quit()

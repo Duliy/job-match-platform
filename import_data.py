@@ -97,6 +97,7 @@ CREATE INDEX IF NOT EXISTS idx_cache_lookup
 -- ======================================================
 -- 索引
 -- ======================================================
+CREATE INDEX IF NOT EXISTS idx_jobs_identity ON jobs(title, company, link, location);
 CREATE INDEX IF NOT EXISTS idx_jobs_city       ON jobs(city);
 CREATE INDEX IF NOT EXISTS idx_jobs_salary     ON jobs(salary_min, salary_max);
 CREATE INDEX IF NOT EXISTS idx_jobs_education  ON jobs(education);
@@ -277,7 +278,7 @@ def import_gk_jobs(conn):
 
 
 def import_jobs_incremental(conn):
-    """增量导入社招数据 —— 只插入数据库中不存在的岗位（按 title+company+link 去重）"""
+    """增量导入社招数据 —— 只插入数据库中不存在的岗位（按 title+company+link+location 去重）"""
     if not os.path.exists(JOBS_JSON):
         return 0
 
@@ -298,8 +299,8 @@ def import_jobs_incremental(conn):
 
         # 检查是否已存在
         cursor.execute(
-            "SELECT id FROM jobs WHERE title=? AND company=? AND link=?",
-            (title, company, link)
+            "SELECT id FROM jobs WHERE title=? AND company=? AND link=? AND COALESCE(location, '')=?",
+            (title, company, link, job.get('工作地点', ''))
         )
         if cursor.fetchone():
             continue

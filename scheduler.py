@@ -221,13 +221,15 @@ def run_social_crawl(keywords=None):
     try:
         social_running = True
         script = os.path.join(BASE_DIR, "login_helper.py")
-        _run_crawler_subprocess(
+        return_code = _run_crawler_subprocess(
             [sys.executable, script, "--keywords", ",".join(keywords), "--auto"],
             log_file,
             CRAWL_TIMEOUT,
         )
 
         db_new = _sync_db(gk=False)
+        if return_code:
+            raise RuntimeError(f"采集未完成（退出码 {return_code}），已导入可用结果，详见日志 {log_file}")
         social_last_run = start_time
         social_last_count = db_new
 
@@ -239,6 +241,7 @@ def run_social_crawl(keywords=None):
         print(f"[Scheduler] 社招采集完成，新增 {db_new} 条（日志: {log_file}）")
         return {"success": True, "count": db_new, "start_time": start_time}
     except subprocess.TimeoutExpired:
+        _sync_db(gk=False)  # 已逐页落盘，超时也保留成功采到的页面。
         cfg = load_crawl_config()
         cfg["last_error"] = "采集超时（60分钟）"
         save_crawl_config(cfg)

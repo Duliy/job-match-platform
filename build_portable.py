@@ -56,6 +56,7 @@ CODE_FILES = [
     "环境预检.py",
     # 爬虫
     "login_helper.py",
+    "crawler_51job.py",
     "gongkao_crawler.py",
     "cookie_collector.py",
     # 前端
