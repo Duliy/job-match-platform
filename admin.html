@@ -749,6 +749,7 @@
             <div class="status-row"><span class="k">定时任务：</span><span class="v">{{ crawl.enabled ? '每 ' + crawl.interval_hours + ' 小时' : '已关闭' }}</span></div>
             <div class="status-row"><span class="k">上次采集：</span><span class="v">{{ crawl.last_run || '从未' }}</span></div>
             <div class="status-row"><span class="k">上次结果：</span><span class="v">{{ crawl.last_count != null ? crawl.last_count + ' 条' : '—' }}</span></div>
+            <div v-if="crawl.last_error" class="status-row"><span class="k">采集提示：</span><span class="v" style="color:#c00">{{ crawl.last_error }}</span></div>
           </div>
         </div>
       </template>
@@ -807,6 +808,7 @@
             <div class="status-row"><span class="k">采集状态：</span><span class="v" v-html="gkCrawlStatusText()"></span></div>
             <div class="status-row"><span class="k">上次采集：</span><span class="v">{{ gkcrawl.last_run || '从未' }}</span></div>
             <div class="status-row"><span class="k">上次结果：</span><span class="v">{{ gkcrawl.last_count != null ? gkcrawl.last_count + ' 条' : '—' }}</span></div>
+            <div v-if="gkcrawl.last_error" class="status-row"><span class="k">采集提示：</span><span class="v" style="color:#c00">{{ gkcrawl.last_error }}</span></div>
           </div>
         </div>
       </template>
@@ -1095,7 +1097,8 @@ function authHeaders() {
 let _toastTimer;
 function showToast(msg, type = '') {
   const el = document.getElementById('toast');
-  el.innerHTML = msg;
+  // 后端错误/文件名都可能含 HTML，提示框只显示文本。
+  el.textContent = String(msg).replace(/<svg\b[^>]*>[\s\S]*?<\/svg>/gi, '').trim();
   el.className = 'toast ' + type + ' show';
   clearTimeout(_toastTimer);
   _toastTimer = setTimeout(() => { el.className = 'toast'; }, 3000);
@@ -1232,13 +1235,13 @@ function initVueApp() {
         // Crawl
         crawl: {
           enabled: false, interval_hours: 12, keywords: [],
-          is_running: false, last_run: '', last_count: null, saving: false
+          is_running: false, last_run: '', last_count: null, last_error: '', saving: false
         },
 
         // GkCrawl
         gkcrawl: {
           keyword: '公务员', year: '2026', interval_hours: 24, provinces: [],
-          is_running: false, last_run: '', last_count: null, saving: false
+          is_running: false, last_run: '', last_count: null, last_error: '', saving: false
         },
 
         // DB Browse
@@ -1521,6 +1524,7 @@ gkcrawl: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="cu
           this.crawl.is_running = data.is_running;
           this.crawl.last_run = data.last_run || '';
           this.crawl.last_count = data.last_count;
+          this.crawl.last_error = data.last_error || "";
         } catch (e) { if (e.message !== 'Unauthorized') showToast('加载配置失败', 'error'); }
       },
       async saveCrawlSchedule() {
@@ -1565,7 +1569,12 @@ gkcrawl: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="cu
               this.crawl.saving = false;
               this.crawl.last_run = data.last_run;
               this.crawl.last_count = data.last_count;
-              showToast('<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><polyline points="20 6 9 17 4 12"/></svg> 采集完成！共 ' + (data.last_count || 0) + ' 条', 'success');
+              this.crawl.last_error = data.last_error || "";
+              if (data.last_error) {
+                showToast('采集未全部完成：' + data.last_error, 'error');
+              } else {
+                showToast('采集完成，新增 ' + (data.last_count || 0) + ' 条', 'success');
+              }
             }
           } catch { clearInterval(timer); this.crawl.saving = false; }
         }, 3000);
@@ -1584,6 +1593,7 @@ gkcrawl: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="cu
           this.gkcrawl.is_running = !!data.is_running;
           this.gkcrawl.last_run = data.last_run || '';
           this.gkcrawl.last_count = data.last_count != null ? data.last_count : null;
+          this.gkcrawl.last_error = data.last_error || "";
         } catch (e) {
           if (e.message !== 'Unauthorized') showToast('加载配置失败', 'error');
         }
@@ -1632,7 +1642,12 @@ gkcrawl: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="cu
               this.gkcrawl.saving = false;
               this.gkcrawl.last_run = data.last_run;
               this.gkcrawl.last_count = data.last_count;
-              showToast('<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><polyline points="20 6 9 17 4 12"/></svg> 公考采集完成！共 ' + (data.last_count || 0) + ' 条', 'success');
+              this.gkcrawl.last_error = data.last_error || "";
+              if (data.last_error) {
+                showToast('公考采集未全部完成：' + data.last_error, 'error');
+              } else {
+                showToast('公考采集完成，新增 ' + (data.last_count || 0) + ' 条', 'success');
+              }
             }
           } catch { clearInterval(timer); this.gkcrawl.saving = false; }
         }, 3000);

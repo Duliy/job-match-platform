@@ -202,6 +202,8 @@ def normalize_education(edu: str) -> str:
 
 def format_salary_display(salary_min: float, salary_max: float, salary_type: str) -> str:
     """将标准化薪资格式化为前端展示字符串"""
+    salary_min = salary_min or 0
+    salary_max = salary_max or 0
     if salary_type == "negotiable":
         return "面议"
     if salary_type == "daily":

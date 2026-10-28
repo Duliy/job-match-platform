@@ -64,6 +64,7 @@ CODE_FILES = [
     "resume_match.html",
     "admin.html",
     "manifest.json",
+    "sw.js",
     "icon-192.png",
     "icon-512.png",
     # 入口脚本
@@ -163,7 +164,49 @@ def step_vcredist():
     print("  [复制] vc_redist")
 
 
+def export_seed_jobs(source_path, destination_path):
+    """仅导出公开岗位，绝不将用户/简历/SMTP/匹配缓存带入便携包。"""
+    import sqlite3
+    from contextlib import closing
+    from import_data import create_tables
+    temporary = destination_path + ".tmp"
+    try:
+        if os.path.exists(temporary):
+            os.remove(temporary)
+        with closing(sqlite3.connect(source_path)) as source, closing(
+                sqlite3.connect(temporary)) as destination:
+            create_tables(destination)
+            for table in ("jobs", "gk_jobs"):
+                source_columns = {r[1] for r in source.execute("PRAGMA table_info("+table+")")}
+                columns = [r[1] for r in destination.execute("PRAGMA table_info("+table+")")
+                           if r[1] in source_columns]
+                if not columns:
+                    continue
+                names = ",".join('"'+c+'"' for c in columns)
+                rows = source.execute("SELECT "+names+" FROM "+table)
+                destination.executemany("INSERT INTO "+table+" ("+names+") VALUES ("+
+                                        ",".join("?" for _ in columns)+")", rows)
+            destination.commit()
+        os.replace(temporary, destination_path)
+    finally:
+        if os.path.exists(temporary):
+            os.remove(temporary)
+
+
+def clean_package_private_data(package_dir):
+    # --skip-downloads 会复用打包目录，清除之前运行留下的私有配置和用户数据。
+    for name in ("data", "cookies"):
+        path = os.path.join(package_dir, name)
+        if os.path.isdir(path):
+            shutil.rmtree(path)
+        os.makedirs(path, exist_ok=True)
+    for name in os.listdir(package_dir):
+        if name.startswith(".env") and os.path.isfile(os.path.join(package_dir, name)):
+            os.remove(os.path.join(package_dir, name))
+
+
 def step_code():
+    clean_package_private_data(PKG_DIR)
     for f in CODE_FILES:
         src = os.path.join(BASE_DIR, f)
         if not os.path.isfile(src):
@@ -200,11 +243,7 @@ def step_code():
         if n_jobs + n_gk > 0:
             # 用备份接口导出一个干净的 db（避免 WAL 不一致）
             dst = os.path.join(PKG_DIR, "data", "jobs.db")
-            src_conn = _sq.connect(seed_db)
-            dst_conn = _sq.connect(dst)
-            src_conn.backup(dst_conn)
-            dst_conn.close()
-            src_conn.close()
+            export_seed_jobs(seed_db, dst)
             print(f"  [种子数据] 打包岗位数据：社招 {n_jobs} 条 + 公考 {n_gk} 条")
     print(f"  [复制] {len(CODE_FILES)} 个项目文件")
 

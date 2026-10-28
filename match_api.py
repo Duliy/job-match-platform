@@ -387,6 +387,8 @@ async def change_password(
     req: ChangePasswordRequest, user: dict = Depends(get_current_user)
 ):
     """修改密码（管理后台「系统设置」用）"""
+    if len(req.new_password.encode("utf-8")) > 72:
+        raise HTTPException(400, "密码的 UTF-8 长度不能超过72字节")
     if len(req.new_password) < 6:
         raise HTTPException(400, "新密码至少6位")
     conn = get_db()
@@ -514,7 +516,9 @@ async def recommend(
     start_time = time.time()
 
     # 1. 缓存检查
-    resume_hash = hashlib.md5(req.resume.raw_text.encode()).hexdigest()
+    resume_hash = hashlib.sha256(json.dumps(
+        {"user_id": user["id"], "resume": req.resume.model_dump()},
+        sort_keys=True, ensure_ascii=False).encode()).hexdigest()
     pref_hash = hashlib.md5(
         json.dumps(req.preference.model_dump(), sort_keys=True).encode()
     ).hexdigest()
@@ -1237,7 +1241,7 @@ def _send_match_email_async(user: dict, high_prob_count: int, recommendations):
             # 2. 获取SMTP配置
             email_cfg = get_email_config()
             if not email_cfg or not email_cfg.get("enabled"):
-                _log(f"SMTP not enabled (cfg={email_cfg}), skip")
+                _log("SMTP not enabled, skip")
                 conn.close()
                 return
             _log(
@@ -1400,7 +1404,7 @@ def check_cache(resume_hash: str, pref_hash: str, job_type: str) -> Optional[dic
         result_json, created_at = row["result_json"], row["created_at"]
         try:
             created_dt = datetime.fromisoformat(created_at)
-            if (datetime.now() - created_dt).total_seconds() < CACHE_TTL:
+            if 0 <= (datetime.utcnow() - created_dt).total_seconds() < CACHE_TTL:
                 return json.loads(result_json)
         except (ValueError, TypeError):
             pass

@@ -126,6 +126,8 @@ def register_user(username: str, password: str, role: str = "user") -> dict:
         return {"ok": False, "message": "用户名至少2个字符"}
     if not password or len(password) < 4:
         return {"ok": False, "message": "密码至少4个字符"}
+    if len(password.encode("utf-8")) > 72:
+        return {"ok": False, "message": "密码的 UTF-8 长度不能超过72字节"}
     if len(username) > 32:
         return {"ok": False, "message": "用户名最长32个字符"}
 

@@ -37,6 +37,9 @@ def main():
         except (EOFError, KeyboardInterrupt):
             print("\n  已取消。下次启动时会再次询问。")
             sys.exit(1)
+        if len(pwd.encode("utf-8")) > 72:
+            print("  密码的 UTF-8 长度不能超过72字节，请重新输入。")
+            continue
         if len(pwd) < 6:
             print("  密码太短，至少 6 位，请重新输入。")
             continue

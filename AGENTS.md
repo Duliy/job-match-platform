@@ -85,7 +85,7 @@ portable_env.py  # Chrome/chromedriver 路径解析（内嵌 > 环境变量 > �
 - 筛选下拉数据源：`GET /api/match/cities?job_type=` 返回**全库**去重城市/省份（2026-09-23 修复，之前前端只从当前页提取导致城市筛选形同虚设）
 - 字段清洗（match_utils）：`extract_city` 内含 `normalize_city`（黑名单剔除"已上市"等公司标签 + 去"市"后缀 + >5字碎片守卫）；`normalize_education` 只保留学历词（实习僧的"4天/周，可转正"等不再写入学历字段，并入职位名展示）；存量清洗脚本 `clean_dirty_data.py`（生产已跑过，可随时重跑）
 - 学历筛选：后端 `education` 参数宽松语义（空学历/不限不排除，与 pre_filter 一致）；社招老数据学历基本为空，靠新采集（51job/智联/猎聘都会提取）逐步填充
-- **改前端页面后必须 bump `sw.js` 的 CACHE_NAME 版本号**（当前 v3），否则用户看到旧缓存页面
+- **改前端页面后必须 bump `sw.js` 的 CACHE_NAME 版本号**（当前 v4），否则用户看到旧缓存页面
 
 ## 四、服务器（生产环境）
 
@@ -172,3 +172,7 @@ portable_env.py  # Chrome/chromedriver 路径解析（内嵌 > 环境变量 > �
 - 手动限定来源/页数：`python login_helper.py --auto --keywords 信息管理与信息系统 --platforms 51job --max-pages 0`（0=全部）。
 - 回归测试：`python -m unittest discover -s tests`。离线便携包共用的 `CODE_FILES` 已加入 `crawler_51job.py`，下次构建会包含新模块。
 - 实测（2026-10-28，本机）：关键词「信息管理与信息系统」50 页全部完成，847 个不同岗位，122.14 秒（含第 38 页异常后的恢复）；临时 JSON 和内存 SQLite 均 847 条，地点/链接缺失均为 0。回归测试 12 项通过。网站实时排序与广告重复会影响每次去重数量，不能以页数×20作为唯一岗位数。
+
+## 十一、2026-10-28 整体检查
+
+修复与后续建议见 `PROJECT_REVIEW_2026-10-28.md`。重点：种子包仅包含岗位；初始化不再使用固定管理员密码；匹配缓存按账号/完整简历隔离且按 UTC 计算 TTL；订阅在 SQL LIMIT 前过滤入库时间并为失败收件人保留检查点；WAL 用在线备份；调度任务异步派发并加锁；增量导入更新已有字段；采集失败不再伪报成功。前端缓存版本 v4。

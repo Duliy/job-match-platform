@@ -78,9 +78,8 @@ def ensure_initialized():
     if os.path.exists(flag):
         return
     if BACKGROUND:
-        # 后台模式无法交互：使用临时密码并强制首次登录修改
-        warn("后台模式跳过初始化向导。请尽快登录管理后台修改默认密码 admin/admin123！")
-        return
+        error("首次启动须先交互运行 init_admin.py 设置管理员密码，再启用后台服务。")
+        sys.exit(1)
     r = subprocess.call([sys.executable, os.path.join(BASE_DIR, "init_admin.py")])
     if r != 0:
         error("初始化未完成，请重新运行")

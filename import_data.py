@@ -278,7 +278,7 @@ def import_gk_jobs(conn):
 
 
 def import_jobs_incremental(conn):
-    """增量导入社招数据 —— 只插入数据库中不存在的岗位（按 title+company+link+location 去重）"""
+    """增量导入社招数据 —— 只插入数据库中不存在的岗位（按 title+company+link+location 去重并更新已有记录）"""
     if not os.path.exists(JOBS_JSON):
         return 0
 
@@ -299,10 +299,23 @@ def import_jobs_incremental(conn):
 
         # 检查是否已存在
         cursor.execute(
-            "SELECT id FROM jobs WHERE title=? AND company=? AND link=? AND COALESCE(location, '')=?",
+            "SELECT id, keywords FROM jobs WHERE title=? AND company=? AND link=? AND COALESCE(location, '')=?",
             (title, company, link, job.get('工作地点', ''))
         )
-        if cursor.fetchone():
+        existing = cursor.fetchone()
+        salary_info = parse_salary(job.get('薪资', ''))
+        if existing:
+            keywords = ','.join(dict.fromkeys(k.strip()
+                for value in (existing[1] or '', job.get('关键词', ''))
+                for k in value.split(',') if k.strip()))
+            cursor.execute("""UPDATE jobs SET salary_raw=?, salary_min=?, salary_max=?,
+                salary_type=?, city=?, education=?, pub_date=?, keywords=?, search_text=?
+                WHERE id=?""", (
+                job.get('薪资', ''), salary_info['salary_min'], salary_info['salary_max'],
+                salary_info['salary_type'], extract_city(job.get('工作地点', '')),
+                normalize_education(job.get('学历要求', '')), job.get('发布日期', ''),
+                keywords, f"{title} {company} {keywords}", existing[0]))
+            # 不改 updated_at：订阅按新增时间推送，重复采集不应再次打扰学生。
             continue
 
         salary_info = parse_salary(job.get('薪资', ''))

@@ -25,6 +25,9 @@ import subprocess
 import sys
 import threading
 import time
+import functools
+import tempfile
+from contextlib import closing
 from datetime import datetime
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
@@ -67,6 +70,33 @@ CRAWL_TIMEOUT = 3600  # 社招采集最长 60 分钟（无人值守，放宽）
 GK_CRAWL_TIMEOUT = 3600  # 公考采集最长 60 分钟
 
 
+_social_lock = threading.Lock()
+_gk_lock = threading.Lock()
+_sub_lock = threading.Lock()
+_backup_lock = threading.Lock()
+_schedule_lock = threading.RLock()
+
+
+def exclusive_task(lock, message):
+    """原子占用任务，避免接口线程与定时线程同时通过 running 检查。"""
+    def decorate(func):
+        @functools.wraps(func)
+        def wrapped(*args, **kwargs):
+            if not lock.acquire(blocking=False):
+                return {"success": False, "message": message}
+            try:
+                return func(*args, **kwargs)
+            finally:
+                lock.release()
+        return wrapped
+    return decorate
+
+
+def _start_background(task, *args):
+    # schedule 的回调必须立即返回，否则长达数分钟的爬虫阻塞订阅和备份。
+    threading.Thread(target=task, args=args, daemon=True).start()
+
+
 # ══════════════════════════════════════════════════════
 # 配置读写
 # ══════════════════════════════════════════════════════
@@ -83,8 +113,17 @@ def _load_json(path, default):
 
 def _save_json(path, cfg):
     os.makedirs(os.path.dirname(path), exist_ok=True)
-    with open(path, "w", encoding="utf-8") as f:
-        json.dump(cfg, f, ensure_ascii=False, indent=2)
+    tmp_path = None
+    try:
+        with tempfile.NamedTemporaryFile(mode="w", encoding="utf-8",
+                dir=os.path.dirname(path), delete=False) as f:
+            tmp_path = f.name
+            json.dump(cfg, f, ensure_ascii=False, indent=2)
+        os.replace(tmp_path, path)
+    finally:
+        if tmp_path and os.path.exists(tmp_path):
+            os.unlink(tmp_path)
+
 
 
 def load_crawl_config():
@@ -191,18 +230,13 @@ def _sync_db(incremental=True, gk=False):
     try:
         from import_data import import_jobs_incremental, import_gk_jobs_incremental
 
-        conn = sqlite3.connect(DB_PATH)
-        if gk:
-            n = import_gk_jobs_incremental(conn)
-        else:
-            n = import_jobs_incremental(conn)
-        conn.close()
-        return n
+        with closing(sqlite3.connect(DB_PATH, timeout=30)) as conn:
+            return import_gk_jobs_incremental(conn) if gk else import_jobs_incremental(conn)
     except Exception as e:
-        print(f"[Scheduler] 数据库同步失败: {e}")
-        return 0
+        raise RuntimeError(f"数据库同步失败: {e}") from e
 
 
+@exclusive_task(_social_lock, "社招采集正在进行中")
 def run_social_crawl(keywords=None):
     """执行社招采集（前程无忧/实习僧免登录；智联/猎聘用 Cookie）"""
     global social_running, social_last_run, social_last_count
@@ -228,7 +262,11 @@ def run_social_crawl(keywords=None):
         )
 
         db_new = _sync_db(gk=False)
+        social_last_run, social_last_count = start_time, db_new
         if return_code:
+            cfg = load_crawl_config()
+            cfg.update(last_run=start_time, last_count=db_new)
+            save_crawl_config(cfg)
             raise RuntimeError(f"采集未完成（退出码 {return_code}），已导入可用结果，详见日志 {log_file}")
         social_last_run = start_time
         social_last_count = db_new
@@ -255,7 +293,8 @@ def run_social_crawl(keywords=None):
         social_running = False
 
 
-def run_gk_crawl(provinces=None, keyword=None, year=None, max_pages=None, delay=1.0):
+@exclusive_task(_gk_lock, "公考采集正在进行中")
+def run_gk_crawl(provinces=None, keyword=None, year=None, max_pages=None, delay=None):
     """执行公考职位采集（纯 HTTP，无需 Chrome）"""
     global gk_running, gk_last_run, gk_last_count
     if gk_running:
@@ -284,9 +323,15 @@ def run_gk_crawl(provinces=None, keyword=None, year=None, max_pages=None, delay=
 
     try:
         gk_running = True
-        _run_crawler_subprocess(args, log_file, GK_CRAWL_TIMEOUT)
+        return_code = _run_crawler_subprocess(args, log_file, GK_CRAWL_TIMEOUT)
 
         db_new = _sync_db(gk=True)
+        gk_last_run, gk_last_count = start_time, db_new
+        if return_code:
+            cfg = load_gk_config()
+            cfg.update(last_run=start_time, last_count=db_new)
+            save_gk_config(cfg)
+            raise RuntimeError(f"公考采集失败（退出码 {return_code}），已保留可用结果，详见日志 {log_file}")
         gk_last_run = start_time
         gk_last_count = db_new
 
@@ -390,6 +435,7 @@ def _send_email(to_addr, subject, html_body):
         return False, str(e)
 
 
+@exclusive_task(_sub_lock, "订阅扫描正在进行中")
 def run_subscription_scan():
     """扫描所有订阅用户（绑定了通知邮箱且上传过简历），
     用 SQL 粗筛找出上次扫描后的新岗位，邮件推送。
@@ -438,8 +484,12 @@ def run_subscription_scan():
 
         total_scan = len(subscribers)
         total_notify = 0
+        user_checkpoints = cfg.get("user_last_run", {})
+        errors = []
 
         for row in subscribers:
+            user_key = str(row["id"])
+            user_last_run = user_checkpoints.setdefault(user_key, last_run)
             try:
                 parsed = json.loads(row["parsed_json"]) if row["parsed_json"] else {}
             except Exception:
@@ -458,6 +508,7 @@ def run_subscription_scan():
                     education=education,
                     job_type=jt,
                     max_candidates=50,
+                    updated_after=user_last_run,
                 )
                 if not candidates and skills:
                     # 技能词（常为英文）匹配不上中文关键词时回退宽泛搜索
@@ -469,15 +520,14 @@ def run_subscription_scan():
                         education=education,
                         job_type=jt,
                         max_candidates=50,
+                        updated_after=user_last_run,
                     )
                 for c in candidates:
-                    # 只保留上次扫描之后更新的岗位（增量推送，避免重复打扰）
-                    updated = str(c.get("updated_at") or c.get("collect_time") or "")
-                    if updated > last_run:
-                        c["job_type"] = jt
-                        new_jobs.append(c)
+                    c["job_type"] = jt
+                    new_jobs.append(c)
 
             if not new_jobs:
+                user_checkpoints[user_key] = start_time
                 continue
 
             # 去重 + 取前 15 条
@@ -498,11 +548,13 @@ def run_subscription_scan():
                 html,
             )
             if ok:
+                user_checkpoints[user_key] = start_time
                 total_notify += 1
                 print(
                     f"[Subscription] 已通知 {row['username']} <{row['notify_email']}>，{len(new_jobs)} 个新岗位"
                 )
             else:
+                errors.append(f"用户 {row['id']} 通知失败: {msg}")
                 print(f"[Subscription] 通知 {row['username']} 失败: {msg}")
 
         sub_last_run = start_time
@@ -512,13 +564,14 @@ def run_subscription_scan():
         cfg["last_run"] = start_time
         cfg["last_scan_count"] = total_scan
         cfg["last_notify_count"] = total_notify
-        cfg["last_error"] = ""
+        cfg["user_last_run"] = user_checkpoints
+        cfg["last_error"] = "; ".join(errors)
         save_sub_config(cfg)
 
         print(
             f"[Subscription] 扫描完成：{total_scan} 个订阅用户，通知 {total_notify} 人"
         )
-        return {"success": True, "count": total_scan, "notified": total_notify}
+        return {"success": not errors, "count": total_scan, "notified": total_notify}
     except Exception as e:
         cfg = load_sub_config()
         cfg["last_error"] = str(e)
@@ -532,6 +585,7 @@ def run_subscription_scan():
 # ══════════════════════════════════════════════════════
 # 数据备份（每日一次，保留最近 7 份）
 # ══════════════════════════════════════════════════════
+@exclusive_task(_backup_lock, "备份正在进行中")
 def backup_data():
     """把 data/ 目录整体复制到 data_backups/YYYYMMDD_HHMMSS/，保留最近 7 份"""
     if not os.path.isdir(DATA_DIR):
@@ -540,7 +594,14 @@ def backup_data():
         os.makedirs(BACKUP_DIR, exist_ok=True)
         ts = datetime.now().strftime("%Y%m%d_%H%M%S")
         dst = os.path.join(BACKUP_DIR, ts)
-        shutil.copytree(DATA_DIR, dst, ignore=shutil.ignore_patterns("crawl_logs"))
+        shutil.copytree(DATA_DIR, dst, ignore=shutil.ignore_patterns(
+            "crawl_logs", "jobs.db", "jobs.db-wal", "jobs.db-shm"))
+        # 直接复制运行中的 WAL 数据库可能丢掉已提交数据；使用 SQLite 在线备份。
+        with closing(sqlite3.connect(DB_PATH)) as source, closing(
+                sqlite3.connect(os.path.join(dst, "jobs.db"))) as destination:
+            source.backup(destination)
+            if destination.execute("PRAGMA integrity_check").fetchone()[0] != "ok":
+                raise RuntimeError("备份数据库完整性检查失败")
         # 清理旧备份
         backups = sorted(
             d
@@ -558,6 +619,11 @@ def backup_data():
 # 调度主循环
 # ══════════════════════════════════════════════════════
 def reload_schedules():
+    with _schedule_lock:
+        _reload_schedules_unlocked()
+
+
+def _reload_schedules_unlocked():
     """根据配置文件重建定时任务"""
     _sched.clear()
 
@@ -566,7 +632,7 @@ def reload_schedules():
         hours = cfg.get("interval_hours", 12)
 
         def _social_job():
-            run_social_crawl(load_crawl_config().get("keywords", []))
+            _start_background(run_social_crawl, load_crawl_config().get("keywords", []))
 
         _sched.every(hours).hours.do(_social_job)
         print(f"[Scheduler] 社招采集：每 {hours} 小时，关键词 {cfg.get('keywords')}")
@@ -576,7 +642,7 @@ def reload_schedules():
         hours = gk.get("interval_hours", 24)
 
         def _gk_job():
-            run_gk_crawl()
+            _start_background(run_gk_crawl)
 
         _sched.every(hours).hours.do(_gk_job)
         print(f"[Scheduler] 公考采集：每 {hours} 小时")
@@ -584,18 +650,19 @@ def reload_schedules():
     sub = load_sub_config()
     if sub.get("enabled", True):
         hours = sub.get("interval_hours", 48)
-        _sched.every(hours).hours.do(run_subscription_scan)
+        _sched.every(hours).hours.do(_start_background, run_subscription_scan)
         print(f"[Scheduler] 订阅推送：每 {hours} 小时")
 
     # 每日凌晨 3:30 备份数据
-    _sched.every().day.at("03:30").do(backup_data)
+    _sched.every().day.at("03:30").do(_start_background, backup_data)
 
 
 def _loop():
     print("[Scheduler] 定时任务线程已启动")
     while True:
         try:
-            _sched.run_pending()
+            with _schedule_lock:
+                _sched.run_pending()
         except Exception as e:
             print(f"[Scheduler] 调度循环异常: {e}")
         time.sleep(30)

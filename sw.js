@@ -1,5 +1,5 @@
 // 商贸就业平台 Service Worker
-const CACHE_NAME = 'job-board-campus-v3';
+const CACHE_NAME = 'job-board-campus-v4';
 const PRE_CACHE = [
   '/',
   '/index.html',
@@ -51,7 +51,7 @@ self.addEventListener('fetch', event => {
         return caches.match(event.request).then(cached => {
           if (cached) return cached;
           // Offline fallback: show index page
-          if (event.request.headers.get('Accept').includes('text/html')) {
+          if ((event.request.headers.get('Accept') || '').includes('text/html')) {
             return caches.match('/index.html');
           }
           return new Response('Offline', { status: 503 });

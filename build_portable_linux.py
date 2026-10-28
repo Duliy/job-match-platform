@@ -34,7 +34,7 @@ CHROME_URL = f"https://storage.googleapis.com/chrome-for-testing-public/{CFT_VER
 CHROMEDRIVER_URL = f"https://storage.googleapis.com/chrome-for-testing-public/{CFT_VERSION}/linux64/chromedriver-linux64.zip"
 
 # 与 Windows 便携包共用同一份代码清单
-from build_portable import CODE_FILES  # noqa: E402
+from build_portable import CODE_FILES, export_seed_jobs, clean_package_private_data  # noqa: E402
 
 LINUX_FILES = CODE_FILES + [
     "install.sh",
@@ -135,6 +135,7 @@ def step_chrome():
 
 
 def step_code():
+    clean_package_private_data(PKG_DIR)
     for f in LINUX_FILES:
         src = os.path.join(BASE_DIR, f)
         if not os.path.isfile(src):
@@ -168,11 +169,7 @@ def step_code():
         _conn.close()
         if n + g > 0:
             dst = os.path.join(PKG_DIR, "data", "jobs.db")
-            s = _sq.connect(seed_db)
-            d = _sq.connect(dst)
-            s.backup(d)
-            d.close()
-            s.close()
+            export_seed_jobs(seed_db, dst)
             print(f"  [种子数据] 社招 {n} 条 + 公考 {g} 条")
     os.chmod(os.path.join(PKG_DIR, "install.sh"), 0o755)
     os.chmod(os.path.join(PKG_DIR, "start.sh"), 0o755)

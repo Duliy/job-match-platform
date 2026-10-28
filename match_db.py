@@ -173,7 +173,7 @@ def get_all_cities(job_type: str = "社招") -> list:
 def pre_filter(skills: list = None, cities: list = None,
                salary_min: float = 0, salary_max: float = 999999,
                education: str = "", job_type: str = "社招",
-               max_candidates: int = 100) -> list:
+               max_candidates: int = 100, updated_after: str = "") -> list:
     """匹配预筛选：从数据库中筛选候选岗位
 
     策略:
@@ -196,6 +196,12 @@ def pre_filter(skills: list = None, cities: list = None,
 
     conditions = ["1=1"]
     params = []
+
+    if updated_after:
+        # SQLite 默认 created_at 为 UTC；配置中的扫描时间是本地时间。
+        # 在 LIMIT 前筛新岗位，防止高薪旧岗位占满候选集而漏掉新岗位。
+        conditions.append("datetime(created_at, 'localtime') > datetime(?)")
+        params.append(updated_after)
 
     # 关键词搜索 - 用技能词构建查询
     # 注意: jobs 表用 keywords, gk_jobs 表用 search_keyword

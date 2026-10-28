@@ -242,7 +242,7 @@ def get_total_pages(html):
     return 1
 
 
-def crawl_gk_jobs(province_code, keyword, year=DEFAULT_YEAR, max_pages=None, delay=1.0):
+def crawl_gk_jobs(province_code, keyword, year=DEFAULT_YEAR, max_pages=None, delay=1.0, report=None):
     """
     爬取指定省份 + 关键词的考公考编职位
 
@@ -256,6 +256,8 @@ def crawl_gk_jobs(province_code, keyword, year=DEFAULT_YEAR, max_pages=None, del
     Returns:
         list[dict]: 所有职位记录
     """
+    if report is not None:
+        report.update(complete=True, error="")
     province_name = PROVINCES.get(province_code, province_code)
     all_records = []
     seen_ids = set()  # 用于去重（同一职位的bmID）
@@ -266,13 +268,15 @@ def crawl_gk_jobs(province_code, keyword, year=DEFAULT_YEAR, max_pages=None, del
 
     # 第1页：获取总数和总页数
     resp = make_request(province_code, keyword, year, page=1)
-    if not resp or resp.status_code != 200:
-        code = resp.status_code if resp else "无响应"
+    if resp is None or resp.status_code != 200:
+        code = resp.status_code if resp is not None else "无响应"
         if code == 403:
             print(f"[考公] ❌ HTTP 403 被拦截 [{province_code}]：目标网站拒绝了本服务器的访问"
                   "（数据中心 IP 被封锁，在校园网/家庭网络环境下可正常采集）")
         else:
             print(f"[考公] ❌ HTTP 请求失败 [{province_code}] (状态码: {code})")
+        if report is not None:
+            report.update(complete=False, error=f"{province_code}: HTTP {code}")
         return []
 
     html = resp.text
@@ -297,8 +301,11 @@ def crawl_gk_jobs(province_code, keyword, year=DEFAULT_YEAR, max_pages=None, del
             break
 
         resp = make_request(province_code, keyword, year, page=page)
-        if not resp or resp.status_code != 200:
-            print(f"[考公] ❌ 第{page}页请求失败，跳过")
+        if resp is None or resp.status_code != 200:
+            print(f"[考公] ❌ 第{page}页请求失败，保留已采结果")
+            if report is not None:
+                code = resp.status_code if resp is not None else "无响应"
+                report.update(complete=False, error=f"{province_code}: 第{page}页 HTTP {code}")
             break
 
         records = parse_gk_table(resp.text)
@@ -388,12 +395,16 @@ def run_crawl(province_codes=None, keywords=None, year=DEFAULT_YEAR, max_pages=N
 
     total_start = time.time()
     all_results = {}
+    failures = []
 
     for prov in province_codes:
         prov_name = PROVINCES.get(prov, prov)
         for kw in keywords:
             start = time.time()
-            records = crawl_gk_jobs(prov, kw, year, max_pages, delay)
+            report = {}
+            records = crawl_gk_jobs(prov, kw, year, max_pages, delay, report=report)
+            if not report.get("complete", False):
+                failures.append(report.get("error", prov))
             if records:
                 saved = save_results(records, prov, kw, year)
                 all_results[f"{prov}_{kw}"] = len(records)
@@ -402,10 +413,12 @@ def run_crawl(province_codes=None, keywords=None, year=DEFAULT_YEAR, max_pages=N
     total_records = sum(all_results.values())
 
     print(f"\n{'='*60}")
-    print(f"[考公] 🎉 全部采集完成！")
+    print("[考公] 部分采集失败，已保留成功结果" if failures else "[考公] 全部采集完成")
     print(f"[考公] 总耗时: {elapsed:.1f}s，总记录: {total_records} 条")
     print(f"{'='*60}")
 
+    if failures:
+        raise RuntimeError("公考采集未完成：" + "; ".join(failures))
     return all_results
 
 

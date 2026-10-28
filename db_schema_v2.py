@@ -232,9 +232,10 @@ def upgrade_schema(db_path: str = DB_PATH):
     # 创建默认管理员（如果 users 表刚创建）
     if "users" not in existing:
         import bcrypt as _bcrypt
+        import secrets
 
         password_hash = _bcrypt.hashpw(
-            "admin123".encode("utf-8"), _bcrypt.gensalt()
+            secrets.token_urlsafe(32).encode("utf-8"), _bcrypt.gensalt()
         ).decode("utf-8")
         cursor.execute(
             """
@@ -244,7 +245,7 @@ def upgrade_schema(db_path: str = DB_PATH):
             ("admin", password_hash, 9999, "admin"),
         )
         conn.commit()
-        print("  已创建默认管理员: admin / admin123")
+        print("  已创建管理员 admin，请运行 init_admin.py 设置登录密码")
 
     # 验证
     cursor.execute("SELECT name FROM sqlite_master WHERE type='table'")
