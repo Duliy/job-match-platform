@@ -45,6 +45,8 @@ CODE_FILES = [
     "match_ai.py",
     "match_db.py",
     "match_utils.py",
+    "job_regions.py",
+    "REGION_DATA_LICENSE.txt",
     "admin_api.py",
     "auth.py",
     "scheduler.py",

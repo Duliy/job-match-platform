@@ -707,6 +707,9 @@ input:focus,select:focus,textarea:focus{
   .main-content{padding:20px 14px 64px}
   .stats-row{grid-template-columns:repeat(2,1fr)}
   .filter-bar{flex-direction:column;align-items:stretch}
+  .filter-bar>input,.filter-bar>select{width:100%;min-width:0;flex:auto}
+  .filter-bar .range-row{min-width:0;width:100%}
+  .filter-bar .range-row input{width:0;min-width:0}
   .job-card .jc-row{flex-wrap:wrap;gap:8px}
   .job-card .jc-salary{margin-left:auto}
   .jc-detail .jd-grid{grid-template-columns:repeat(2,1fr)}
@@ -867,8 +870,8 @@ input:focus,select:focus,textarea:focus{
     <div :class="['tab-panel',{active:activeTab===1}]">
       <div class="page-head"><h2>岗位搜索</h2><p>多平台岗位一站聚合，按城市、薪资、学历自由筛选。无需登录。</p></div>
       <div class="sub-tabs">
-        <button :class="['sub-tab',{active:jobType==='社招'}]" @click="jobType='社招';jobFilter.city='';loadJobs();loadCities()">社招</button>
-        <button :class="['sub-tab',{active:jobType==='公考'}]" @click="jobType='公考';jobFilter.city='';loadJobs();loadCities()">公考</button>
+        <button :class="['sub-tab',{active:jobType==='社招'}]" @click="jobType='社招';jobFilter.city='';jobPage=1;loadJobs();loadCities()">社招</button>
+        <button :class="['sub-tab',{active:jobType==='公考'}]" @click="jobType='公考';jobFilter.city='';jobPage=1;loadJobs();loadCities()">公考</button>
       </div>
       <div class="stats-row">
         <div class="stat-card"><div class="stat-num">{{ stats.totalJobs||0 }}</div><div class="stat-label">岗位总数</div></div>
@@ -877,9 +880,9 @@ input:focus,select:focus,textarea:focus{
         <div class="stat-card"><div class="stat-num">{{ stats.lastUpdated||'-' }}</div><div class="stat-label">最近更新</div></div>
       </div>
       <div class="filter-bar">
-        <input v-model="jobFilter.keyword" placeholder="搜索岗位/公司" @keyup.enter="loadJobs()">
+        <input v-model="jobFilter.keyword" placeholder="岗位 / 公司 / 城市，多个关键词用空格分隔" @keyup.enter="jobPage=1;loadJobs()">
         <select v-model="jobFilter.city">
-          <option value="">全部城市</option>
+          <option value="">全部省份</option>
           <option v-for="c in cityOptions" :key="c" :value="c">{{ c }}</option>
         </select>
         <div class="range-row">
@@ -891,7 +894,7 @@ input:focus,select:focus,textarea:focus{
           <option value="">学历不限</option>
           <option v-for="e in eduOptions" :key="e" :value="e">{{ e }}</option>
         </select>
-        <button class="btn btn-primary btn-sm" @click="loadJobs()">搜索</button>
+        <button class="btn btn-primary btn-sm" @click="jobPage=1;loadJobs()">搜索</button>
       </div>
       <div v-if="jobsLoading" class="loading-wrap"><div class="spinner"></div><p>加载岗位列表...</p></div>
       <template v-else-if="jobList.length">
@@ -1612,11 +1615,11 @@ const app=createApp({
       jobsLoading.value=false;
     }
 
-    // 城市下拉：全库去重，而非当前页（服务端 /api/match/cities）
+    // 地区筛选仅展示全库岗位覆盖的省级地区。
     async function loadCities(){
       try{
-        const data=await api('/api/match/cities?job_type='+encodeURIComponent(jobType.value));
-        cityOptions.value=data.cities||[];
+        const data=await api('/api/match/provinces?job_type='+encodeURIComponent(jobType.value));
+        cityOptions.value=data.provinces||[];
       }catch{}
     }
 

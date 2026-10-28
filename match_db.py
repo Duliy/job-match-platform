@@ -18,6 +18,7 @@ match_db.py — 数据库操作封装
 
 import sqlite3
 import os
+from job_regions import job_province, province_name, PROVINCES
 from datetime import datetime
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -51,9 +52,33 @@ def add_salary_field(jobs):
 def get_db():
     """获取数据库连接"""
     conn = sqlite3.connect(DB_PATH)
+    conn.create_function("job_province", 2, job_province, deterministic=True)
     conn.row_factory = sqlite3.Row
     conn.execute("PRAGMA journal_mode=WAL")
     return conn
+
+
+def _like(value):
+    return '%' + value.replace('\\', '\\\\').replace('%', '\\%').replace('_', '\\_') + '%'
+
+
+def _search_terms(conditions, params, keyword, columns):
+    # Whitespace-separated terms are ANDed; a term may match any displayed field.
+    for term in dict.fromkeys(keyword.split()):
+        conditions.append('(' + ' OR '.join(column + " LIKE ? ESCAPE '\\'" for column in columns) + ')')
+        params.extend([_like(term)] * len(columns))
+
+
+def get_all_provinces(job_type="社招"):
+    conn = get_db()
+    try:
+        if job_type == "公考":
+            rows = conn.execute("SELECT DISTINCT job_province(province, region) FROM gk_jobs")
+        else:
+            rows = conn.execute("SELECT DISTINCT job_province(city, location) FROM jobs")
+        return sorted(row[0] for row in rows if row[0])
+    finally:
+        conn.close()
 
 
 def query_jobs(keyword: str = "", city: str = "", salary_min: float = 0,
@@ -70,14 +95,16 @@ def query_jobs(keyword: str = "", city: str = "", salary_min: float = 0,
     conditions = ["1=1"]
     params = []
 
-    if keyword:
-        conditions.append("(title LIKE ? OR company LIKE ? OR keywords LIKE ?)")
-        kw = f"%{keyword}%"
-        params.extend([kw, kw, kw])
+    _search_terms(conditions, params, keyword,
+                  ["title", "company", "keywords", "city", "location", "job_province(city, location)"])
 
     if city:
-        conditions.append("city LIKE ?")
-        params.append(f"%{city}%")
+        if province_name(city) in PROVINCES:
+            conditions.append("job_province(city, location) = ?")
+            params.append(province_name(city))
+        else:  # Compatibility for existing clients that send a city filter.
+            conditions.append("(city LIKE ? ESCAPE '\\' OR location LIKE ? ESCAPE '\\')")
+            params.extend([_like(city)] * 2)
 
     if salary_min > 0:
         conditions.append("(salary_type='negotiable' OR salary_max >= ?)")
@@ -126,14 +153,13 @@ def query_gk_jobs(keyword: str = "", province: str = "",
     conditions = ["1=1"]
     params = []
 
-    if keyword:
-        conditions.append("(title LIKE ? OR description LIKE ? OR major_req LIKE ?)")
-        kw = f"%{keyword}%"
-        params.extend([kw, kw, kw])
+    _search_terms(conditions, params, keyword,
+                  ["title", "company", "department", "description", "major_req", "province", "region",
+                   "job_province(province, region)"])
 
     if province:
-        conditions.append("province LIKE ?")
-        params.append(f"%{province}%")
+        conditions.append("job_province(province, region) = ?")
+        params.append(province_name(province))
 
     # 学历：宽松语义 —— 未标注/不限 不排除；"本科"可匹配"本科及以上"但排除"仅限硕士"
     if education and education not in ("不限", "学历不限"):

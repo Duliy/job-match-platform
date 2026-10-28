@@ -44,6 +44,7 @@ from match_db import (
     query_jobs,
     query_gk_jobs,
     get_all_cities,
+    get_all_provinces,
     get_stats,
     pre_filter,
     record_hot_click,
@@ -719,6 +720,11 @@ async def list_jobs(
         "page_size": page_size,
         "total_pages": (total + page_size - 1) // page_size if total > 0 else 0,
     }
+
+
+@app.get("/api/match/provinces")
+async def list_provinces(job_type: str = Query("社招")):
+    return {"provinces": get_all_provinces(job_type)}
 
 
 @app.get("/api/match/cities")
