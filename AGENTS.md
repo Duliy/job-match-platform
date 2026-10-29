@@ -85,7 +85,7 @@ portable_env.py  # Chrome/chromedriver 路径解析（内嵌 > 环境变量 > �
 - 筛选下拉数据源：`GET /api/match/cities?job_type=` 返回**全库**去重城市/省份（2026-09-23 修复，之前前端只从当前页提取导致城市筛选形同虚设）
 - 字段清洗（match_utils）：`extract_city` 内含 `normalize_city`（黑名单剔除"已上市"等公司标签 + 去"市"后缀 + >5字碎片守卫）；`normalize_education` 只保留学历词（实习僧的"4天/周，可转正"等不再写入学历字段，并入职位名展示）；存量清洗脚本 `clean_dirty_data.py`（生产已跑过，可随时重跑）
 - 学历筛选：后端 `education` 参数宽松语义（空学历/不限不排除，与 pre_filter 一致）；社招老数据学历基本为空，靠新采集（51job/智联/猎聘都会提取）逐步填充
-- **改前端页面后必须 bump `sw.js` 的 CACHE_NAME 版本号**（当前 v5），否则用户看到旧缓存页面
+- **改前端页面后必须 bump `sw.js` 的 CACHE_NAME 版本号**（当前 v6），否则用户看到旧缓存页面
 
 ## 四、服务器（生产环境）
 
@@ -185,3 +185,7 @@ portable_env.py  # Chrome/chromedriver 路径解析（内嵌 > 环境变量 > �
 ## 十三、2026-10-28 省份筛选与组合搜索
 
 学生端下拉使用 `/api/match/provinces`，只展示岗位覆盖的省级地区（含直辖市/自治区）。`job_regions.py` 内置离线省市映射，来源及授权见 `REGION_DATA_LICENSE.txt`；通过 SQLite 函数按已有 city/location 判断省份，无需改写生产数据。原 cities API 保留兼容。社招筛选参数 city 可传省份或历史城市；公考仍按省份筛选。搜索按任意空白拆词，词与词为 AND，每词可匹配岗位、公司、地点等字段；例如“成都 数据分析”。LIKE 特殊字符按普通文本处理。搜索/切换岗位类型重置到第一页，SW v5。两个便携包白名单已纳入地区模块与授权文件。
+
+## 十四、2026-10-29 其他来源分页
+
+详见 `CRAWLER_SOURCES_2026-10-29.md`。`crawler_sources.py` 统一实习僧/猎聘/智联的整页读取、分页、限速、失败报告；前两者免 Cookie 实测到末页，智联仍受访问限制，登录后能力未完成实站验收。每个平台遵守后台50页上限，`--max-pages 0` 可采全部公开分页。结果写 `data/source_status.json`，后台健康面板逐来源展示，SW v6。实习僧部分职位名特殊字体编码仍待详情补充，不能将占位名称视为完整原文。稳定详情链接更新旧记录，保留新增时间避免重复订阅邮件。

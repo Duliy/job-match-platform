@@ -936,8 +936,21 @@
               </tbody>
             </table>
           </div>
+          <div class="table-wrap" style="margin-top:16px" v-if="health.data && Object.keys(health.data.sources || {}).length">
+            <table>
+              <thead><tr><th>采集来源</th><th>最近关键词</th><th>已采页数</th><th>岗位数（去重）</th><th>最近检查</th><th>结果</th></tr></thead>
+              <tbody>
+                <tr v-for="(source,key) in health.data.sources" :key="key">
+                  <td>{{ ({'51job':'前程无忧',shixiseng:'实习僧',liepin:'猎聘网',zhaopin:'智联招聘'})[key] || key }}</td>
+                  <td>{{ source.keyword }}</td><td>{{ source.pages ?? '—' }} / {{ source.total_pages ?? source.expected_pages ?? '—' }}</td>
+                  <td>{{ source.count ?? 0 }}</td><td>{{ (source.checked_at || '').replace('T',' ') }}</td>
+                  <td :style="{color:source.complete?'#16803c':'#c00'}">{{ source.reason || (source.complete?'完成':'未完成') }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
           <div style="margin-top:16px">
-            <div class="card-title" style="font-size:15px">Cookie 状态（智联/猎聘需要）</div>
+            <div class="card-title" style="font-size:15px">Cookie 状态（猎聘、实习僧、前程无忧可免登录）</div>
             <div class="table-wrap" v-if="health.data">
               <table>
                 <thead>
@@ -957,7 +970,7 @@
                 </tbody>
               </table>
             </div>
-            <p style="font-size:12px;color:#888;margin-top:8px">Cookie 一般 7 天内有效。过期或缺失时，请到「爬虫系统 → Cookie 管理」重新上传。</p>
+            <p style="font-size:12px;color:#888;margin-top:8px">文件日期仅供参考，实际可用性以采集结果为准。智联可能需要登录并完成站点验证，可到「爬虫系统 → Cookie 管理」上传登录 Cookie。</p>
           </div>
         </div>
       </template>

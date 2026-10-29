@@ -291,6 +291,12 @@ def import_jobs_incremental(conn):
     jobs = data.get('jobs', [])
     cursor = conn.cursor()
     count = 0
+    from crawler_sources import stable_source_link
+    source_ids = {}
+    for row in cursor.execute("SELECT id, keywords, platform, link FROM jobs").fetchall():
+        stable = stable_source_link(row[3] or '')
+        if stable:
+            source_ids.setdefault((row[2], stable), (row[0], row[1]))
 
     for job in jobs:
         title = job.get('职位名称', '')
@@ -303,19 +309,25 @@ def import_jobs_incremental(conn):
             (title, company, link, job.get('工作地点', ''))
         )
         existing = cursor.fetchone()
+        stable = stable_source_link(link)
+        if not existing and stable:
+            existing = source_ids.get((job.get('来源平台', ''), stable))
         salary_info = parse_salary(job.get('薪资', ''))
         if existing:
             keywords = ','.join(dict.fromkeys(k.strip()
                 for value in (existing[1] or '', job.get('关键词', ''))
                 for k in value.split(',') if k.strip()))
             cursor.execute("""UPDATE jobs SET salary_raw=?, salary_min=?, salary_max=?,
-                salary_type=?, city=?, education=?, pub_date=?, keywords=?, search_text=?
-                WHERE id=?""", (
+                salary_type=?, city=?, education=?, pub_date=?, keywords=?, search_text=?,
+                title=?, company=?, location=?, link=? WHERE id=?""", (
                 job.get('薪资', ''), salary_info['salary_min'], salary_info['salary_max'],
                 salary_info['salary_type'], extract_city(job.get('工作地点', '')),
                 normalize_education(job.get('学历要求', '')), job.get('发布日期', ''),
-                keywords, f"{title} {company} {keywords}", existing[0]))
+                keywords, f"{title} {company} {keywords}", title, company,
+                job.get('工作地点', ''), link, existing[0]))
             # 不改 updated_at：订阅按新增时间推送，重复采集不应再次打扰学生。
+            if stable:
+                source_ids[(job.get('来源平台', ''), stable)] = (existing[0], keywords)
             continue
 
         salary_info = parse_salary(job.get('薪资', ''))
@@ -346,6 +358,8 @@ def import_jobs_incremental(conn):
                 search_text
             ))
             count += 1
+            if stable:
+                source_ids[(job.get('来源平台', ''), stable)] = (cursor.lastrowid, job.get('关键词', ''))
         except Exception:
             pass
 

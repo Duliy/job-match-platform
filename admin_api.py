@@ -48,7 +48,7 @@ COOKIE_PLATFORMS = [
     ("51job", "前程无忧", True),
     ("shixiseng", "实习僧", True),
     ("zhaopin", "智联招聘", False),
-    ("liepin", "猎聘网", False),
+    ("liepin", "猎聘网", True),
 ]
 
 
@@ -523,6 +523,7 @@ async def health(admin: dict = Depends(get_admin_user)):
         "gk": st["gk"],
         "subscription": st["subscription"],
         "cookies": _cookie_status(),
+        "sources": scheduler._load_json(os.path.join(scheduler.DATA_DIR, "source_status.json"), {}),
         "jobs_total": stats.get("jobs", {}).get("total", 0),
         "gk_jobs_total": stats.get("gk_jobs", {}).get("total", 0),
         "db_last_updated": stats.get("last_updated", ""),

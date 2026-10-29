@@ -59,6 +59,7 @@ CODE_FILES = [
     # 爬虫
     "login_helper.py",
     "crawler_51job.py",
+    "crawler_sources.py",
     "gongkao_crawler.py",
     "cookie_collector.py",
     # 前端
