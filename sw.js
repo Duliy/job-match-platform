@@ -1,5 +1,5 @@
-// 商贸就业平台 Service Worker
-const CACHE_NAME = 'job-board-campus-v6';
+// 商贸学子就业信息共享站 Service Worker
+const CACHE_NAME = 'job-board-campus-v7';
 const PRE_CACHE = [
   '/',
   '/index.html',

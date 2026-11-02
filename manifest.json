@@ -1,7 +1,7 @@
 {
-  "name": "西南大学商贸学院 · 就业服务平台",
-  "short_name": "商贸就业",
-  "description": "西南大学商贸学院就业服务与简历匹配平台",
+  "name": "商贸学子就业信息共享站",
+  "short_name": "商贸学子就业信息共享站",
+  "description": "商贸学子就业信息共享站，为西南大学商贸学院师生提供岗位信息、简历匹配与就业订阅服务",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
@@ -21,6 +21,10 @@
       "type": "image/png"
     }
   ],
-  "categories": ["education", "business", "productivity"],
+  "categories": [
+    "education",
+    "business",
+    "productivity"
+  ],
   "prefer_related_applications": false
 }

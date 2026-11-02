@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-match_api.py — 就业服务平台 统一服务 (FastAPI，校园交付版)
+match_api.py — 商贸学子就业信息共享站 统一服务 (FastAPI，校园交付版)
 
 功能:
   - 用户注册/登录/认证
@@ -188,7 +188,7 @@ CACHE_TTL = 300  # 缓存5分钟
 PUBLIC_BASE_URL = os.environ.get("PUBLIC_BASE_URL", "").rstrip("/")
 
 # ── FastAPI 应用 ─────────────────────────────────────
-app = FastAPI(title="就业服务平台API（校园版）", version="3.0.0", docs_url="/api/docs")
+app = FastAPI(title="商贸学子就业信息共享站API（校园版）", version="3.0.0", docs_url="/api/docs")
 
 # CORS
 app.add_middleware(
@@ -1329,7 +1329,7 @@ def _send_match_email_async(user: dict, high_prob_count: int, recommendations):
 
             login_link_html = (
                 f'<div style="margin-top:16px;text-align:center;">'
-                f'<a href="{PUBLIC_BASE_URL}/resume_match.html" target="_blank" style="display:inline-block;background:#9C6B3C;color:#fff;text-decoration:none;font-size:13px;font-weight:500;padding:8px 24px;border-radius:6px;">打开就业服务平台查看完整报告</a></div>'
+                f'<a href="{PUBLIC_BASE_URL}/resume_match.html" target="_blank" style="display:inline-block;background:#9C6B3C;color:#fff;text-decoration:none;font-size:13px;font-weight:500;padding:8px 24px;border-radius:6px;">打开商贸学子就业信息共享站查看完整报告</a></div>'
                 if PUBLIC_BASE_URL
                 else ""
             )
@@ -1337,7 +1337,7 @@ def _send_match_email_async(user: dict, high_prob_count: int, recommendations):
             html_body = f"""
     <div style="max-width:560px;margin:0 auto;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;">
       <div style="background:linear-gradient(135deg,#FBF8F3,#F5E6D3);padding:24px;border-radius:12px 12px 0 0;">
-        <h2 style="color:#9C6B3C;margin:0;font-size:20px;letter-spacing:0.5px;">就业服务平台</h2>
+        <h2 style="color:#9C6B3C;margin:0;font-size:20px;letter-spacing:0.5px;">商贸学子就业信息共享站</h2>
         <p style="color:#8B7355;margin:4px 0 0 0;font-size:13px;">岗位智能匹配 · 推荐通知</p>
       </div>
       <div style="padding:24px;border:1px solid #E8DDD0;border-top:none;border-radius:0 0 12px 12px;">
@@ -1348,12 +1348,12 @@ def _send_match_email_async(user: dict, high_prob_count: int, recommendations):
         {jobs_html}
         {login_link_html}
         <hr style="border:none;border-top:1px solid #E8DDD0;margin:18px 0 10px;">
-        <p style="font-size:11px;color:#AAA;margin:0;line-height:1.6;">此邮件由就业服务平台自动发送 &middot; 请勿直接回复</p>
+        <p style="font-size:11px;color:#AAA;margin:0;line-height:1.6;">此邮件由商贸学子就业信息共享站自动发送 &middot; 请勿直接回复</p>
       </div>
     </div>"""
 
             msg = MIMEMultipart("alternative")
-            msg["Subject"] = "就业服务平台：发现 {} 个高匹配度岗位".format(job_count)
+            msg["Subject"] = "商贸学子就业信息共享站：发现 {} 个高匹配度岗位".format(job_count)
             msg["From"] = email_cfg["from_email"]
             msg["To"] = notify_email
             msg.attach(MIMEText(html_body, "html", "utf-8"))

@@ -3,10 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>就业服务平台</title>
+<title>商贸学子就业信息共享站</title>
 <style>
 /* ═══════════════════════════════════════════════════════════
-   就业服务平台 · 学生端 — Apple Design Language
+   商贸学子就业信息共享站 · 学生端 — Apple Design Language
    色系复刻 apple.com：#f5f5f7 底 / 白卡 / #1d1d1f 文 / #0071e3 蓝
    ═══════════════════════════════════════════════════════════ */
 :root{
@@ -733,7 +733,7 @@ input:focus,select:focus,textarea:focus{
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="17" x2="20" y2="17"/></svg>
       </button>
       <div class="logo">
-        <span>就业服务平台</span>
+        <span>商贸学子就业信息共享站</span>
       </div>
       <div class="header-right">
         <button class="btn-sm btn-outline" @click="switchTab(4)" :title="apiKeySet?'已设置 API Key':'点击设置你的 DeepSeek API Key'">
@@ -1253,8 +1253,8 @@ input:focus,select:focus,textarea:focus{
               <div class="mep-dot"><span></span><span></span><span></span></div>
             </div>
             <div class="mock-email-body">
-              <div class="meb-from">发件人: <strong>就业服务平台</strong></div>
-              <div class="meb-subject">就业服务平台 — 发现 {{ vipHighProbCount||3 }} 个新岗位</div>
+              <div class="meb-from">发件人: <strong>商贸学子就业信息共享站</strong></div>
+              <div class="meb-subject">商贸学子就业信息共享站 — 发现 {{ vipHighProbCount||3 }} 个新岗位</div>
               <div class="meb-greeting">亲爱的 {{ user?.username||'用户' }}：</div>
               <div class="meb-content">
                 您好！系统刚刚完成了新一轮智能岗位匹配，我们发现以下岗位与您的简历高度匹配（匹配度 ≥ 60%）：
@@ -1269,7 +1269,7 @@ input:focus,select:focus,textarea:focus{
               </div>
               <a class="meb-cta" href="#" onclick="return false">登录平台查看 ></a>
               <div class="meb-footer">
-                此邮件由就业服务平台自动发送 · 如不想接收请登录取消订阅<br>
+                此邮件由商贸学子就业信息共享站自动发送 · 如不想接收请登录取消订阅<br>
                 <span v-if="!vipEmail||vipShowEmailPreview===true">（演示模式 — 实际发件将使用你绑定的邮箱地址）</span>
               </div>
             </div>

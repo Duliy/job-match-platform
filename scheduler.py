@@ -419,7 +419,7 @@ def _build_notify_email(username, jobs, scan_time):
     return f"""
 <div style="max-width:560px;margin:0 auto;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;">
   <div style="background:linear-gradient(135deg,#FBF8F3,#F5E6D3);padding:24px;border-radius:12px 12px 0 0;">
-    <h2 style="color:#9C6B3C;margin:0;font-size:20px;">就业服务平台</h2>
+    <h2 style="color:#9C6B3C;margin:0;font-size:20px;">商贸学子就业信息共享站</h2>
     <p style="color:#8B7355;margin:4px 0 0 0;font-size:13px;">订阅岗位 · 新岗位通知</p>
   </div>
   <div style="padding:24px;border:1px solid #E8DDD0;border-top:none;border-radius:0 0 12px 12px;">
@@ -429,7 +429,7 @@ def _build_notify_email(username, jobs, scan_time):
       如需 AI 智能匹配分析，请登录平台并使用您自己的 DeepSeek API Key。
     </p>
     {rows_html}
-    <p style="font-size:11px;color:#AAA;margin:0;line-height:1.6;">此邮件由就业服务平台自动发送 · 请勿直接回复</p>
+    <p style="font-size:11px;color:#AAA;margin:0;line-height:1.6;">此邮件由商贸学子就业信息共享站自动发送 · 请勿直接回复</p>
   </div>
 </div>"""
 
@@ -566,7 +566,7 @@ def run_subscription_scan():
             html = _build_notify_email(row["username"], new_jobs, start_time)
             ok, msg = _send_email(
                 row["notify_email"],
-                f"就业服务平台：{len(new_jobs)} 个与您相关的新岗位",
+                f"商贸学子就业信息共享站：{len(new_jobs)} 个与您相关的新岗位",
                 html,
             )
             if ok:
